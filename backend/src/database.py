@@ -67,8 +67,7 @@ class ObjetivoORM(Base):
     completado = Column(Boolean, default=False, nullable=False)
 
     # Relaciones
-    movimientos = relationship("MovimientoORM", back_populates="objetivo")
-
+    movimientos = relationship("MovimientoORM", back_populates="objetivo", cascade="all, delete-orphan")
 
 class MovimientoORM(Base):
     """Modelo ORM para la tabla movimientos."""

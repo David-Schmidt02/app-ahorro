@@ -21,6 +21,15 @@ class MovimientoCreate(MovimientoBase):
     objetivo_id: int = Field(..., gt=0)
 
 
+class MovimientoUpdate(BaseModel):
+    """Schema para actualizar un Movimiento."""
+    monto: Optional[Decimal] = Field(None, gt=0)
+    moneda: Optional[Moneda] = None
+    tipo: Optional[TipoMovimiento] = None
+    motivo: Optional[str] = None
+    nota: Optional[str] = None
+
+
 class MovimientoResponse(MovimientoBase):
     """Schema para respuesta de Movimiento."""
     id: int

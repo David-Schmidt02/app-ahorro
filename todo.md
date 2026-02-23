@@ -8,3 +8,5 @@
 - [ ] Actualizar middleware/auth_middleware.py para usar src.config.settings
 - [ ] Probar dynamic config reload
 - [ ] Probar endpoints en /docs
+
+- [ ] Eliminar todo lo que tiene que ver con csv

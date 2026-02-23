@@ -6,7 +6,7 @@ app:
   api_prefix: "/api/v1"
 
 database:
-  url: "postgresql://user:password@localhost:5432/app_ahorro?client_encoding=utf8"
+  url: "sqlite:///./app_ahorro.db"
   pool_size: 5
   max_overflow: 10
   echo: false
@@ -17,16 +17,6 @@ jwt:
   algorithm: "HS256"
   access_token_expire_minutes: 30
 
-cors:
-  enabled: true
-  origins:
-    - "http://localhost:3000"
-    - "http://localhost:5173"
-  allow_credentials: true
-  allow_methods:
-    - "*"
-  allow_headers:
-    - "*"
 
 rate_limit:
   enabled: false
@@ -53,3 +43,7 @@ logging:
 config_reload:
   enabled: true
   check_interval_seconds: 30
+
+test_user:
+  email: "test@appahorro.com"
+  password: "password123"

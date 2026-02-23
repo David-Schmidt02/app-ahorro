@@ -25,6 +25,8 @@ build/
 # Database
 *.db
 *.sqlite3
+*-shm
+*-wal
 
 # Testing
 .pytest_cache/

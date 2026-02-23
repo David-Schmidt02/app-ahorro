@@ -63,7 +63,7 @@ class TasaCambioService:
         """
         if not tipo_cotizacion:
             settings = get_settings()
-            tipo_cotizacion = TipoCotizacion(settings.TIPO_COTIZACION_DEFAULT)
+            tipo_cotizacion = TipoCotizacion(settings.tasa_cambio.tipo_cotizacion_default)
 
         # Obtener tasa desde API
         tasa_valor = await self.obtener_tasa_desde_api(tipo_cotizacion)
@@ -95,7 +95,7 @@ class TasaCambioService:
         """
         if not tipo_cotizacion:
             settings = get_settings()
-            tipo_cotizacion = TipoCotizacion(settings.TIPO_COTIZACION_DEFAULT)
+            tipo_cotizacion = TipoCotizacion(settings.tasa_cambio.tipo_cotizacion_default)
 
         # Obtener última tasa
         tasa = self.repository.obtener_ultima(
@@ -109,7 +109,7 @@ class TasaCambioService:
 
         # Verificar si está vigente
         settings = get_settings()
-        if tasa.esta_vigente(horas_vigencia=settings.HORAS_VIGENCIA_TASA):
+        if tasa.esta_vigente(horas_vigencia=settings.tasa_cambio.horas_vigencia):
             return tasa
 
         return None

@@ -35,16 +35,6 @@ class JWTConfig(BaseModel):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-
-class CORSConfig(BaseModel):
-    """CORS configuration."""
-    enabled: bool = True
-    origins: List[str] = []
-    allow_credentials: bool = True
-    allow_methods: List[str] = ["*"]
-    allow_headers: List[str] = ["*"]
-
-
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration."""
     enabled: bool = False
@@ -87,16 +77,22 @@ class ConfigReloadConfig(BaseModel):
     check_interval_seconds: int = 30
 
 
+class TestUserConfig(BaseModel):
+    """Test user settings for testing purposes."""
+    email: str
+    password: str
+
+
 class Settings(BaseModel):
     """Root settings model."""
     app: AppConfig
     database: DatabaseConfig
     jwt: JWTConfig
-    cors: CORSConfig
     rate_limit: RateLimitConfig
     tasa_cambio: TasaCambioConfig
     logging: LoggingConfig
     config_reload: ConfigReloadConfig
+    test_user: TestUserConfig
 
 
 def _get_config_path() -> Path:

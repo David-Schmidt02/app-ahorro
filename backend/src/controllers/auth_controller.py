@@ -7,7 +7,8 @@ from src.database import get_db
 from src.repositories.usuario_repository import UsuarioRepository
 from src.services.usuario_service import UsuarioService
 from src.schemas.usuario_schema import UsuarioLogin, Token, UsuarioCreate, UsuarioResponse
-from src.middleware.auth_middleware import crear_access_token
+from src.middleware.auth_middleware import crear_access_token, obtener_usuario_actual
+from src.domain.usuario import Usuario
 from src.config.settings import get_settings
 
 
@@ -71,3 +72,19 @@ def register(
     )
 
     return usuario
+
+
+@router.get("/me", response_model=UsuarioResponse)
+def get_current_user(
+    current_user: Usuario = Depends(obtener_usuario_actual)
+):
+    """
+    Obtiene los datos del usuario actual autenticado.
+
+    Args:
+        current_user: Usuario autenticado desde el token JWT
+
+    Returns:
+        UsuarioResponse: Datos del usuario actual
+    """
+    return current_user

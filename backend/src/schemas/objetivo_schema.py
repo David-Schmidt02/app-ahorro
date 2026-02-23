@@ -26,6 +26,7 @@ class ObjetivoUpdate(BaseModel):
     nombre: Optional[str] = Field(None, min_length=1, max_length=200)
     descripcion: Optional[str] = None
     monto_objetivo: Optional[Decimal] = Field(None, gt=0)
+    moneda: Optional[Moneda] = None
     fecha_limite: Optional[date] = None
     es_prioritario: Optional[bool] = None
     estado: Optional[EstadoObjetivo] = None

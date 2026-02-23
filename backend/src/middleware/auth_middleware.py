@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from src.config import settings
+from src.config.settings import get_settings
 from src.database import get_db
 from src.repositories.usuario_repository import UsuarioRepository
 from src.domain.usuario import Usuario
@@ -27,6 +27,7 @@ def crear_access_token(data: dict, expires_delta: Optional[timedelta] = None) ->
         str: Token JWT codificado
     """
     to_encode = data.copy()
+    settings = get_settings()
 
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -52,6 +53,7 @@ def decodificar_token(token: str) -> dict:
         ValueError: Si el token es inválido
     """
     try:
+        settings = get_settings()
         payload = jwt.decode(token, settings.jwt.secret_key, algorithms=[settings.jwt.algorithm])
         return payload
     except JWTError as e:

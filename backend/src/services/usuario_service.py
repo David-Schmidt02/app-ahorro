@@ -6,6 +6,13 @@ from src.domain.usuario import Usuario
 from src.repositories.usuario_repository import UsuarioRepository
 
 
+import bcrypt
+try:
+    # Workaround para compatibilidad entre passlib y bcrypt >= 4.0
+    bcrypt.__about__ = type("about", (), {"__version__": bcrypt.__version__})
+except (AttributeError, ImportError):
+    pass
+
 # Configuración para hasheo de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

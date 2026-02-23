@@ -103,25 +103,6 @@ class MovimientoRepository:
             logger.error(f"Error al listar movimientos por objetivo {objetivo_id}: {e}")
             return []
 
-    def listar_por_usuario(self, usuario_id: int) -> List[Movimiento]:
-        """
-        Obtiene todos los movimientos de un usuario específico.
-
-        Args:
-            usuario_id: ID del usuario
-
-        Returns:
-            List[Movimiento]: Lista de movimientos ordenados por fecha
-        """
-        try:
-            orms = self.db.query(MovimientoORM).filter(
-                MovimientoORM.usuario_id == usuario_id
-            ).order_by(MovimientoORM.fecha.desc()).all()
-            return [self._to_domain(orm) for orm in orms]
-        except SQLAlchemyError as e:
-            logger.error(f"Error al listar movimientos por usuario {usuario_id}: {e}")
-            return []
-
     def listar_todos(self) -> List[Movimiento]:
         """
         Obtiene todos los movimientos.
@@ -154,6 +135,37 @@ class MovimientoRepository:
         except SQLAlchemyError as e:
             logger.error(f"Error al listar movimientos recientes: {e}")
             return []
+
+    def actualizar(self, movimiento: Movimiento) -> Movimiento:
+        """
+        Actualiza un movimiento existente.
+
+        Args:
+            movimiento: Entidad de dominio con los cambios
+
+        Returns:
+            Optional[Movimiento]: Entidad actualizada o None si error
+        """
+        try:
+            orm = self.db.query(MovimientoORM).filter(MovimientoORM.id == movimiento.id).first()
+            if not orm:
+                logger.warning(f"Movimiento {movimiento.id} no encontrado para actualizar")
+                return None
+
+            # Actualizar campos
+            orm.monto = movimiento.monto
+            orm.moneda = movimiento.moneda
+            orm.tipo = movimiento.tipo
+            orm.motivo = movimiento.motivo
+            orm.nota = movimiento.nota
+
+            self.db.commit()
+            self.db.refresh(orm)
+            return self._to_domain(orm)
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Error al actualizar movimiento {movimiento.id}: {e}")
+            return None
 
     def eliminar(self, movimiento_id: int) -> None:
         """

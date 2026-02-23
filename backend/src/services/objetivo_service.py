@@ -116,6 +116,7 @@ class ObjetivoService:
         nombre: Optional[str] = None,
         descripcion: Optional[str] = None,
         monto_objetivo: Optional[Decimal] = None,
+        moneda: Optional[Moneda] = None,
         fecha_limite: Optional[date] = None,
         es_prioritario: Optional[bool] = None
     ) -> Objetivo:
@@ -127,6 +128,7 @@ class ObjetivoService:
             nombre: Nuevo nombre (opcional)
             descripcion: Nueva descripción (opcional)
             monto_objetivo: Nuevo monto objetivo (opcional)
+            moneda: Nueva moneda (opcional)
             fecha_limite: Nueva fecha límite (opcional)
             es_prioritario: Nuevo estado prioritario (opcional)
 
@@ -150,6 +152,9 @@ class ObjetivoService:
 
         if monto_objetivo is not None:
             objetivo.monto_objetivo = monto_objetivo
+
+        if moneda is not None:
+            objetivo.moneda = moneda
 
         if fecha_limite is not None:
             objetivo.fecha_limite = fecha_limite

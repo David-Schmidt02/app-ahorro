@@ -1,17 +1,23 @@
 """Controller para gestión de objetivos."""
 from typing import List
+import csv
+import io
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.repositories.objetivo_repository import ObjetivoRepository
+from src.repositories.movimiento_repository import MovimientoRepository
 from src.services.objetivo_service import ObjetivoService
+from src.services.proyeccion_service import ProyeccionService
 from src.schemas.objetivo_schema import (
     ObjetivoCreate,
     ObjetivoUpdate,
     ObjetivoResponse,
     PostergarFechaRequest
 )
+from src.schemas.proyeccion_schema import ProyeccionResponse
 from src.middleware.auth_middleware import obtener_usuario_actual
 from src.domain.usuario import Usuario
 from src.domain.enums import EstadoObjetivo
@@ -24,6 +30,13 @@ def get_objetivo_service(db: Session = Depends(get_db)) -> ObjetivoService:
     """Dependency que proporciona el servicio de objetivo."""
     repository = ObjetivoRepository(db)
     return ObjetivoService(repository)
+
+
+def get_proyeccion_service(db: Session = Depends(get_db)) -> ProyeccionService:
+    """Dependency que proporciona el servicio de proyecciones."""
+    objetivo_repo = ObjetivoRepository(db)
+    movimiento_repo = MovimientoRepository(db)
+    return ProyeccionService(objetivo_repo, movimiento_repo)
 
 
 @router.post("/", response_model=ObjetivoResponse, status_code=status.HTTP_201_CREATED)
@@ -50,16 +63,27 @@ def crear_objetivo(
 def listar_objetivos(
     estado: EstadoObjetivo = Query(None, description="Filtrar por estado"),
     prioritario: bool = Query(None, description="Filtrar solo prioritarios"),
+    busqueda: str = Query(None, description="Buscar por nombre o descripción"),
     service: ObjetivoService = Depends(get_objetivo_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Lista objetivos con filtros opcionales."""
+    # Obtener lista base según filtros prioritarios
     if prioritario:
         objetivos = service.listar_objetivos_prioritarios()
     elif estado:
         objetivos = service.listar_objetivos_por_estado(estado)
     else:
         objetivos = service.listar_objetivos()
+
+    # Aplicar búsqueda por texto si se especificó
+    if busqueda:
+        busqueda_lower = busqueda.lower()
+        objetivos = [
+            obj for obj in objetivos
+            if busqueda_lower in obj.nombre.lower() or
+               (obj.descripcion and busqueda_lower in obj.descripcion.lower())
+        ]
 
     return [_enriquecer_objetivo_response(obj) for obj in objetivos]
 
@@ -88,6 +112,7 @@ def actualizar_objetivo(
         nombre=objetivo_data.nombre,
         descripcion=objetivo_data.descripcion,
         monto_objetivo=objetivo_data.monto_objetivo,
+        moneda=objetivo_data.moneda,
         fecha_limite=objetivo_data.fecha_limite,
         es_prioritario=objetivo_data.es_prioritario
     )
@@ -138,6 +163,81 @@ def reactivar_objetivo(
     """Reactiva un objetivo pausado."""
     objetivo = service.reactivar_objetivo(objetivo_id)
     return _enriquecer_objetivo_response(objetivo)
+
+
+@router.put("/{objetivo_id}/estado", response_model=ObjetivoResponse)
+def actualizar_estado_objetivo(
+    objetivo_id: int,
+    estado: EstadoObjetivo = Query(..., description="Nuevo estado del objetivo"),
+    service: ObjetivoService = Depends(get_objetivo_service),
+    current_user: Usuario = Depends(obtener_usuario_actual)
+):
+    """Actualiza el estado de un objetivo (activo, pausado, completado)."""
+    if estado == EstadoObjetivo.COMPLETADO:
+        objetivo = service.marcar_completado(objetivo_id)
+    elif estado == EstadoObjetivo.PAUSADO:
+        objetivo = service.pausar_objetivo(objetivo_id)
+    else:
+        objetivo = service.reactivar_objetivo(objetivo_id)
+    
+    return _enriquecer_objetivo_response(objetivo)
+
+
+@router.get("/{objetivo_id}/proyeccion", response_model=ProyeccionResponse)
+def obtener_proyeccion(
+    objetivo_id: int,
+    service: ProyeccionService = Depends(get_proyeccion_service),
+    current_user: Usuario = Depends(obtener_usuario_actual)
+):
+    """Obtiene la proyección de cumplimiento de un objetivo."""
+    proyeccion = service.calcular_proyeccion(objetivo_id)
+    return proyeccion
+
+
+@router.get("/exportar/csv")
+def exportar_objetivos_csv(
+    service: ObjetivoService = Depends(get_objetivo_service),
+    current_user: Usuario = Depends(obtener_usuario_actual)
+):
+    """Exporta todos los objetivos del usuario a un archivo CSV."""
+    objetivos = service.listar_objetivos()
+
+    # Crear CSV en memoria
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Encabezados
+    writer.writerow([
+        'ID', 'Nombre', 'Descripción', 'Monto Objetivo', 'Moneda',
+        'Monto Acumulado', '% Completado', 'Estado', 'Es Prioritario',
+        'Fecha Límite', 'Fecha Creación'
+    ])
+
+    # Datos
+    for obj in objetivos:
+        porcentaje = obj.calcular_porcentaje_completado()
+        monto_acumulado = obj.monto_objetivo * (porcentaje / 100)
+        writer.writerow([
+            obj.id,
+            obj.nombre,
+            obj.descripcion or '',
+            float(obj.monto_objetivo),
+            obj.moneda,
+            float(monto_acumulado),
+            float(porcentaje),
+            obj.estado.value,
+            'Sí' if obj.es_prioritario else 'No',
+            obj.fecha_limite.strftime('%Y-%m-%d') if obj.fecha_limite else '',
+            obj.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+
+    # Preparar respuesta
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=objetivos.csv"}
+    )
 
 
 @router.delete("/{objetivo_id}", status_code=status.HTTP_204_NO_CONTENT)
