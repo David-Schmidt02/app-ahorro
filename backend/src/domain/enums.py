@@ -22,6 +22,6 @@ class TipoMovimiento(str, Enum):
 
 class TipoCotizacion(str, Enum):
     """Tipos de cotización del dólar en Argentina."""
-    BLUE = "blue"
-    OFICIAL = "oficial"
-    MEP = "mep"
+    BLUE = "BLUE"
+    OFICIAL = "OFICIAL"
+    MEP = "MEP"

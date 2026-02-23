@@ -2,9 +2,14 @@
 from decimal import Decimal
 from typing import Dict
 
+from src.services.tasa_cambio_service import TasaCambioService
+
 from src.repositories.objetivo_repository import ObjetivoRepository
 from src.repositories.movimiento_repository import MovimientoRepository
 from src.domain.enums import EstadoObjetivo, TipoMovimiento
+from src.log.logging_config import get_logger
+
+logger = get_logger("estadistica_service")
 
 
 class EstadisticaService:
@@ -13,12 +18,14 @@ class EstadisticaService:
     def __init__(
         self,
         objetivo_repository: ObjetivoRepository,
-        movimiento_repository: MovimientoRepository
+        movimiento_repository: MovimientoRepository,
+        tasa_cambio_service: TasaCambioService
     ):
         self.objetivo_repository = objetivo_repository
         self.movimiento_repository = movimiento_repository
+        self.tasa_cambio_service = tasa_cambio_service
 
-    def calcular_estadisticas(self) -> Dict:
+    async def calcular_estadisticas(self) -> Dict:
         """
         Calcula las estadísticas globales de la pareja.
 
@@ -70,20 +77,33 @@ class EstadisticaService:
         else:
             promedio_cumplimiento = Decimal(0)
 
-        return {
+        res = {
             "total_objetivos": total_objetivos,
             "objetivos_activos": objetivos_activos,
             "objetivos_completados": objetivos_completados,
             "objetivos_pausados": objetivos_pausados,
-            "monto_total_objetivos": monto_total_objetivos,
-            "monto_total_guardado": monto_total_guardado,
-            "monto_restante": monto_restante,
-            "progreso_global_porcentaje": progreso_global_porcentaje,
+            "monto_total_objetivos": round(float(monto_total_objetivos), 2),
+            "monto_total_guardado": round(float(monto_total_guardado), 2),
+            "monto_restante": round(float(monto_restante), 2),
+            "progreso_global_porcentaje": round(float(progreso_global_porcentaje), 2),
             "total_movimientos": total_movimientos,
             "total_aportes": total_aportes,
             "total_retiros": total_retiros,
-            "suma_aportes": suma_aportes,
-            "suma_retiros": suma_retiros,
-            "promedio_aporte": promedio_aporte,
-            "promedio_cumplimiento_objetivos": promedio_cumplimiento
+            "suma_aportes": round(float(suma_aportes), 2),
+            "suma_retiros": round(float(suma_retiros), 2),
+            "promedio_aporte": round(float(promedio_aporte), 2),
+            "promedio_cumplimiento_objetivos": round(float(promedio_cumplimiento), 2),
+            "tasa_dolar_blue": 0.0
         }
+
+        import traceback
+        # Obtener la tasa de cambio vigente
+        try:
+            tasa = await self.tasa_cambio_service.obtener_o_actualizar_tasa()
+            res["tasa_dolar_blue"] = round(float(tasa.tasa), 2) if tasa else 0.0
+            logger.info(f"EstadisticaService: tasa_dolar_blue seteada en res: {res['tasa_dolar_blue']}")
+        except Exception as e:
+            logger.error(f"Error al obtener tasa para estadísticas: {e}\n{traceback.format_exc()}")
+            res["tasa_dolar_blue"] = 0.0
+
+        return res

@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import api from '../api/axios';
+import { useCurrency } from '../context/CurrencyContext';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import SavingsIcon from '@mui/icons-material/Savings';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -44,6 +46,7 @@ const Dashboard = () => {
         es_prioritario: false
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { dolarRate, setDolarRate } = useCurrency();
 
     const fetchDashboardData = async () => {
         try {
@@ -63,18 +66,27 @@ const Dashboard = () => {
                 api.get('/estadisticas/')
             ]);
 
-            setObjetivos(objetivosRes.data);
+            const sortedObjectives = (objetivosRes.data || []).sort((a, b) => {
+                if (a.es_prioritario === b.es_prioritario) return 0;
+                return a.es_prioritario ? -1 : 1;
+            });
+
+            setObjetivos(sortedObjectives);
             setMovimientos(movimientosRes.data);
 
             const stats = estadisticasRes.data;
+            if (stats.tasa_dolar_blue > 0) {
+                setDolarRate(Number(stats.tasa_dolar_blue));
+            }
+
             setTotales({
-                guardado: stats.patrimonio_total_ars || 0,
-                meta: stats.meta_total_ars || 0,
-                progreso: stats.progreso_global || 0,
-                patrimonio_ars: stats.patrimonio_total_ars || 0,
-                patrimonio_usd: stats.patrimonio_total_usd || 0,
+                guardado: stats.monto_total_guardado || 0,
+                meta: stats.monto_total_objetivos || 0,
+                progreso: stats.progreso_global_porcentaje || 0,
+                patrimonio_ars: stats.monto_total_guardado || 0,
+                patrimonio_usd: 0, // Se calcula dinámicamente o se actualiza luego
                 objetivos_completados: stats.objetivos_completados || 0,
-                objetivos_totales: stats.objetivos_totales || 0
+                objetivos_totales: stats.total_objetivos || 0
             });
 
         } catch (error) {
@@ -84,12 +96,16 @@ const Dashboard = () => {
         }
     };
 
+    const loadData = useCallback(() => {
+        fetchDashboardData();
+    }, [busqueda, filtroEstado]);
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchDashboardData();
-        }, 300); // Debounce search
+            loadData();
+        }, 300);
         return () => clearTimeout(timer);
-    }, [busqueda, filtroEstado]);
+    }, [loadData]);
 
     const handleNewSubmit = async (e) => {
         e.preventDefault();
@@ -131,8 +147,10 @@ const Dashboard = () => {
                     </div>
                     <div className="summary-info">
                         <h3>Patrimonio Total</h3>
-                        <p style={{ fontSize: '1.2rem' }}>AR$ {totales.patrimonio_ars.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                        <p style={{ fontSize: '0.9rem', opacity: 0.8, color: 'var(--accent-success)' }}>US$ {totales.patrimonio_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                        <p style={{ fontSize: '1.2rem' }}>AR$ {Number(totales.patrimonio_ars || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        <p style={{ fontSize: '0.9rem', opacity: 0.8, color: 'var(--accent-success)' }}>
+                            US$ {Number((totales.patrimonio_ars || 0) / (dolarRate || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </p>
                     </div>
                 </div>
 
@@ -153,9 +171,9 @@ const Dashboard = () => {
                     </div>
                     <div className="summary-info">
                         <h3>Progreso Global</h3>
-                        <p>{totales.progreso.toFixed(1)}%</p>
+                        <p>{Number(totales.progreso || 0).toFixed(1)}%</p>
                         <div className="progress-bar-bg" style={{ height: '4px', marginTop: '0.5rem' }}>
-                            <div className="progress-bar-fill" style={{ width: `${totales.progreso}%` }}></div>
+                            <div className="progress-bar-fill" style={{ width: `${Number(totales.progreso || 0)}%` }}></div>
                         </div>
                     </div>
                 </div>
@@ -202,7 +220,7 @@ const Dashboard = () => {
                         <div className="bordo-tooltip-container">
                             <InfoOutlinedIcon fontSize="small" className="tooltip-icon" />
                             <div className="bordo-tooltip-text">
-                                Lista filtrada proyectos y metas financieras actuales.
+                                Lista filtrada de metas.
                             </div>
                         </div>
                     </h2>
@@ -228,7 +246,7 @@ const Dashboard = () => {
                                         <h3 className="objective-title">{obj.nombre}</h3>
                                     </div>
                                     <div className="objective-monto">
-                                        ${Number(obj.monto_objetivo || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        ${Math.round(Number(obj.monto_objetivo || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                     </div>
                                     <div className="objective-dates">
                                         Vence: {obj.fecha_limite ? new Date(obj.fecha_limite).toLocaleDateString() : 'Sin fecha'}
@@ -276,7 +294,7 @@ const Dashboard = () => {
                                 {movimientos.map((mov) => (
                                     <tr key={mov.id}>
                                         <td>{new Date(mov.fecha).toLocaleDateString()}</td>
-                                        <td>{mov.objetivo_id}</td>
+                                        <td>{objetivos.find(o => o.id === mov.objetivo_id)?.nombre || `ID: ${mov.objetivo_id}`}</td>
                                         <td>{mov.motivo}</td>
                                         <td>
                                             <span className={`move-type type-${mov.tipo}`}>
@@ -284,7 +302,7 @@ const Dashboard = () => {
                                             </span>
                                         </td>
                                         <td className={mov.tipo === 'aporte' ? 'amount-positive' : 'amount-negative'}>
-                                            {mov.tipo === 'aporte' ? '+' : '-'}${mov.monto.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            {mov.tipo === 'aporte' ? '+' : '-'}${Math.round(mov.monto).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                         </td>
                                     </tr>
                                 ))}

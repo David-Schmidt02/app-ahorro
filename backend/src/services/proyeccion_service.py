@@ -6,7 +6,9 @@ from typing import Optional, Dict
 
 from src.repositories.objetivo_repository import ObjetivoRepository
 from src.repositories.movimiento_repository import MovimientoRepository
-from src.domain.enums import TipoMovimiento
+from src.services.tasa_cambio_service import TasaCambioService
+from src.domain.enums import TipoMovimiento, TipoCotizacion
+from src.config import get_settings
 
 
 class ProyeccionService:
@@ -15,12 +17,14 @@ class ProyeccionService:
     def __init__(
         self,
         objetivo_repository: ObjetivoRepository,
-        movimiento_repository: MovimientoRepository
+        movimiento_repository: MovimientoRepository,
+        tasa_cambio_service: TasaCambioService
     ):
         self.objetivo_repository = objetivo_repository
         self.movimiento_repository = movimiento_repository
+        self.tasa_cambio_service = tasa_cambio_service
 
-    def calcular_proyeccion(self, objetivo_id: int) -> Dict:
+    async def calcular_proyeccion(self, objetivo_id: int) -> Dict:
         """
         Calcula la proyección de cumplimiento de un objetivo.
 
@@ -84,7 +88,15 @@ class ProyeccionService:
             meses_transcurridos = max(Decimal(1), Decimal(delta.days) / Decimal(30))
 
         # Calcular promedio mensual
-        suma_aportes = sum(m.monto for m in aportes)
+        suma_aportes = Decimal("0")
+        for m in aportes:
+            monto_convertido = await self.tasa_cambio_service.convertir(
+                monto=m.monto,
+                moneda_origen=m.moneda,
+                moneda_destino=objetivo.moneda
+            )
+            suma_aportes += monto_convertido
+            
         promedio_mensual = suma_aportes / Decimal(meses_transcurridos)
 
         # Proyectar meses restantes

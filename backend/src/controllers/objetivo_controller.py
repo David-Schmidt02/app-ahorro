@@ -34,9 +34,15 @@ def get_objetivo_service(db: Session = Depends(get_db)) -> ObjetivoService:
 
 def get_proyeccion_service(db: Session = Depends(get_db)) -> ProyeccionService:
     """Dependency que proporciona el servicio de proyecciones."""
+    from src.repositories.tasa_cambio_repository import TasaCambioRepository
+    from src.services.tasa_cambio_service import TasaCambioService
+    
     objetivo_repo = ObjetivoRepository(db)
     movimiento_repo = MovimientoRepository(db)
-    return ProyeccionService(objetivo_repo, movimiento_repo)
+    tasa_repo = TasaCambioRepository(db)
+    tasa_service = TasaCambioService(tasa_repo)
+    
+    return ProyeccionService(objetivo_repo, movimiento_repo, tasa_service)
 
 
 @router.post("/", response_model=ObjetivoResponse, status_code=status.HTTP_201_CREATED)
@@ -184,13 +190,13 @@ def actualizar_estado_objetivo(
 
 
 @router.get("/{objetivo_id}/proyeccion", response_model=ProyeccionResponse)
-def obtener_proyeccion(
+async def obtener_proyeccion(
     objetivo_id: int,
     service: ProyeccionService = Depends(get_proyeccion_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Obtiene la proyección de cumplimiento de un objetivo."""
-    proyeccion = service.calcular_proyeccion(objetivo_id)
+    proyeccion = await service.calcular_proyeccion(objetivo_id)
     return proyeccion
 
 
@@ -251,10 +257,18 @@ def eliminar_objetivo(
     return None
 
 
+import json
+
 def _enriquecer_objetivo_response(objetivo) -> dict:
     """Helper que agrega campos calculados a la respuesta del objetivo."""
+    try:
+        historial = json.loads(objetivo.historial_progreso) if hasattr(objetivo, 'historial_progreso') and objetivo.historial_progreso else []
+    except Exception:
+        historial = []
+        
     return {
         **objetivo.__dict__,
         "porcentaje_completado": objetivo.calcular_porcentaje_completado(),
-        "pago_mensual_requerido": objetivo.calcular_pago_mensual_requerido()
+        "pago_mensual_requerido": objetivo.calcular_pago_mensual_requerido(),
+        "historial_progreso": historial
     }

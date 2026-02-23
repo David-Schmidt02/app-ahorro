@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowBack, CheckCircleOutline, PauseCircleOutline, PlayCircleOutline, DeleteOutline, Edit, Add, Remove } from '@mui/icons-material';
+import { ArrowBack, CheckCircleOutline, PauseCircleOutline, PlayCircleOutline, DeleteOutline, Edit, Add, Remove, InfoOutlined } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../api/axios';
 import Swal from 'sweetalert2';
 import Modal from '../components/Modal';
 import '../styles/objective-detail.css';
 import { formatAmount, cleanAmount } from '../utils/formatters';
+import { useCurrency } from '../context/CurrencyContext';
 
 const ObjectiveDetail = () => {
   const { id } = useParams();
@@ -23,7 +24,19 @@ const ObjectiveDetail = () => {
   const [monedaMove, setMonedaMove] = useState('ARS');
   const [motivoMove, setMotivoMove] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dolarRate, setDolarRate] = useState(null);
+  const { dolarRate } = useCurrency();
+  const [viewMoneda, setViewMoneda] = useState(null); // Se setea al cargar el objetivo
+  
+  // Pagination & Projection State
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [projection, setProjection] = useState(null);
+  const LIMIT = 10;
+
+  // Movement Edit State
+  const [isEditMoveModalOpen, setIsEditMoveModalOpen] = useState(false);
+  const [editingMove, setEditingMove] = useState(null);
+  const [editMoveForm, setEditMoveForm] = useState({ monto: '', motivo: '', fecha: '', tipo: '' });
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,14 +50,28 @@ const ObjectiveDetail = () => {
   });
 
   // Fetch Data
-  const fetchObjectiveData = async () => {
+  const fetchObjectiveData = async (loadMore = false) => {
     try {
-      const [objRes, movsRes] = await Promise.all([
+      const currentPage = loadMore ? page + 1 : 1;
+      const [objRes, movsRes, projRes] = await Promise.all([
         api.get(`/objetivos/${id}`),
-        api.get(`/movimientos/?objetivo_id=${id}`)
+        api.get(`/movimientos/?objetivo_id=${id}&limite=${LIMIT}&offset=${(currentPage - 1) * LIMIT}`),
+        api.get(`/objetivos/${id}/proyeccion`).catch(() => ({ data: null }))
       ]);
+      
       setObjective(objRes.data);
-      setMovimientos(movsRes.data);
+      if (!viewMoneda) setViewMoneda(objRes.data.moneda);
+      setProjection(projRes.data);
+      
+      if (loadMore) {
+        setMovimientos(prev => [...prev, ...movsRes.data]);
+        setPage(currentPage);
+      } else {
+        setMovimientos(movsRes.data);
+        setPage(1);
+      }
+      
+      setHasMore(movsRes.data.length === LIMIT);
     } catch (err) {
       console.error("Error fetching objective data:", err);
       setError("No se pudo cargar la información del objetivo.");
@@ -55,15 +82,7 @@ const ObjectiveDetail = () => {
 
   useEffect(() => {
     fetchObjectiveData();
-    const fetchDolar = async () => {
-      try {
-        const res = await api.get('https://dolarapi.com/v1/dolares/blue');
-        setDolarRate(res.data.venta);
-      } catch (e) {
-        console.error("Error fetching dolar rate for conversion");
-      }
-    };
-    fetchDolar();
+    // Ya no hacemos fetch del dólar aquí, se asume cargado globalmente o en el Dashboard/Navbar
   }, [id]);
 
   const handleAddMovement = async (e) => {
@@ -95,12 +114,34 @@ const ObjectiveDetail = () => {
     setEditFormData({
       nombre: objective.nombre,
       descripcion: objective.descripcion || '',
-      monto_objetivo: objective.monto_objetivo,
+      monto_objetivo: formatAmount(objective.monto_objetivo),
       moneda: objective.moneda || 'ARS',
       fecha_limite: objective.fecha_limite ? new Date(objective.fecha_limite).toISOString().split('T')[0] : '',
       es_prioritario: objective.es_prioritario
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleEditCurrencyChange = (newMoneda) => {
+    if (!dolarRate || newMoneda === editFormData.moneda) {
+      setEditFormData({ ...editFormData, moneda: newMoneda });
+      return;
+    }
+
+    const currentMonto = parseFloat(cleanAmount(editFormData.monto_objetivo)) || 0;
+    let newMonto = currentMonto;
+
+    if (editFormData.moneda === 'ARS' && newMoneda === 'USD') {
+      newMonto = currentMonto / dolarRate;
+    } else if (editFormData.moneda === 'USD' && newMoneda === 'ARS') {
+      newMonto = currentMonto * dolarRate;
+    }
+
+    setEditFormData({
+      ...editFormData,
+      moneda: newMoneda,
+      monto_objetivo: formatAmount(newMonto.toFixed(2))
+    });
   };
 
   const handleEditSubmit = async (e) => {
@@ -187,6 +228,59 @@ const ObjectiveDetail = () => {
     }
   };
 
+  const handleEditMove = (mov) => {
+    setEditingMove(mov);
+    setEditMoveForm({
+      monto: formatAmount(mov.monto.toString()),
+      motivo: mov.motivo,
+      fecha: new Date(mov.fecha).toISOString().split('T')[0],
+      tipo: mov.tipo
+    });
+    setIsEditMoveModalOpen(true);
+  };
+
+  const handleUpdateMove = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/movimientos/${editingMove.id}`, {
+        ...editMoveForm,
+        monto: parseFloat(cleanAmount(editMoveForm.monto))
+      });
+      setIsEditMoveModalOpen(false);
+      await fetchObjectiveData();
+    } catch (err) {
+      console.error("Error updating movement:", err);
+      alert("No se pudo actualizar el movimiento");
+    }
+  };
+
+  const handleDeleteMove = async (moveId) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar movimiento?',
+      text: "El monto se restará/sumará del acumulado automáticamente.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      background: 'var(--bg-surface)',
+      color: 'var(--text-primary)',
+      customClass: {
+        popup: 'glass-modal',
+        confirmButton: 'btn-danger',
+        cancelButton: 'btn-secondary'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/movimientos/${moveId}`);
+        await fetchObjectiveData();
+      } catch (err) {
+        console.error("Error deleting movement:", err);
+      }
+    }
+  };
+
   if (loading) return <div className="page-container" style={{ textAlign: 'center', marginTop: '5rem' }}><div className="glass-panel" style={{display: 'inline-block', padding: '2rem'}}>Cargando detalles...</div></div>;
   if (error) return (
     <div className="page-container" style={{ textAlign: 'center', marginTop: '5rem' }}>
@@ -200,30 +294,33 @@ const ObjectiveDetail = () => {
   );
   if (!objective) return <div className="page-container"><div className="glass-panel" style={{borderColor: 'var(--accent-warning)', color: 'var(--accent-warning)', padding: '2rem'}}>Objetivo no encontrado</div></div>;
 
-  const mntActual = Number(objective.monto_objetivo || 0) * (Number(objective.porcentaje_completado || 0) / 100);
-  const mntRestante = Number(objective.monto_objetivo || 0) - mntActual;
   const isActivo = objective.estado === 'activo';
+  const mntActual = Number(objective.monto_actual || 0);
+  const mntObjetivo = Number(objective.monto_objetivo || 0);
+  const mntRestante = mntObjetivo - mntActual;
 
-  // Prepare Chart Data (Cumulative Sum of Aportes - Retiros)
-  const chartData = [];
-  let currentSum = 0;
-  
-  // Sort movements by date ascending for the chart
-  const sortedMovs = [...movimientos].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  
-  chartData.push({
-    name: 'Inicio',
-    Acumulado: 0
-  });
+  // Utilidad para convertir montos según la moneda de visualización
+  const convert = (amount, originalMoneda) => {
+    if (!viewMoneda || !dolarRate || viewMoneda === originalMoneda) return amount;
+    if (originalMoneda === 'ARS' && viewMoneda === 'USD') return amount / dolarRate;
+    if (originalMoneda === 'USD' && viewMoneda === 'ARS') return amount * dolarRate;
+    return amount;
+  };
 
-  sortedMovs.forEach(mov => {
-    if (mov.tipo === 'aporte') currentSum += Number(mov.monto);
-    if (mov.tipo === 'retiro') currentSum -= Number(mov.monto);
-    chartData.push({
-      name: new Date(mov.fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      Acumulado: currentSum
+  const displayMoneda = viewMoneda || objective.moneda || 'ARS';
+
+  const chartData = [{ name: 'Inicio', Acumulado: 0 }];
+
+  if (objective.historial_progreso && objective.historial_progreso.length > 0) {
+    const historialOrdenado = [...objective.historial_progreso].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    
+    historialOrdenado.forEach(item => {
+      chartData.push({
+        name: new Date(item.fecha).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+        Acumulado: Math.round(convert(Number(item.monto_acumulado), objective.moneda) * 100) / 100
+      });
     });
-  });
+  }
 
   return (
     <div className="page-container">
@@ -236,15 +333,48 @@ const ObjectiveDetail = () => {
             <h1 style={{ margin: 0 }}>{objective.nombre} <span style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>({objective.moneda})</span></h1>
           </div>
         </div>
-        <div className="status-badge" style={{ 
-            textTransform: 'capitalize', 
-            fontSize: '1rem', 
-            padding: '0.5rem 1rem', 
-            background: isActivo ? 'rgba(16, 185, 129, 0.15)' : 'rgba(225, 29, 72, 0.15)', 
-            color: isActivo ? 'var(--accent-success)' : 'var(--accent-danger)', 
-            borderRadius: 'var(--radius-full)' 
-          }}>
-          Estado: {objective.estado}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="status-badge" style={{ 
+              textTransform: 'capitalize', 
+              fontSize: '0.9rem', 
+              padding: '0.4rem 0.8rem', 
+              background: isActivo ? 'rgba(16, 185, 129, 0.15)' : 'rgba(225, 29, 72, 0.15)', 
+              color: isActivo ? 'var(--accent-success)' : 'var(--accent-danger)', 
+              borderRadius: 'var(--radius-full)' 
+            }}>
+            {objective.estado}
+          </div>
+          
+          <div className="dashboard-controls" style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+             <button 
+                onClick={() => setViewMoneda('ARS')}
+                style={{ 
+                  padding: '0.3rem 0.8rem', 
+                  fontSize: '0.75rem', 
+                  borderRadius: 'var(--radius-full)', 
+                  border: 'none',
+                  background: displayMoneda === 'ARS' ? 'var(--accent-primary)' : 'transparent',
+                  color: displayMoneda === 'ARS' ? 'white' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s'
+                }}
+             >ARS</button>
+             <button 
+                onClick={() => setViewMoneda('USD')}
+                style={{ 
+                  padding: '0.3rem 0.8rem', 
+                  fontSize: '0.75rem', 
+                  borderRadius: 'var(--radius-full)', 
+                  border: 'none',
+                  background: displayMoneda === 'USD' ? 'var(--accent-primary)' : 'transparent',
+                  color: displayMoneda === 'USD' ? 'white' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s'
+                }}
+             >USD</button>
+          </div>
         </div>
       </header>
       
@@ -252,52 +382,74 @@ const ObjectiveDetail = () => {
         <div className="detail-main-panel">
           
           <div className="detail-info-grid">
-             <div className="detail-info-card">
-               <h4 className="secondary-label">Fondo del Objetivo</h4>
-               <div className="detail-metrics-group">
-                 <div className="detail-metric-item">
-                   <h4 className="secondary-label">ACUMULADO</h4>
-                   <p style={{ color: 'var(--accent-success)' }}>${mntActual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                 </div>
-                 <div className="detail-metric-item" style={{ textAlign: 'right' }}>
-                   <h4 className="secondary-label">RESTANTE</h4>
-                   <p>${Math.max(0, mntRestante).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                 </div>
-               </div>
-             </div>
-             <div className="detail-info-card">
-               <h4 className="secondary-label">Meta y Prioridad</h4>
-               <div className="detail-metrics-group">
-                 <div className="detail-metric-item">
-                   <h4 className="secondary-label">TOTAL</h4>
-                   <p>${Number(objective.monto_objetivo || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                 </div>
-                 <div className="detail-metric-item" style={{ textAlign: 'right' }}>
-                   <h4 className="secondary-label">PRIORIDAD</h4>
-                   <p style={{ color: objective.es_prioritario ? 'var(--accent-warning)' : 'inherit' }}>{objective.es_prioritario ? 'Alta' : 'Normal'}</p>
-                 </div>
-               </div>
-             </div>
+              <div className="detail-info-card">
+                <h4 className="secondary-label">Fondo del Objetivo ({displayMoneda})</h4>
+                <div className="detail-metrics-group">
+                  <div className="detail-metric-item">
+                    <h4 className="secondary-label">ACUMULADO</h4>
+                    <p style={{ color: 'var(--accent-success)' }}>${convert(mntActual, objective.moneda).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="detail-metric-item" style={{ textAlign: 'right' }}>
+                    <h4 className="secondary-label">RESTANTE</h4>
+                    <p style={{ color: mntRestante > 0 ? 'var(--text-primary)' : 'var(--accent-success)' }}>
+                      ${Math.max(0, convert(mntRestante, objective.moneda)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="detail-info-card">
+                <h4 className="secondary-label">Meta y Prioridad ({displayMoneda})</h4>
+                <div className="detail-metrics-group">
+                  <div className="detail-metric-item">
+                    <h4 className="secondary-label">TOTAL</h4>
+                    <p>${convert(mntObjetivo, objective.moneda).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="detail-metric-item" style={{ textAlign: 'right' }}>
+                    <h4 className="secondary-label">PRIORIDAD</h4>
+                    <p style={{ color: objective.es_prioritario ? 'var(--accent-warning)' : 'inherit' }}>{objective.es_prioritario ? 'Alta' : 'Normal'}</p>
+                  </div>
+                </div>
+              </div>
           </div>
+
+          {projection && projection.estimacion_meses > 0 && (
+            <div className="detail-info-card glass-panel" style={{ border: '1px solid var(--accent-success)', background: 'rgba(16, 185, 129, 0.05)', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h4 style={{ color: 'var(--accent-success)', marginBottom: '0.25rem' }}>Proyección de Cumplimiento</h4>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  Basado en tu ritmo de ahorro de <strong style={{color: 'var(--text-primary)'}}>${projection.ahorro_promedio_mensual.toLocaleString()}</strong> por mes.
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>~ {projection.estimacion_meses} meses</p>
+                <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>Meta: {new Date(projection.fecha_estimada).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
 
           <div className="progress-section">
             <div className="progress-section-header">
-              <h4>Evolución del Ahorro</h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ margin: 0 }}>Evolución del Ahorro</h4>
+                <div title="El gráfico representa el saldo histórico acumulado" style={{ display: 'flex', color: 'var(--text-muted)', cursor: 'help' }}>
+                  <InfoOutlined fontSize="small" style={{ fontSize: '1rem' }} />
+                </div>
+              </div>
               <span>{Number(objective.porcentaje_completado || 0).toFixed(1)}%</span>
             </div>
             
-            <div style={{ width: '100%', height: 250, marginTop: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: '100%', height: 250, marginTop: '1rem', marginBottom: '1.5rem', minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 30, bottom: 5, left: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                  <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
                   <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'var(--accent-primary)' }}
-                    formatter={(value) => [`$${value}`, 'Acumulado']}
+                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.98)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
+                    itemStyle={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}
+                    formatter={(value) => [`$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${displayMoneda}`, 'Acumulado']}
                   />
-                  <ReferenceLine y={Number(objective.monto_objetivo)} label={{ position: 'top', value: 'Meta', fill: 'var(--text-secondary)', fontSize: 12 }} stroke="var(--accent-warning)" strokeDasharray="3 3" />
+                  <ReferenceLine y={convert(mntObjetivo, objective.moneda)} label={{ position: 'top', value: `Meta ${displayMoneda}`, fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} stroke="var(--accent-warning)" strokeDasharray="5 5" />
                   <Line type="monotone" dataKey="Acumulado" stroke="var(--accent-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--bg-primary)' }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -321,30 +473,51 @@ const ObjectiveDetail = () => {
                <h4>Historial de Movimientos</h4>
              </div>
              
-             {movimientos.length === 0 ? (
-               <p style={{ color: 'var(--text-muted)' }}>No hay movimientos para este objetivo todavía.</p>
-             ) : (
-               <div className="movements-list">
-                 {movimientos.map(mov => (
-                   <div key={mov.id} className={`movement-item type-${mov.tipo}`}>
-                      <div className="movement-item-info">
-                         <span className="movement-item-reason">{mov.motivo}</span>
-                         <span className="movement-item-date">{new Date(mov.fecha).toLocaleString()}</span>
+              {movimientos.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)' }}>No hay movimientos para este objetivo todavía.</p>
+              ) : (
+                <>
+                  <div className="movements-list">
+                    {movimientos.map(mov => (
+                      <div key={mov.id} className={`movement-item type-${mov.tipo}`}>
+                        <div className="movement-item-info">
+                           <span className="movement-item-reason">{mov.motivo}</span>
+                           <span className="movement-item-date">{new Date(mov.fecha).toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                           <div className="movement-item-amount" style={{ textAlign: 'right' }}>
+                              <p style={{ margin: 0 }}>
+                                {mov.tipo === 'aporte' ? '+' : '-'}${Number(mov.monto).toLocaleString(undefined, { maximumFractionDigits: 2 })} {mov.moneda}
+                              </p>
+                              {dolarRate && (
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                   ≈ USD ${(mov.moneda === 'USD' ? Number(mov.monto) : Number(mov.monto) / dolarRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </p>
+                              )}
+                           </div>
+                           <div className="movement-actions" style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button className="btn-icon-small" onClick={() => handleEditMove(mov)} title="Editar">
+                                <Edit style={{ fontSize: '1rem' }} />
+                              </button>
+                              <button className="btn-icon-small btn-danger-text" onClick={() => handleDeleteMove(mov.id)} title="Eliminar">
+                                <DeleteOutline style={{ fontSize: '1rem' }} />
+                              </button>
+                           </div>
+                        </div>
                       </div>
-                       <div className="movement-item-amount" style={{ textAlign: 'right' }}>
-                          <p style={{ margin: 0 }}>
-                            {mov.tipo === 'aporte' ? '+' : '-'}${Number(mov.monto).toLocaleString(undefined, { minimumFractionDigits: 2 })} {mov.moneda}
-                          </p>
-                          {dolarRate && (
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                               ≈ USD ${(mov.moneda === 'USD' ? Number(mov.monto) : Number(mov.monto) / dolarRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </p>
-                          )}
-                       </div>
-                   </div>
-                 ))}
-               </div>
-             )}
+                    ))}
+                  </div>
+                  {hasMore && (
+                    <button 
+                      className="btn-secondary" 
+                      style={{ width: '100%', marginTop: '1rem' }} 
+                      onClick={() => fetchObjectiveData(true)}
+                    >
+                      Ver más movimientos
+                    </button>
+                  )}
+                </>
+              )}
           </div>
 
         </div>
@@ -503,7 +676,7 @@ const ObjectiveDetail = () => {
               <label>Moneda</label>
               <select
                 value={editFormData.moneda}
-                onChange={(e) => setEditFormData({...editFormData, moneda: e.target.value})}
+                onChange={(e) => handleEditCurrencyChange(e.target.value)}
                 className="glass-select"
               >
                 <option value="ARS">ARS</option>
@@ -532,6 +705,52 @@ const ObjectiveDetail = () => {
               <span className="checkmark"></span>
               Marcar como prioritario
             </label>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Movement Modal */}
+      <Modal
+        isOpen={isEditMoveModalOpen}
+        onClose={() => setIsEditMoveModalOpen(false)}
+        title="Editar Movimiento"
+        footer={
+          <>
+            <button type="button" className="btn-secondary" onClick={() => setIsEditMoveModalOpen(false)}>Cancelar</button>
+            <button type="submit" form="edit-move-form" className="btn-primary">Actualizar</button>
+          </>
+        }
+      >
+        <form id="edit-move-form" onSubmit={handleUpdateMove}>
+          <div className="form-group">
+            <label>Monto</label>
+            <div className="amount-input-wrapper">
+              <span className="amount-input-prefix">$</span>
+              <input 
+                type="text" 
+                value={editMoveForm.monto}
+                onChange={(e) => setEditMoveForm({...editMoveForm, monto: formatAmount(e.target.value)})}
+                required
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Motivo</label>
+            <input 
+              type="text" 
+              value={editMoveForm.motivo}
+              onChange={(e) => setEditMoveForm({...editMoveForm, motivo: e.target.value})}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Fecha</label>
+            <input 
+              type="date" 
+              value={editMoveForm.fecha}
+              onChange={(e) => setEditMoveForm({...editMoveForm, fecha: e.target.value})}
+              required
+            />
           </div>
         </form>
       </Modal>

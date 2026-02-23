@@ -39,13 +39,13 @@ def get_movimiento_service(db: Session = Depends(get_db)) -> MovimientoService:
 
 
 @router.post("/", response_model=MovimientoResponse, status_code=status.HTTP_201_CREATED)
-def crear_movimiento(
+async def crear_movimiento(
     movimiento_data: MovimientoCreate,
     service: MovimientoService = Depends(get_movimiento_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Crea un nuevo movimiento (aporte o retiro)."""
-    movimiento = service.crear_movimiento(
+    movimiento = await service.crear_movimiento(
         monto=movimiento_data.monto,
         moneda=movimiento_data.moneda,
         tipo=movimiento_data.tipo,
@@ -84,14 +84,14 @@ def obtener_movimiento(
 
 
 @router.put("/{movimiento_id}", response_model=MovimientoResponse)
-def actualizar_movimiento(
+async def actualizar_movimiento(
     movimiento_id: int,
     movimiento_data: MovimientoUpdate,
     service: MovimientoService = Depends(get_movimiento_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Actualiza un movimiento existente."""
-    movimiento = service.actualizar_movimiento(
+    movimiento = await service.actualizar_movimiento(
         movimiento_id=movimiento_id,
         monto=movimiento_data.monto,
         moneda=movimiento_data.moneda,
@@ -147,11 +147,11 @@ def exportar_movimientos_csv(
 
 
 @router.delete("/{movimiento_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_movimiento(
+async def eliminar_movimiento(
     movimiento_id: int,
     service: MovimientoService = Depends(get_movimiento_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Elimina un movimiento y revierte su efecto en el objetivo."""
-    service.eliminar_movimiento(movimiento_id)
+    await service.eliminar_movimiento(movimiento_id)
     return None

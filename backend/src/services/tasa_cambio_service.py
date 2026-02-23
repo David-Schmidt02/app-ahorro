@@ -7,7 +7,9 @@ from src.domain.tasa_cambio import TasaCambio
 from src.repositories.tasa_cambio_repository import TasaCambioRepository
 from src.domain.enums import TipoCotizacion, Moneda
 from src.config.settings import get_settings
+from src.log.logging_config import get_logger
 
+logger = get_logger("tasa_cambio_service")
 
 class TasaCambioService:
     """Service que orquesta la lógica de negocio de tasas de cambio."""
@@ -29,7 +31,7 @@ class TasaCambioService:
             ValueError: Si hay error al obtener la tasa
         """
         try:
-            url = f"https://dolarapi.com/v1/dolares/{tipo_cotizacion.value}"
+            url = f"https://dolarapi.com/v1/dolares/{tipo_cotizacion.value.lower()}"
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, timeout=10.0)
                 response.raise_for_status()
@@ -105,11 +107,15 @@ class TasaCambioService:
         )
 
         if not tasa:
+            logger.info(f"No se encontró ninguna tasa registrada para {tipo_cotizacion.value}")
             return None
 
         # Verificar si está vigente
         settings = get_settings()
-        if tasa.esta_vigente(horas_vigencia=settings.tasa_cambio.horas_vigencia):
+        vigente = tasa.esta_vigente(horas_vigencia=settings.tasa_cambio.horas_vigencia)
+        logger.info(f"Tasa encontrada: {tasa.tasa} ({tasa.fecha}). Vigente: {vigente}")
+        
+        if vigente:
             return tasa
 
         return None
@@ -117,22 +123,46 @@ class TasaCambioService:
     async def obtener_o_actualizar_tasa(self, tipo_cotizacion: Optional[TipoCotizacion] = None) -> TasaCambio:
         """
         Obtiene la tasa vigente o la actualiza si no hay una vigente.
+        Implementa fallback: si la actualización falla, intenta usar la última registrada.
 
         Args:
             tipo_cotizacion: Tipo de cotización (usa default de config si no se especifica)
 
         Returns:
-            TasaCambio: Tasa vigente o recién actualizada
+            TasaCambio: Tasa vigente, recién actualizada o última disponible.
+
+        Raises:
+            ValueError: Si no existe ninguna tasa en la base de datos y la API falla.
         """
         tasa_vigente = self.obtener_tasa_vigente(tipo_cotizacion)
 
         if tasa_vigente:
             return tasa_vigente
 
-        # No hay tasa vigente, actualizar
-        return await self.actualizar_tasa(tipo_cotizacion)
+        # No hay tasa vigente, intentar actualizar
+        try:
+            return await self.actualizar_tasa(tipo_cotizacion)
+        except Exception as e:
+            logger.warning(f"Error al actualizar tasa desde API ({e}). Usando fallback de base de datos.")
+            
+            # Fallback: buscar la última registrada sin importar vigencia
+            if not tipo_cotizacion:
+                settings = get_settings()
+                tipo_cotizacion = TipoCotizacion(settings.tasa_cambio.tipo_cotizacion_default)
+            
+            tasa_fallback = self.repository.obtener_ultima(
+                moneda_origen=Moneda.ARS.value,
+                moneda_destino=Moneda.USD.value,
+                tipo_cotizacion=tipo_cotizacion
+            )
+            
+            if tasa_fallback:
+                return tasa_fallback
+                
+            # Si ni siquiera hay fallback, propagar error
+            raise ValueError("No se pudo obtener tasa de API ni de base de datos locales.")
 
-    def convertir(
+    async def convertir(
         self,
         monto: Decimal,
         moneda_origen: Moneda,
@@ -141,6 +171,7 @@ class TasaCambioService:
     ) -> Decimal:
         """
         Convierte un monto de una moneda a otra usando la tasa vigente.
+        Si la tasa no existe o expiró, la actualiza automáticamente.
 
         Args:
             monto: Monto a convertir
@@ -152,7 +183,7 @@ class TasaCambioService:
             Decimal: Monto convertido
 
         Raises:
-            ValueError: Si no hay tasa vigente o si las monedas son iguales o no soportadas
+            ValueError: Si hay error al obtener/actualizar la tasa o monedas no soportadas
         """
         # Si las monedas son iguales, no convertir
         if moneda_origen == moneda_destino:
@@ -163,11 +194,8 @@ class TasaCambioService:
                 (moneda_origen == Moneda.USD and moneda_destino == Moneda.ARS)):
             raise ValueError("Solo se soporta conversión entre ARS y USD")
 
-        # Obtener tasa vigente
-        tasa = self.obtener_tasa_vigente(tipo_cotizacion)
-
-        if not tasa:
-            raise ValueError("No hay tasa de cambio vigente. Debe actualizar la tasa primero.")
+        # Obtener tasa vigente o actualizarla automáticamente
+        tasa = await self.obtener_o_actualizar_tasa(tipo_cotizacion)
 
         # Convertir según la dirección
         if moneda_origen == Moneda.ARS and moneda_destino == Moneda.USD:

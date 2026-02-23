@@ -93,15 +93,14 @@ body {
   overflow: hidden;
 }
 
-/* Hover effects: Brightness + Glow */
+/* Hover effects: Clean background shift + Translate */
 .btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover, .btn-warning:hover {
-  filter: brightness(1.5);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px currentColor;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 
 .btn-primary:active, .btn-secondary:active, .btn-success:active, .btn-danger:active, .btn-warning:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 /* Semantic Variants */

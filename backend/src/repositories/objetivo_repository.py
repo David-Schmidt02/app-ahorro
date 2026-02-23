@@ -30,7 +30,8 @@ class ObjetivoRepository:
             fecha_creacion=orm.fecha_creacion,
             estado=orm.estado,
             es_prioritario=orm.es_prioritario,
-            completado=orm.completado
+            completado=orm.completado,
+            historial_progreso=getattr(orm, 'historial_progreso', "[]")
         )
 
     def _to_orm(self, objetivo: Objetivo) -> ObjetivoORM:
@@ -45,7 +46,8 @@ class ObjetivoRepository:
             fecha_creacion=objetivo.fecha_creacion,
             estado=objetivo.estado,
             es_prioritario=objetivo.es_prioritario,
-            completado=objetivo.completado
+            completado=objetivo.completado,
+            historial_progreso=objetivo.historial_progreso
         )
         if objetivo.id:
             orm.id = objetivo.id
@@ -167,6 +169,7 @@ class ObjetivoRepository:
             orm.estado = objetivo.estado
             orm.es_prioritario = objetivo.es_prioritario
             orm.completado = objetivo.completado
+            orm.historial_progreso = objetivo.historial_progreso
 
             self.db.commit()
             self.db.refresh(orm)

@@ -23,7 +23,7 @@ rate_limit:
   requests_per_minute: 60
 
 tasa_cambio:
-  tipo_cotizacion_default: "blue"
+  tipo_cotizacion_default: "BLUE"
   horas_vigencia: 24
   api_url: "https://dolarapi.com/v1/dolares"
 

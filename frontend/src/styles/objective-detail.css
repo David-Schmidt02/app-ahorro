@@ -1,6 +1,6 @@
 .objective-detail-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 2.6fr 1fr;
   gap: 2rem;
   margin-top: 1.5rem;
 }
@@ -447,4 +447,37 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+}
+
+/* Small Action Buttons for History */
+.btn-icon-small {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-small:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-danger-text:hover {
+  color: var(--accent-danger) !important;
+  background: rgba(225, 29, 72, 0.1) !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+}
+
+/* Pagination Button Custom Hover */
+.movements-list + .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }

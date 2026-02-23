@@ -1,29 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
 
 const Navbar = () => {
   const { logout, user } = useAuth();
+  const { dolarRate } = useCurrency();
   const navigate = useNavigate();
-  const [dolar, setDolar] = useState(null);
-
-  useEffect(() => {
-    const fetchDolar = async () => {
-      try {
-        const res = await axios.get('https://dolarapi.com/v1/dolares/blue');
-        setDolar(res.data);
-      } catch (e) {
-        console.error("Error fetching dolar rate");
-      }
-    };
-    fetchDolar();
-    const interval = setInterval(fetchDolar, 300000); // Refresh every 5 mins
-    return () => clearInterval(interval);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -54,10 +40,10 @@ const Navbar = () => {
 
         {user && (
           <div className="navbar-actions" style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
-            {dolar && (
-              <div className="dolar-widget glass-panel" title={`Venta: $${dolar.venta} | Compra: $${dolar.compra}`}>
+            {dolarRate && (
+              <div className="dolar-widget glass-panel" title={`Cotización centralizada (Backend)`}>
                 <span className="dolar-label">USD Blue</span>
-                <span className="dolar-value">${dolar.venta}</span>
+                <span className="dolar-value">${dolarRate.toLocaleString()}</span>
               </div>
             )}
             <span style={{color: 'var(--text-secondary)', fontWeight: '500', fontSize: '1.1rem'}}>¡Hola, {userName}!</span>

@@ -1,5 +1,5 @@
-"""Schemas de Pydantic para Estadísticas."""
 from decimal import Decimal
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -12,21 +12,22 @@ class EstadisticasResponse(BaseModel):
     objetivos_pausados: int
 
     # Montos
-    monto_total_objetivos: Decimal
-    monto_total_guardado: Decimal
-    monto_restante: Decimal
-    progreso_global_porcentaje: Decimal
+    monto_total_objetivos: float
+    monto_total_guardado: float
+    monto_restante: float
+    progreso_global_porcentaje: float
 
     # Movimientos
     total_movimientos: int
     total_aportes: int
     total_retiros: int
-    suma_aportes: Decimal
-    suma_retiros: Decimal
+    suma_aportes: float
+    suma_retiros: float
 
     # Promedios
-    promedio_aporte: Decimal
-    promedio_cumplimiento_objetivos: Decimal  # % promedio de cumplimiento
+    promedio_aporte: float
+    promedio_cumplimiento_objetivos: float  # % promedio de cumplimiento
+    tasa_dolar_blue: Optional[float] = None
 
     class Config:
         from_attributes = True

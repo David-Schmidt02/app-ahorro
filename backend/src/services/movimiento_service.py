@@ -24,7 +24,7 @@ class MovimientoService:
         self.usuario_repository = usuario_repository
         self.tasa_cambio_service = tasa_cambio_service
 
-    def crear_movimiento(
+    async def crear_movimiento(
         self,
         monto: Decimal,
         moneda: Moneda,
@@ -66,7 +66,7 @@ class MovimientoService:
         # Convertir monto si las monedas son diferentes
         monto_convertido = monto
         if moneda != objetivo.moneda:
-            monto_convertido = self.tasa_cambio_service.convertir(
+            monto_convertido = await self.tasa_cambio_service.convertir(
                 monto=monto,
                 moneda_origen=moneda,
                 moneda_destino=objetivo.moneda
@@ -77,6 +77,9 @@ class MovimientoService:
             objetivo.agregar_monto(monto_convertido)
         elif tipo == TipoMovimiento.RETIRO:
             objetivo.retirar_monto(monto_convertido)
+
+        from datetime import datetime
+        objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
         # Persistir cambios en el objetivo
         actualizado = self.objetivo_repository.actualizar(objetivo)
@@ -151,7 +154,7 @@ class MovimientoService:
         """
         return self.repository.listar_recientes(limite)
 
-    def actualizar_movimiento(
+    async def actualizar_movimiento(
         self,
         movimiento_id: int,
         monto: Optional[Decimal] = None,
@@ -203,7 +206,7 @@ class MovimientoService:
             # Convertir monto anterior a moneda del objetivo
             monto_anterior_convertido = monto_anterior
             if moneda_anterior != objetivo.moneda:
-                monto_anterior_convertido = self.tasa_cambio_service.convertir(
+                monto_anterior_convertido = await self.tasa_cambio_service.convertir(
                     monto=monto_anterior,
                     moneda_origen=moneda_anterior,
                     moneda_destino=objetivo.moneda
@@ -218,7 +221,7 @@ class MovimientoService:
             # Convertir monto nuevo a moneda del objetivo
             monto_nuevo_convertido = monto_nuevo
             if moneda_nueva != objetivo.moneda:
-                monto_nuevo_convertido = self.tasa_cambio_service.convertir(
+                monto_nuevo_convertido = await self.tasa_cambio_service.convertir(
                     monto=monto_nuevo,
                     moneda_origen=moneda_nueva,
                     moneda_destino=objetivo.moneda
@@ -229,6 +232,9 @@ class MovimientoService:
                 objetivo.agregar_monto(monto_nuevo_convertido)
             elif tipo_nuevo == TipoMovimiento.RETIRO:
                 objetivo.retirar_monto(monto_nuevo_convertido)
+
+            from datetime import datetime
+            objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
             # Persistir cambios en el objetivo
             actualizado = self.objetivo_repository.actualizar(objetivo)
@@ -254,7 +260,7 @@ class MovimientoService:
 
         return movimiento_actualizado
 
-    def eliminar_movimiento(self, movimiento_id: int) -> None:
+    async def eliminar_movimiento(self, movimiento_id: int) -> None:
         """
         Elimina un movimiento y revierte su efecto en el objetivo.
 
@@ -278,7 +284,7 @@ class MovimientoService:
         # Convertir monto si es necesario
         monto_convertido = movimiento.monto
         if movimiento.moneda != objetivo.moneda:
-            monto_convertido = self.tasa_cambio_service.convertir(
+            monto_convertido = await self.tasa_cambio_service.convertir(
                 monto=movimiento.monto,
                 moneda_origen=movimiento.moneda,
                 moneda_destino=objetivo.moneda
@@ -291,6 +297,9 @@ class MovimientoService:
         elif movimiento.tipo == TipoMovimiento.RETIRO:
             # Si fue un retiro, agregar el monto de vuelta
             objetivo.agregar_monto(monto_convertido)
+
+        from datetime import datetime
+        objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
         # Persistir cambios en el objetivo
         actualizado = self.objetivo_repository.actualizar(objetivo)

@@ -3,6 +3,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 from dateutil.relativedelta import relativedelta
+import json
 
 from src.domain.enums import Moneda, EstadoObjetivo
 
@@ -22,6 +23,7 @@ class Objetivo:
         estado: EstadoObjetivo = EstadoObjetivo.ACTIVO,
         es_prioritario: bool = False,
         completado: bool = False,
+        historial_progreso: str = "[]",
         id: Optional[int] = None,
         fecha_creacion: Optional[datetime] = None
     ):
@@ -36,6 +38,7 @@ class Objetivo:
         self.estado = estado
         self.es_prioritario = es_prioritario
         self.completado = completado
+        self.historial_progreso = historial_progreso
 
         self._validar_invariantes()
 
@@ -175,6 +178,19 @@ class Objetivo:
             raise ValueError("No se puede reactivar un objetivo completado")
 
         self.estado = EstadoObjetivo.ACTIVO
+
+    def agregar_historial(self, fecha: datetime, monto_acumulado: Decimal) -> None:
+        """Agrega un punto en el tiempo al historial serializado de progreso."""
+        try:
+            historial = json.loads(self.historial_progreso)
+        except json.JSONDecodeError:
+            historial = []
+            
+        historial.append({
+            "fecha": fecha.isoformat(),
+            "monto_acumulado": float(monto_acumulado)
+        })
+        self.historial_progreso = json.dumps(historial)
 
     def __repr__(self) -> str:
         return f"<Objetivo(id={self.id}, nombre='{self.nombre}', monto={self.monto_actual}/{self.monto_objetivo} {self.moneda})>"

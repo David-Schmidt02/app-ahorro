@@ -32,16 +32,23 @@ class ObjetivoUpdate(BaseModel):
     estado: Optional[EstadoObjetivo] = None
 
 
+class ProgresoItem(BaseModel):
+    """Schema para representar el progreso del acumulado temporal en el historial del objetivo."""
+    fecha: datetime
+    monto_acumulado: float
+
+
 class ObjetivoResponse(ObjetivoBase):
     """Schema para respuesta de Objetivo."""
     id: int
-    monto_actual: Decimal
+    monto_actual: float
     estado: EstadoObjetivo
     es_prioritario: bool
     completado: bool
     fecha_creacion: datetime
-    porcentaje_completado: Decimal
-    pago_mensual_requerido: Decimal
+    porcentaje_completado: float
+    pago_mensual_requerido: float
+    historial_progreso: list[ProgresoItem] = []
 
     class Config:
         from_attributes = True

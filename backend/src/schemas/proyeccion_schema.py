@@ -8,8 +8,8 @@ from pydantic import BaseModel
 class ProyeccionResponse(BaseModel):
     """Schema para proyección de cumplimiento de un objetivo."""
     objetivo_id: int
-    monto_restante: Decimal
-    promedio_mensual_aportes: Decimal
+    monto_restante: float
+    promedio_mensual_aportes: float
     meses_estimados_restantes: Optional[int]
     fecha_cumplimiento_estimada: Optional[date]
     mensaje: str

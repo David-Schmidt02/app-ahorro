@@ -65,6 +65,7 @@ class ObjetivoORM(Base):
     estado = Column(SQLEnum(EstadoObjetivo), default=EstadoObjetivo.ACTIVO, nullable=False)
     es_prioritario = Column(Boolean, default=False, nullable=False)
     completado = Column(Boolean, default=False, nullable=False)
+    historial_progreso = Column(Text, default="[]", nullable=False)
 
     # Relaciones
     movimientos = relationship("MovimientoORM", back_populates="objetivo", cascade="all, delete-orphan")
