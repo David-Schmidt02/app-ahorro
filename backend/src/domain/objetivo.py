@@ -50,7 +50,8 @@ class Objetivo:
         if self.monto_actual < 0:
             raise ValueError("El monto actual no puede ser negativo")
 
-        if self.fecha_limite < date.today() and self.estado == EstadoObjetivo.ACTIVO:
+        # Solo validar en creación (id is None), no cuando se carga desde DB
+        if self.id is None and self.fecha_limite < date.today() and self.estado == EstadoObjetivo.ACTIVO:
             raise ValueError("La fecha límite no puede ser anterior a hoy para objetivos activos")
 
     def postergar_fecha_limite(self, nueva_fecha: date) -> None:

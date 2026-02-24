@@ -1,4 +1,7 @@
-# App de Ahorro - Configuration (ÚNICA fuente de configuración)
+# App de Ahorro - Configuration
+# IMPORTANTE: En producción (Railway), las variables de entorno sobreescriben este archivo:
+#   DATABASE_URL  → database.url
+#   SECRET_KEY    → jwt.secret_key
 
 app:
   name: "App de Ahorro"
@@ -6,6 +9,7 @@ app:
   api_prefix: "/api/v1"
 
 database:
+  # Desarrollo local: SQLite. En producción Railway inyecta DATABASE_URL automáticamente.
   url: "sqlite:///./app_ahorro.db"
   pool_size: 5
   max_overflow: 10
@@ -13,10 +17,10 @@ database:
 
 jwt:
   enabled: true
-  secret_key: "your-secret-key-change-in-production-min-32-chars-long"
+  # En producción sobreescribir con la env var SECRET_KEY
+  secret_key: "dev-secret-key-change-in-production-min-32-chars"
   algorithm: "HS256"
   access_token_expire_minutes: 30
-
 
 rate_limit:
   enabled: false
@@ -33,15 +37,15 @@ logging:
   console:
     enabled: true
   file:
-    enabled: true
+    enabled: false  # Desactivado en producción (Railway maneja los logs)
     path: "logs/app.log"
     max_bytes: 10485760  # 10MB
-    backup_count: 7      # 7 days retention
+    backup_count: 7
     rotation: "daily"
   suppress_uvicorn: true
 
 config_reload:
-  enabled: true
+  enabled: false  # Sin sentido en Railway (el archivo no cambia en runtime)
   check_interval_seconds: 30
 
 test_user:

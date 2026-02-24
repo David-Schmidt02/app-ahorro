@@ -111,7 +111,8 @@ def _get_config_path() -> Path:
 
 def load_config() -> Settings:
     """
-    Load configuration from config.yaml.
+    Load configuration from config.yaml, with environment variable overrides.
+    Environment variables take precedence (used in production / Railway).
 
     Returns:
         Settings: Validated settings object
@@ -120,6 +121,19 @@ def load_config() -> Settings:
 
     with open(config_path, 'r', encoding='utf-8') as f:
         config_dict = yaml.safe_load(f)
+
+    # DATABASE_URL override (Railway injects this automatically)
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        # psycopg2 requires postgresql:// — Railway sometimes uses postgres://
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        config_dict["database"]["url"] = db_url
+
+    # SECRET_KEY override
+    secret_key = os.environ.get("SECRET_KEY")
+    if secret_key:
+        config_dict["jwt"]["secret_key"] = secret_key
 
     return Settings(**config_dict)
 

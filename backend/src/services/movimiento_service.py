@@ -63,16 +63,17 @@ class MovimientoService:
         if not objetivo:
             raise KeyError(f"No se encontró objetivo con id {objetivo_id}")
 
-        # Convertir monto si las monedas son diferentes
+        # Convertir monto siempre a USD para guardarlo
         monto_convertido = monto
-        if moneda != objetivo.moneda:
+        if moneda != Moneda.USD:
             monto_convertido = await self.tasa_cambio_service.convertir(
                 monto=monto,
                 moneda_origen=moneda,
-                moneda_destino=objetivo.moneda
+                moneda_destino=Moneda.USD
             )
 
         # Aplicar el movimiento al objetivo según su tipo
+        # Nota: El objetivo ahora también debería estar siempre en USD
         if tipo == TipoMovimiento.APORTE:
             objetivo.agregar_monto(monto_convertido)
         elif tipo == TipoMovimiento.RETIRO:
@@ -86,10 +87,10 @@ class MovimientoService:
         if not actualizado:
             raise ValueError(f"No se pudo actualizar el objetivo {objetivo_id} al aplicar movimiento")
 
-        # Crear entidad de movimiento
+        # Crear entidad de movimiento, guardando siempre en USD
         movimiento = Movimiento(
-            monto=monto,
-            moneda=moneda,
+            monto=monto_convertido,
+            moneda=Moneda.USD,
             tipo=tipo,
             usuario_id=usuario_id,
             objetivo_id=objetivo_id,
@@ -193,45 +194,35 @@ class MovimientoService:
 
         # Si se cambia monto, moneda o tipo, hay que revertir el efecto anterior y aplicar el nuevo
         if monto is not None or moneda is not None or tipo is not None:
-            # Valores anteriores
-            monto_anterior = movimiento_actual.monto
-            moneda_anterior = movimiento_actual.moneda
+            # Valores anteriores (siempre estaban en USD en la BBDD)
+            monto_anterior_usd = movimiento_actual.monto
             tipo_anterior = movimiento_actual.tipo
 
-            # Valores nuevos (usar actuales si no se especificaron)
-            monto_nuevo = monto if monto is not None else monto_anterior
-            moneda_nueva = moneda if moneda is not None else moneda_anterior
+            # Valores nuevos (los proveídos, o los actuales asumiendo que ya son USD)
+            monto_nuevo_bruto = monto if monto is not None else movimiento_actual.monto
+            moneda_nueva = moneda if moneda is not None else Moneda.USD
             tipo_nuevo = tipo if tipo is not None else tipo_anterior
 
-            # Convertir monto anterior a moneda del objetivo
-            monto_anterior_convertido = monto_anterior
-            if moneda_anterior != objetivo.moneda:
-                monto_anterior_convertido = await self.tasa_cambio_service.convertir(
-                    monto=monto_anterior,
-                    moneda_origen=moneda_anterior,
-                    moneda_destino=objetivo.moneda
-                )
-
-            # Revertir efecto anterior
+            # Revertir efecto anterior (que ya estaba en USD)
             if tipo_anterior == TipoMovimiento.APORTE:
-                objetivo.retirar_monto(monto_anterior_convertido)
+                objetivo.retirar_monto(monto_anterior_usd)
             elif tipo_anterior == TipoMovimiento.RETIRO:
-                objetivo.agregar_monto(monto_anterior_convertido)
+                objetivo.agregar_monto(monto_anterior_usd)
 
-            # Convertir monto nuevo a moneda del objetivo
-            monto_nuevo_convertido = monto_nuevo
-            if moneda_nueva != objetivo.moneda:
-                monto_nuevo_convertido = await self.tasa_cambio_service.convertir(
-                    monto=monto_nuevo,
+            # Convertir monto nuevo a USD
+            monto_nuevo_usd = monto_nuevo_bruto
+            if moneda_nueva != Moneda.USD:
+                monto_nuevo_usd = await self.tasa_cambio_service.convertir(
+                    monto=monto_nuevo_bruto,
                     moneda_origen=moneda_nueva,
-                    moneda_destino=objetivo.moneda
+                    moneda_destino=Moneda.USD
                 )
 
-            # Aplicar efecto nuevo
+            # Aplicar efecto nuevo en USD
             if tipo_nuevo == TipoMovimiento.APORTE:
-                objetivo.agregar_monto(monto_nuevo_convertido)
+                objetivo.agregar_monto(monto_nuevo_usd)
             elif tipo_nuevo == TipoMovimiento.RETIRO:
-                objetivo.retirar_monto(monto_nuevo_convertido)
+                objetivo.retirar_monto(monto_nuevo_usd)
 
             from datetime import datetime
             objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
@@ -241,11 +232,12 @@ class MovimientoService:
             if not actualizado:
                 raise ValueError(f"No se pudo actualizar el objetivo {objetivo.id}")
 
-        # Actualizar campos del movimiento
-        if monto is not None:
-            movimiento_actual.monto = monto
-        if moneda is not None:
-            movimiento_actual.moneda = moneda
+            # Al actualizar, el movimiento guardará la info convertida a USD
+            if monto is not None or moneda is not None:
+                movimiento_actual.monto = monto_nuevo_usd
+                movimiento_actual.moneda = Moneda.USD
+
+        # Actualizar campos del movimiento general
         if tipo is not None:
             movimiento_actual.tipo = tipo
         if motivo is not None:
@@ -281,14 +273,8 @@ class MovimientoService:
         if not objetivo:
             raise KeyError(f"No se encontró el objetivo asociado al movimiento (id {movimiento.objetivo_id})")
 
-        # Convertir monto si es necesario
+        # Como el movimiento ya está en USD, lo revertimos directamente
         monto_convertido = movimiento.monto
-        if movimiento.moneda != objetivo.moneda:
-            monto_convertido = await self.tasa_cambio_service.convertir(
-                monto=movimiento.monto,
-                moneda_origen=movimiento.moneda,
-                moneda_destino=objetivo.moneda
-            )
 
         # Revertir el efecto del movimiento en el objetivo
         if movimiento.tipo == TipoMovimiento.APORTE:

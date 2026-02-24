@@ -11,10 +11,15 @@ from src.domain.enums import Moneda, EstadoObjetivo
 class ObjetivoService:
     """Service que orquesta la lógica de negocio de objetivos."""
 
-    def __init__(self, repository: ObjetivoRepository):
+    def __init__(
+        self,
+        repository: ObjetivoRepository,
+        tasa_cambio_service: 'TasaCambioService'
+    ):
         self.repository = repository
+        self.tasa_cambio_service = tasa_cambio_service
 
-    def crear_objetivo(
+    async def crear_objetivo(
         self,
         nombre: str,
         monto_objetivo: Decimal,
@@ -37,11 +42,20 @@ class ObjetivoService:
         Returns:
             Objetivo: Objetivo creado
         """
-        # Crear entidad de dominio (valida reglas en __init__)
+        # Convertir monto objetivo a USD siempre
+        monto_convertido = monto_objetivo
+        if moneda != Moneda.USD:
+            monto_convertido = await self.tasa_cambio_service.convertir(
+                monto=monto_objetivo,
+                moneda_origen=moneda,
+                moneda_destino=Moneda.USD
+            )
+
+        # Crear entidad de dominio (valida reglas en __init__), guardando en USD
         objetivo = Objetivo(
             nombre=nombre,
-            monto_objetivo=monto_objetivo,
-            moneda=moneda,
+            monto_objetivo=monto_convertido,
+            moneda=Moneda.USD,
             fecha_limite=fecha_limite,
             descripcion=descripcion,
             es_prioritario=es_prioritario
@@ -110,7 +124,7 @@ class ObjetivoService:
         """
         return self.repository.listar_por_estado(estado)
 
-    def actualizar_objetivo(
+    async def actualizar_objetivo(
         self,
         objetivo_id: int,
         nombre: Optional[str] = None,
@@ -150,11 +164,22 @@ class ObjetivoService:
         if descripcion is not None:
             objetivo.descripcion = descripcion
 
-        if monto_objetivo is not None:
-            objetivo.monto_objetivo = monto_objetivo
+        if monto_objetivo is not None or moneda is not None:
+            # Determinar nuevo monto y moneda (usando actuales si no se proveen)
+            monto_nuevo = monto_objetivo if monto_objetivo is not None else objetivo.monto_objetivo
+            moneda_nueva = moneda if moneda is not None else objetivo.moneda
 
-        if moneda is not None:
-            objetivo.moneda = moneda
+            monto_nuevo_usd = monto_nuevo
+            # Si la moneda proveída (o la actual en caso de no proveerse y ser diferente a USD - aunque ya debería ser USD) no es USD
+            if moneda_nueva != Moneda.USD:
+                monto_nuevo_usd = await self.tasa_cambio_service.convertir(
+                    monto=monto_nuevo,
+                    moneda_origen=moneda_nueva,
+                    moneda_destino=Moneda.USD
+                )
+
+            objetivo.monto_objetivo = monto_nuevo_usd
+            objetivo.moneda = Moneda.USD
 
         if fecha_limite is not None:
             objetivo.fecha_limite = fecha_limite

@@ -8,13 +8,33 @@ from sqlalchemy.orm import sessionmaker, relationship
 from src.config import settings
 from src.domain.enums import Moneda, EstadoObjetivo, TipoMovimiento, TipoCotizacion
 
+
+def _build_engine(url: str, pool_size: int, max_overflow: int, echo: bool):
+    """Crea el engine SQLAlchemy con la config apropiada según el tipo de BD."""
+    if url.startswith("sqlite"):
+        # SQLite: no soporta pool_size/max_overflow, necesita check_same_thread=False
+        return create_engine(
+            url,
+            echo=echo,
+            pool_pre_ping=True,
+            connect_args={"check_same_thread": False}
+        )
+    # PostgreSQL (y otros)
+    return create_engine(
+        url,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        echo=echo,
+        pool_pre_ping=True
+    )
+
+
 # Crear engine de SQLAlchemy
-engine = create_engine(
+engine = _build_engine(
     settings.database.url,
-    pool_size=settings.database.pool_size,
-    max_overflow=settings.database.max_overflow,
-    echo=settings.database.echo,
-    pool_pre_ping=True
+    settings.database.pool_size,
+    settings.database.max_overflow,
+    settings.database.echo
 )
 
 # Crear session factory

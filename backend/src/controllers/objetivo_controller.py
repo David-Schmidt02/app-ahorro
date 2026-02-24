@@ -1,9 +1,6 @@
 """Controller para gestión de objetivos."""
 from typing import List
-import csv
-import io
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -26,17 +23,19 @@ from src.domain.enums import EstadoObjetivo
 router = APIRouter(prefix="/objetivos", tags=["Objetivos"])
 
 
+from src.repositories.tasa_cambio_repository import TasaCambioRepository
+from src.services.tasa_cambio_service import TasaCambioService
+
 def get_objetivo_service(db: Session = Depends(get_db)) -> ObjetivoService:
     """Dependency que proporciona el servicio de objetivo."""
     repository = ObjetivoRepository(db)
-    return ObjetivoService(repository)
+    tasa_cambio_repo = TasaCambioRepository(db)
+    tasa_cambio_service = TasaCambioService(tasa_cambio_repo)
+    return ObjetivoService(repository, tasa_cambio_service)
 
 
 def get_proyeccion_service(db: Session = Depends(get_db)) -> ProyeccionService:
     """Dependency que proporciona el servicio de proyecciones."""
-    from src.repositories.tasa_cambio_repository import TasaCambioRepository
-    from src.services.tasa_cambio_service import TasaCambioService
-    
     objetivo_repo = ObjetivoRepository(db)
     movimiento_repo = MovimientoRepository(db)
     tasa_repo = TasaCambioRepository(db)
@@ -46,13 +45,13 @@ def get_proyeccion_service(db: Session = Depends(get_db)) -> ProyeccionService:
 
 
 @router.post("/", response_model=ObjetivoResponse, status_code=status.HTTP_201_CREATED)
-def crear_objetivo(
+async def crear_objetivo(
     objetivo_data: ObjetivoCreate,
     service: ObjetivoService = Depends(get_objetivo_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Crea un nuevo objetivo."""
-    objetivo = service.crear_objetivo(
+    objetivo = await service.crear_objetivo(
         nombre=objetivo_data.nombre,
         monto_objetivo=objetivo_data.monto_objetivo,
         moneda=objetivo_data.moneda,
@@ -106,14 +105,14 @@ def obtener_objetivo(
 
 
 @router.put("/{objetivo_id}", response_model=ObjetivoResponse)
-def actualizar_objetivo(
+async def actualizar_objetivo(
     objetivo_id: int,
     objetivo_data: ObjetivoUpdate,
     service: ObjetivoService = Depends(get_objetivo_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Actualiza un objetivo existente."""
-    objetivo = service.actualizar_objetivo(
+    objetivo = await service.actualizar_objetivo(
         objetivo_id=objetivo_id,
         nombre=objetivo_data.nombre,
         descripcion=objetivo_data.descripcion,
@@ -199,51 +198,6 @@ async def obtener_proyeccion(
     proyeccion = await service.calcular_proyeccion(objetivo_id)
     return proyeccion
 
-
-@router.get("/exportar/csv")
-def exportar_objetivos_csv(
-    service: ObjetivoService = Depends(get_objetivo_service),
-    current_user: Usuario = Depends(obtener_usuario_actual)
-):
-    """Exporta todos los objetivos del usuario a un archivo CSV."""
-    objetivos = service.listar_objetivos()
-
-    # Crear CSV en memoria
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Encabezados
-    writer.writerow([
-        'ID', 'Nombre', 'Descripción', 'Monto Objetivo', 'Moneda',
-        'Monto Acumulado', '% Completado', 'Estado', 'Es Prioritario',
-        'Fecha Límite', 'Fecha Creación'
-    ])
-
-    # Datos
-    for obj in objetivos:
-        porcentaje = obj.calcular_porcentaje_completado()
-        monto_acumulado = obj.monto_objetivo * (porcentaje / 100)
-        writer.writerow([
-            obj.id,
-            obj.nombre,
-            obj.descripcion or '',
-            float(obj.monto_objetivo),
-            obj.moneda,
-            float(monto_acumulado),
-            float(porcentaje),
-            obj.estado.value,
-            'Sí' if obj.es_prioritario else 'No',
-            obj.fecha_limite.strftime('%Y-%m-%d') if obj.fecha_limite else '',
-            obj.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')
-        ])
-
-    # Preparar respuesta
-    output.seek(0)
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=objetivos.csv"}
-    )
 
 
 @router.delete("/{objetivo_id}", status_code=status.HTTP_204_NO_CONTENT)

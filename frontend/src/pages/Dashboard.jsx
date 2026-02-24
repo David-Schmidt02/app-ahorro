@@ -79,12 +79,14 @@ const Dashboard = () => {
                 setDolarRate(Number(stats.tasa_dolar_blue));
             }
 
+            const currentRate = stats.tasa_dolar_blue > 0 ? Number(stats.tasa_dolar_blue) : (dolarRate || 1);
+            
             setTotales({
                 guardado: stats.monto_total_guardado || 0,
                 meta: stats.monto_total_objetivos || 0,
                 progreso: stats.progreso_global_porcentaje || 0,
-                patrimonio_ars: stats.monto_total_guardado || 0,
-                patrimonio_usd: 0, // Se calcula dinámicamente o se actualiza luego
+                patrimonio_usd: stats.monto_total_guardado || 0,
+                patrimonio_ars: (stats.monto_total_guardado || 0) * currentRate,
                 objetivos_completados: stats.objetivos_completados || 0,
                 objetivos_totales: stats.total_objetivos || 0
             });
@@ -149,7 +151,7 @@ const Dashboard = () => {
                         <h3>Patrimonio Total</h3>
                         <p style={{ fontSize: '1.2rem' }}>AR$ {Number(totales.patrimonio_ars || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         <p style={{ fontSize: '0.9rem', opacity: 0.8, color: 'var(--accent-success)' }}>
-                            US$ {Number((totales.patrimonio_ars || 0) / (dolarRate || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            US$ {Number(totales.patrimonio_usd || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </p>
                     </div>
                 </div>
@@ -249,7 +251,7 @@ const Dashboard = () => {
                                         ${Math.round(Number(obj.monto_objetivo || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                     </div>
                                     <div className="objective-dates">
-                                        Vence: {obj.fecha_limite ? new Date(obj.fecha_limite).toLocaleDateString() : 'Sin fecha'}
+                                        Vence: {obj.fecha_limite ? new Date(obj.fecha_limite + 'T00:00:00').toLocaleDateString() : 'Sin fecha'}
                                     </div>
                                 </div>
 

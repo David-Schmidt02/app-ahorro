@@ -412,17 +412,17 @@ const ObjectiveDetail = () => {
               </div>
           </div>
 
-          {projection && projection.estimacion_meses > 0 && (
+          {projection && projection.meses_estimados_restantes > 0 && (
             <div className="detail-info-card glass-panel" style={{ border: '1px solid var(--accent-success)', background: 'rgba(16, 185, 129, 0.05)', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h4 style={{ color: 'var(--accent-success)', marginBottom: '0.25rem' }}>Proyección de Cumplimiento</h4>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  Basado en tu ritmo de ahorro de <strong style={{color: 'var(--text-primary)'}}>${projection.ahorro_promedio_mensual.toLocaleString()}</strong> por mes.
+                  Basado en tu ritmo de ahorro de <strong style={{color: 'var(--text-primary)'}}>${Number(projection.promedio_mensual_aportes).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> por mes.
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>~ {projection.estimacion_meses} meses</p>
-                <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>Meta: {new Date(projection.fecha_estimada).toLocaleDateString()}</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>~ {projection.meses_estimados_restantes} meses</p>
+                <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{projection.mensaje}</p>
               </div>
             </div>
           )}
@@ -463,7 +463,12 @@ const ObjectiveDetail = () => {
             </div>
             {objective.fecha_limite && (
               <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                Vencimiento estimado: {new Date(objective.fecha_limite).toLocaleDateString()}
+                Vencimiento establecido: {new Date(objective.fecha_limite + 'T00:00:00').toLocaleDateString()}
+              </p>
+            )}
+            {projection && projection.fecha_cumplimiento_estimada && (
+              <p style={{ marginTop: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Vencimiento estimado: {new Date(projection.fecha_cumplimiento_estimada + 'T00:00:00').toLocaleDateString()}
               </p>
             )}
           </div>

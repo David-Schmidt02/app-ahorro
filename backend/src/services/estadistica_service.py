@@ -6,7 +6,7 @@ from src.services.tasa_cambio_service import TasaCambioService
 
 from src.repositories.objetivo_repository import ObjetivoRepository
 from src.repositories.movimiento_repository import MovimientoRepository
-from src.domain.enums import EstadoObjetivo, TipoMovimiento
+from src.domain.enums import EstadoObjetivo, TipoMovimiento, Moneda
 from src.log.logging_config import get_logger
 
 logger = get_logger("estadistica_service")
@@ -44,8 +44,9 @@ class EstadisticaService:
         objetivos_completados = sum(1 for obj in objetivos if obj.estado == EstadoObjetivo.COMPLETADO)
         objetivos_pausados = sum(1 for obj in objetivos if obj.estado == EstadoObjetivo.PAUSADO)
 
-        # Montos de objetivos
+        # Montos de objetivos (Ya están asumiéndose en USD en la BBDD)
         monto_total_objetivos = sum(obj.monto_objetivo for obj in objetivos)
+        
         monto_total_guardado = Decimal(0)
         for obj in objetivos:
             porcentaje = obj.calcular_porcentaje_completado()
@@ -64,6 +65,8 @@ class EstadisticaService:
 
         total_aportes = len(aportes)
         total_retiros = len(retiros)
+        
+        # Como ahora todo está en USD, simplemente sumamos
         suma_aportes = sum(m.monto for m in aportes)
         suma_retiros = sum(m.monto for m in retiros)
 

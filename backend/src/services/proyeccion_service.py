@@ -88,15 +88,8 @@ class ProyeccionService:
             meses_transcurridos = max(Decimal(1), Decimal(delta.days) / Decimal(30))
 
         # Calcular promedio mensual
-        suma_aportes = Decimal("0")
-        for m in aportes:
-            monto_convertido = await self.tasa_cambio_service.convertir(
-                monto=m.monto,
-                moneda_origen=m.moneda,
-                moneda_destino=objetivo.moneda
-            )
-            suma_aportes += monto_convertido
-            
+        # Ya no requerimos convertir porque 'aportes' ya están en USD como el objetivo
+        suma_aportes = sum(m.monto for m in aportes)
         promedio_mensual = suma_aportes / Decimal(meses_transcurridos)
 
         # Proyectar meses restantes

@@ -1,9 +1,6 @@
 """Controller para gestión de movimientos."""
 from typing import List
-import csv
-import io
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -61,13 +58,18 @@ async def crear_movimiento(
 @router.get("/", response_model=List[MovimientoResponse])
 def listar_movimientos(
     objetivo_id: int = Query(None, description="Filtrar por objetivo"),
-    usuario_id: int = Query(None, description="Filtrar por usuario"),
     limite: int = Query(None, ge=1, le=100, description="Limitar resultados"),
     service: MovimientoService = Depends(get_movimiento_service),
     current_user: Usuario = Depends(obtener_usuario_actual)
 ):
     """Lista movimientos con filtros opcionales."""
-    movimientos = service.listar_todos_movimientos()
+    if objetivo_id:
+        movimientos = service.listar_movimientos_por_objetivo(objetivo_id)
+    else:
+        movimientos = service.listar_todos_movimientos()
+
+    if limite:
+        movimientos = movimientos[:limite]
 
     return movimientos
 
@@ -101,49 +103,6 @@ async def actualizar_movimiento(
     )
     return movimiento
 
-
-@router.get("/exportar/csv")
-def exportar_movimientos_csv(
-    objetivo_id: int = Query(None, description="Filtrar por objetivo"),
-    service: MovimientoService = Depends(get_movimiento_service),
-    current_user: Usuario = Depends(obtener_usuario_actual)
-):
-    """Exporta movimientos a un archivo CSV."""
-    if objetivo_id:
-        movimientos = service.listar_movimientos_por_objetivo(objetivo_id)
-    else:
-        movimientos = service.listar_movimientos_por_usuario(current_user.id)
-
-    # Crear CSV en memoria
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Encabezados
-    writer.writerow([
-        'ID', 'Fecha', 'Tipo', 'Monto', 'Moneda',
-        'Objetivo ID', 'Motivo', 'Nota'
-    ])
-
-    # Datos
-    for mov in movimientos:
-        writer.writerow([
-            mov.id,
-            mov.fecha.strftime('%Y-%m-%d %H:%M:%S'),
-            mov.tipo.value,
-            float(mov.monto),
-            mov.moneda,
-            mov.objetivo_id,
-            mov.motivo or '',
-            mov.nota or ''
-        ])
-
-    # Preparar respuesta
-    output.seek(0)
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=movimientos.csv"}
-    )
 
 
 @router.delete("/{movimiento_id}", status_code=status.HTTP_204_NO_CONTENT)
