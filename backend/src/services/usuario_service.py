@@ -1,20 +1,9 @@
 """Service para la lógica de negocio de Usuario."""
 from typing import List
-from passlib.context import CryptContext
+import bcrypt
 
 from src.domain.usuario import Usuario
 from src.repositories.usuario_repository import UsuarioRepository
-
-
-import bcrypt
-try:
-    # Workaround para compatibilidad entre passlib y bcrypt >= 4.0
-    bcrypt.__about__ = type("about", (), {"__version__": bcrypt.__version__})
-except (AttributeError, ImportError):
-    pass
-
-# Configuración para hasheo de contraseñas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UsuarioService:
@@ -25,11 +14,13 @@ class UsuarioService:
 
     def _hash_password(self, password: str) -> str:
         """Hashea una contraseña."""
-        return pwd_context.hash(password)
+        password_bytes = password.encode("utf-8")[:72]
+        return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
     def _verificar_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verifica si una contraseña coincide con su hash."""
-        return pwd_context.verify(plain_password, hashed_password)
+        password_bytes = plain_password.encode("utf-8")[:72]
+        return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
 
     def crear_usuario(self, nombre: str, email: str, password: str) -> Usuario:
         """

@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 // Páginas Pendientes
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ObjectiveDetail from './pages/ObjectiveDetail';
 
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         
         {/* Rutas Privadas / Plataforma */}
         <Route element={<PrivateRoute />}>

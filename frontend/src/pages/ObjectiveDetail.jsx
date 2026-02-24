@@ -1,13 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowBack, CheckCircleOutline, PauseCircleOutline, PlayCircleOutline, DeleteOutline, Edit, Add, Remove, InfoOutlined } from '@mui/icons-material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../api/axios';
 import Swal from 'sweetalert2';
 import Modal from '../components/Modal';
+import TutorialOverlay from '../components/TutorialOverlay';
+import { useTutorial } from '../hooks/useTutorial';
 import '../styles/objective-detail.css';
 import { formatAmount, cleanAmount } from '../utils/formatters';
 import { useCurrency } from '../context/CurrencyContext';
+
+const DETAIL_TUTORIAL_STEPS = [
+  {
+    title: 'Los números importantes',
+    description: 'Acá ves cuánto llevamos acumulado, cuánto falta y cuál es la meta total. Todo en la moneda que elijas arriba.',
+    selector: '.detail-info-grid',
+    position: 'bottom',
+  },
+  {
+    title: 'Cómo va el ahorro',
+    description: 'El gráfico muestra cómo fue creciendo el dinero guardado con el tiempo. Abajo tenemos unas fechas tentativas.',
+    selector: '.chart-section',
+    position: 'top',
+  },
+  {
+    title: 'Sumar o retirar plata',
+    description: 'Cada vez que guardamos algo o necesitamos retirar, lo registramos acá. Ponemos el monto, la moneda y opcionalmente el motivo.',
+    selector: '.register-movement-panel',
+    position: 'left',
+  },
+  {
+    title: 'Acciones del objetivo',
+    description: 'Desde acá podés modificar la meta, pausarla si la ponemos en espera, marcarla como cumplida cuando llegamos, o eliminarla.',
+    selector: '.actions-panel',
+    position: 'left',
+  },
+  {
+    title: 'Historial de movimientos',
+    description: 'Todos los aportes y retiros que hicimos en esta meta, ordenados por fecha. Podés editar o borrar cualquiera si te equivocaste.',
+    selector: '.movements-history',
+    position: 'top',
+  },
+];
 
 const ObjectiveDetail = () => {
   const { id } = useParams();
@@ -32,6 +68,15 @@ const ObjectiveDetail = () => {
   const [hasMore, setHasMore] = useState(true);
   const [projection, setProjection] = useState(null);
   const LIMIT = 10;
+
+  const detailSteps = useMemo(() => {
+    const hasProjection = projection && projection.meses_estimados_restantes > 0;
+    return hasProjection
+      ? DETAIL_TUTORIAL_STEPS
+      : DETAIL_TUTORIAL_STEPS.filter(s => s.selector !== '.projection-card');
+  }, [projection]);
+
+  const tutorial = useTutorial(detailSteps);
 
   // Movement Edit State
   const [isEditMoveModalOpen, setIsEditMoveModalOpen] = useState(false);
@@ -281,7 +326,7 @@ const ObjectiveDetail = () => {
     }
   };
 
-  if (loading) return <div className="page-container" style={{ textAlign: 'center', marginTop: '5rem' }}><div className="glass-panel" style={{display: 'inline-block', padding: '2rem'}}>Cargando detalles...</div></div>;
+  if (loading) return <div className="page-container page-loader"><div className="spinner" /><span>Cargando detalles...</span></div>;
   if (error) return (
     <div className="page-container" style={{ textAlign: 'center', marginTop: '5rem' }}>
       <div className="glass-panel" style={{display: 'inline-block', borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)', padding: '2rem'}}>
@@ -334,6 +379,9 @@ const ObjectiveDetail = () => {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button className="tutorial-help-btn" onClick={tutorial.start}>
+            <HelpOutlineIcon fontSize="small" /> Tutorial
+          </button>
           <div className="status-badge" style={{ 
               textTransform: 'capitalize', 
               fontSize: '0.9rem', 
@@ -413,7 +461,7 @@ const ObjectiveDetail = () => {
           </div>
 
           {projection && projection.meses_estimados_restantes > 0 && (
-            <div className="detail-info-card glass-panel" style={{ border: '1px solid var(--accent-success)', background: 'rgba(16, 185, 129, 0.05)', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="detail-info-card glass-panel projection-card" style={{ border: '1px solid var(--accent-success)', background: 'rgba(16, 185, 129, 0.05)', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h4 style={{ color: 'var(--accent-success)', marginBottom: '0.25rem' }}>Proyección de Cumplimiento</h4>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
@@ -427,7 +475,7 @@ const ObjectiveDetail = () => {
             </div>
           )}
 
-          <div className="progress-section">
+          <div className="progress-section chart-section">
             <div className="progress-section-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <h4 style={{ margin: 0 }}>Evolución del Ahorro</h4>
@@ -473,7 +521,7 @@ const ObjectiveDetail = () => {
             )}
           </div>
 
-          <div className="progress-section">
+          <div className="progress-section movements-history">
              <div className="progress-section-header">
                <h4>Historial de Movimientos</h4>
              </div>
@@ -528,7 +576,7 @@ const ObjectiveDetail = () => {
         </div>
 
         <div className="detail-side-panel">
-          <div className="glass-panel" style={{ padding: '1rem' }}>
+          <div className="glass-panel register-movement-panel" style={{ padding: '1rem' }}>
              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Registrar Movimiento</h3>
              
              <div className="movement-tabs">
@@ -599,7 +647,7 @@ const ObjectiveDetail = () => {
              </form>
           </div>
 
-          <div className="glass-panel" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="glass-panel actions-panel" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
              <h3 style={{ marginBottom: '0.25rem', fontSize: '1.1rem' }}>Acciones</h3>
              <button type="button" className="btn-secondary" style={{ width: '100%' }} onClick={openEditModal}>
                 <Edit fontSize="small" /> Modificar Objetivo
@@ -625,6 +673,19 @@ const ObjectiveDetail = () => {
           </div>
         </div>
       </div>
+
+      <TutorialOverlay
+        active={tutorial.active}
+        step={tutorial.currentStep}
+        currentIndex={tutorial.currentIndex}
+        total={tutorial.total}
+        isFirst={tutorial.isFirst}
+        isLast={tutorial.isLast}
+        progress={tutorial.progress}
+        onNext={tutorial.next}
+        onPrev={tutorial.prev}
+        onFinish={tutorial.finish}
+      />
 
       {/* Edit Modal */}
       <Modal

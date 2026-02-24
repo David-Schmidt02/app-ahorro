@@ -7,8 +7,7 @@
 - [x] Eliminar todo lo que tiene que ver con csv
 - [x] Que se devuelva todo en dólares + la tasa de conversion. Si se almacena un movimiento/objetivo en pesos -> se convierte a dólares antes de persistir.
 - [x] Vencimiento establecido (manual) y Vencimiento estimado (regresión) mostrados por separado en el frontend.
-
-- [ ] Migrar a PostgreSQL y deployear en Railway
+- [x] Migrar a PostgreSQL y deployear en Railway
 
  Mi idea es generar dos cosas:
   1. Un tutorial muy ligero para la aplicacion, vi que un frontend developer realizó uno para un proyecto en

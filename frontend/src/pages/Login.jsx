@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
@@ -45,7 +45,7 @@ const Login = () => {
            <div className="auth-icon-wrapper">
              <LockOutlinedIcon className="auth-icon" fontSize="large" />
            </div>
-           <h2>Bienvenido de Vuelta</h2>
+           <h2>Buenas <span className="material-symbols-outlined heart-pulse" style={{ fontSize: '1.2em', verticalAlign: 'middle', color: '#e57373' }}>favorite</span></h2>
            <p className="text-secondary">Inicia sesión para gestionar tus ahorros</p>
         </div>
 
@@ -112,7 +112,12 @@ const Login = () => {
         </form>
         
         <div className="auth-footer">
-          <p className="text-muted">¿No tienes cuenta? Contacta al admin.</p>
+          <p className="text-muted">
+            ¿No tenés cuenta? Create una bichito de luz <span className="material-symbols-outlined" style={{ fontSize: '1em', verticalAlign: 'middle', color: '#FFD600', filter: 'drop-shadow(0 0 4px #FFD600)' }}>lightbulb_2</span>{' '}
+            <Link to="/register" className="auth-register-link">
+              Registrate
+            </Link>
+          </p>
         </div>
 
       </div>

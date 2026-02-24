@@ -93,6 +93,7 @@ class Settings(BaseModel):
     logging: LoggingConfig
     config_reload: ConfigReloadConfig
     test_user: TestUserConfig
+    registration_enabled: bool = False
 
 
 def _get_config_path() -> Path:
@@ -134,6 +135,11 @@ def load_config() -> Settings:
     secret_key = os.environ.get("SECRET_KEY")
     if secret_key:
         config_dict["jwt"]["secret_key"] = secret_key
+
+    # REGISTRATION_ENABLED override
+    reg_enabled = os.environ.get("REGISTRATION_ENABLED")
+    if reg_enabled is not None:
+        config_dict["registration_enabled"] = reg_enabled.lower() == "true"
 
     return Settings(**config_dict)
 

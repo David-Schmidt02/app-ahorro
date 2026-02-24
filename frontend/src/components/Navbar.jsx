@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import { jwtDecode } from 'jwt-decode';
 
 const Navbar = () => {
   const { logout, user } = useAuth();
@@ -16,19 +15,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  let userName = '';
-  const token = localStorage.getItem('token');
-  if (token) {
-      try {
-          const decoded = jwtDecode(token);
-          if (decoded.sub) {
-              userName = decoded.sub.split('@')[0];
-              userName = userName.charAt(0).toUpperCase() + userName.slice(1);
-          }
-      } catch (e) {
-          console.error("Error decoding token for greeting in Navbar");
-      }
-  }
+  const userName = user?.nombre || '';
 
   return (
     <nav className="navbar glass-panel">

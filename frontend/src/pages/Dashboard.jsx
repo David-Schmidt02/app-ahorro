@@ -11,14 +11,57 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
+import TutorialOverlay from '../components/TutorialOverlay';
+import { useTutorial } from '../hooks/useTutorial';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount } from '../utils/formatters';
 
+const TUTORIAL_STEPS = [
+  {
+    title: 'Hola, bichito de luz 💛',
+    description: 'Te armé esta pequeña app para que los dos podamos ver cómo van nuestros ahorros sin lio.',
+    selector: null,
+    position: 'center',
+  },
+  {
+    title: 'El resumen de todo',
+    description: 'Acá podés ver cuánto tenemos guardado en pesos y en dólares, cuántas metas ya cumplimos y cómo vamos en general.',
+    selector: '.summary-cards',
+    position: 'bottom',
+  },
+  {
+    title: 'Buscá lo que necesitás',
+    description: 'Si tenemos muchos objetivos, desde acá podés buscar por nombre o filtrar los que están activos, pausados o completados.',
+    selector: '.dashboard-controls',
+    position: 'bottom',
+  },
+  {
+    title: 'Nuestros objetivos',
+    description: 'Cada tarjeta es una meta. Hacé click en cualquiera para ver cómo va, cargar un aporte o ver cuándo la estaríamos alcanzando.',
+    selector: '.objectives-grid',
+    position: 'top',
+  },
+  {
+    title: 'Crear una meta nueva',
+    description: 'Cuando se nos ocurra algo nuevo para ahorrar, desde acá lo agregamos. Le ponemos nombre, cuánto queremos juntar, para cuándo y en qué moneda.',
+    selector: '.btn-nuevo-objetivo',
+    position: 'bottom',
+  },
+  {
+    title: 'Los últimos movimientos',
+    description: 'Acá aparece un resumen de lo último que cargamos. Si querés ver todo el historial de una meta en particular, entrá a la tarjeta.',
+    selector: '.movements-section',
+    position: 'top',
+  },
+];
+
 const Dashboard = () => {
     const navigate = useNavigate();
+    const tutorial = useTutorial(TUTORIAL_STEPS);
     const [objetivos, setObjetivos] = useState([]);
     const [movimientos, setMovimientos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -130,16 +173,21 @@ const Dashboard = () => {
     };
 
     if (isLoading) {
-        return <div className="page-container" style={{ textAlign: 'center', marginTop: '5rem' }}>Cargando Panel...</div>;
+        return <div className="page-container page-loader"><div className="spinner" /><span>Cargando panel...</span></div>;
     }
 
     return (
         <div className="page-container">
             <div className="dashboard-header">
                 <h1>Resumen de Ahorros</h1>
-                <button className="btn-primary" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <AddIcon fontSize="small" /> Nuevo Objetivo
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <button className="tutorial-help-btn" onClick={tutorial.start}>
+                        <HelpOutlineIcon fontSize="small" /> Tutorial
+                    </button>
+                    <button className="btn-primary btn-nuevo-objetivo" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <AddIcon fontSize="small" /> Nuevo Objetivo
+                    </button>
+                </div>
             </div>
 
             <div className="summary-cards">
@@ -273,9 +321,9 @@ const Dashboard = () => {
                 )}
             </div>
 
-            <div className="dashboard-section" style={{ marginTop: '3rem', paddingBottom: '3rem' }}>
-                <h2>Últimos Movimientos</h2>
-                
+            <div className="dashboard-section movements-section" style={{ marginTop: '3rem', paddingBottom: '3rem' }}>
+                <h2 style={{ marginBottom: '1.5rem' }}>Últimos Movimientos</h2>
+
                 {movimientos.length === 0 ? (
                     <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', marginTop: '1.5rem' }}>
                         <p>No hay movimientos registrados recientes.</p>
@@ -313,6 +361,19 @@ const Dashboard = () => {
                     </div>
                 )}
             </div>
+
+            <TutorialOverlay
+                active={tutorial.active}
+                step={tutorial.currentStep}
+                currentIndex={tutorial.currentIndex}
+                total={tutorial.total}
+                isFirst={tutorial.isFirst}
+                isLast={tutorial.isLast}
+                progress={tutorial.progress}
+                onNext={tutorial.next}
+                onPrev={tutorial.prev}
+                onFinish={tutorial.finish}
+            />
 
             {/* Modal Nuevo Objetivo */}
             <Modal

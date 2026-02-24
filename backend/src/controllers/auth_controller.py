@@ -43,7 +43,7 @@ def login(
     settings = get_settings()
     access_token_expires = timedelta(minutes=settings.jwt.access_token_expire_minutes)
     access_token = crear_access_token(
-        data={"sub": usuario.email},
+        data={"sub": usuario.email, "nombre": usuario.nombre},
         expires_delta=access_token_expires
     )
 
@@ -55,6 +55,8 @@ def register(
     usuario_data: UsuarioCreate,
     service: UsuarioService = Depends(get_usuario_service)
 ):
+    if not get_settings().registration_enabled:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El registro está deshabilitado.")
     """
     Endpoint de registro de nuevo usuario.
 
