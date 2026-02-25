@@ -63,6 +63,14 @@ const ObjectiveDetail = () => {
   const { dolarRate } = useCurrency();
   const [viewMoneda, setViewMoneda] = useState(null); // Se setea al cargar el objetivo
   
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Pagination & Projection State
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -370,28 +378,30 @@ const ObjectiveDetail = () => {
   return (
     <div className="page-container">
       <header className="dashboard-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="dashboard-header-left">
           <button className="btn-volver" onClick={() => navigate(-1)}>
             <ArrowBack fontSize="small" /> Volver
           </button>
-          <div>
-            <h1 style={{ margin: 0 }}>{objective.nombre} <span style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>({objective.moneda})</span></h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0, fontSize: '1.8rem' }}>{objective.nombre}</h1>
+            <div className="status-badge" style={{ 
+                textTransform: 'capitalize', 
+                fontSize: '0.85rem', 
+                padding: '0.3rem 0.6rem', 
+                background: isActivo ? 'rgba(16, 185, 129, 0.15)' : 'rgba(225, 29, 72, 0.15)', 
+                color: isActivo ? 'var(--accent-success)' : 'var(--accent-danger)', 
+                borderRadius: 'var(--radius-full)',
+                fontWeight: '600'
+              }}>
+              {objective.estado}
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        
+        <div className="dashboard-header-right">
           <button className="tutorial-help-btn" onClick={tutorial.start}>
             <HelpOutlineIcon fontSize="small" /> Tutorial
           </button>
-          <div className="status-badge" style={{ 
-              textTransform: 'capitalize', 
-              fontSize: '0.9rem', 
-              padding: '0.4rem 0.8rem', 
-              background: isActivo ? 'rgba(16, 185, 129, 0.15)' : 'rgba(225, 29, 72, 0.15)', 
-              color: isActivo ? 'var(--accent-success)' : 'var(--accent-danger)', 
-              borderRadius: 'var(--radius-full)' 
-            }}>
-            {objective.estado}
-          </div>
           
           <div className="dashboard-controls" style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
              <button 
@@ -486,12 +496,24 @@ const ObjectiveDetail = () => {
               <span>{Number(objective.porcentaje_completado || 0).toFixed(1)}%</span>
             </div>
             
-            <div style={{ width: '100%', height: 250, marginTop: '1rem', marginBottom: '1.5rem', minWidth: 0 }}>
+            <div style={{ width: '100%', height: 250, marginTop: '1rem', marginBottom: '1.5rem', minWidth: 0, marginLeft: '-15px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 30, bottom: 5, left: 30 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
+                  <YAxis 
+                    stroke="var(--text-secondary)" 
+                    fontSize={11} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    width={55}
+                    tickFormatter={(value) => {
+                      if (isMobile) {
+                        return `$${Intl.NumberFormat('es-AR', { notation: 'compact', compactDisplay: 'short' }).format(value).replace('mil', 'k').replace('M', 'm')}`;
+                      }
+                      return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+                    }} 
+                  />
                   <RechartsTooltip 
                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.98)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
                     itemStyle={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}
