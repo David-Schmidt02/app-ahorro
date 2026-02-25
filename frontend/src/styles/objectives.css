@@ -152,3 +152,22 @@
     color: var(--accent-danger);
     font-weight: 600;
 }
+
+/* Responsive Objectives */
+@media (max-width: 600px) {
+  .objectives-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .movements-table {
+    font-size: 0.85rem;
+  }
+  
+  .movements-table th,
+  .movements-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
