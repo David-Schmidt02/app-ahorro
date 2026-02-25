@@ -5,6 +5,10 @@ import yaml
 from pathlib import Path
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env si existe en el entorno local
+load_dotenv()
 
 
 # Thread lock for atomic settings replacement

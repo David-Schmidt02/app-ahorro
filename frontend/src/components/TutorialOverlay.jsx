@@ -6,23 +6,24 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 
 const PADDING = 10;
-const TOOLTIP_W = 360;
-
 const TOOLTIP_H_EST = 230; // altura estimada del tooltip
 
+const getTooltipW = () => Math.min(360, window.innerWidth - 32);
+
 const getTooltipPos = (rect, position) => {
+  const tooltipW = getTooltipW();
   if (!rect || position === 'center') {
     return {
       top: Math.round(window.innerHeight / 2 - TOOLTIP_H_EST / 2),
-      left: Math.round(window.innerWidth / 2 - TOOLTIP_W / 2),
+      left: Math.round(window.innerWidth / 2 - tooltipW / 2),
     };
   }
 
   const offset = 18;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const clampX = (x) => Math.max(16, Math.min(x, vw - TOOLTIP_W - 16));
-  const centerX = clampX(rect.left + rect.width / 2 - TOOLTIP_W / 2);
+  const clampX = (x) => Math.max(16, Math.min(x, vw - tooltipW - 16));
+  const centerX = clampX(rect.left + rect.width / 2 - tooltipW / 2);
 
   let top, left;
 
@@ -30,7 +31,7 @@ const getTooltipPos = (rect, position) => {
     case 'bottom':
       top = rect.bottom + offset;
       left = centerX;
-      if (top + 210 > vh) top = rect.top - 210 - offset;
+      if (top + 210 > vh) top = Math.max(16, rect.top - 210 - offset);
       break;
     case 'top':
       top = rect.top - 210 - offset;
@@ -40,17 +41,24 @@ const getTooltipPos = (rect, position) => {
     case 'right':
       top = Math.max(16, rect.top + rect.height / 2 - 105);
       left = rect.right + offset;
-      if (left + TOOLTIP_W > vw) left = rect.left - TOOLTIP_W - offset;
+      if (left + tooltipW > vw) left = rect.left - tooltipW - offset;
+      // Fallback a bottom si no entra a los lados
+      if (left < 16) { left = centerX; top = rect.bottom + offset; }
       break;
     case 'left':
       top = Math.max(16, rect.top + rect.height / 2 - 105);
-      left = rect.left - TOOLTIP_W - offset;
+      left = rect.left - tooltipW - offset;
       if (left < 16) left = rect.right + offset;
+      // Fallback a bottom si no entra a los lados
+      if (left + tooltipW > vw - 16) { left = centerX; top = rect.bottom + offset; }
       break;
     default:
       top = rect.bottom + offset;
       left = centerX;
   }
+
+  // Prevenir que desaparezca por los bordes en ninguna circunstancia
+  left = clampX(left);
 
   return { top, left };
 };
@@ -154,7 +162,7 @@ const TutorialOverlay = ({
       {rectReady && <div
         key={currentIndex}
         className="tutorial-tooltip"
-        style={{ position: 'fixed', width: TOOLTIP_W, zIndex: 9002, pointerEvents: 'all', ...tooltipPos }}
+        style={{ position: 'fixed', width: getTooltipW(), zIndex: 9002, pointerEvents: 'all', ...tooltipPos }}
       >
         <div className="tutorial-header">
           <span className="tutorial-step-label">Paso {currentIndex + 1} de {total}</span>
