@@ -258,3 +258,40 @@
   transition: color var(--transition-fast), background var(--transition-fast);
 }
 .tutorial-help-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.12); }
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar-greeting {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+/* Responsive General Components */
+@media (max-width: 768px) {
+  .navbar-content {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .navbar-actions {
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .navbar-greeting {
+    font-size: 0.95rem;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+}
+

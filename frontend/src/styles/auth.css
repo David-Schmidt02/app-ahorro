@@ -152,3 +152,16 @@
   display: inline-block;
   animation: heart-pulse 1.8s ease-in-out infinite;
 }
+
+/* Responsive Auth */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2rem 1.5rem;
+    max-width: 90%;
+  }
+
+  .auth-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
