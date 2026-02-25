@@ -284,7 +284,7 @@ const ObjectiveDetail = () => {
   const handleEditMove = (mov) => {
     setEditingMove(mov);
     setEditMoveForm({
-      monto: formatAmount(mov.monto.toString()),
+      monto: mov.monto ? formatAmount(Number(mov.monto)) : '',
       motivo: mov.motivo,
       fecha: new Date(mov.fecha).toISOString().split('T')[0],
       tipo: mov.tipo
