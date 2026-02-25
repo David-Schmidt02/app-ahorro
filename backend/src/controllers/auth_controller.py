@@ -10,7 +10,9 @@ from src.schemas.usuario_schema import UsuarioLogin, Token, UsuarioCreate, Usuar
 from src.middleware.auth_middleware import crear_access_token, obtener_usuario_actual
 from src.domain.usuario import Usuario
 from src.config.settings import get_settings
+from src.log.logging_config import get_logger
 
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
@@ -55,7 +57,11 @@ def register(
     usuario_data: UsuarioCreate,
     service: UsuarioService = Depends(get_usuario_service)
 ):
-    if not get_settings().registration_enabled:
+    settings = get_settings()
+    logger.info(f"[REGISTER] Request recibido - email: {usuario_data.email}")
+    logger.info(f"[REGISTER] registration_enabled en este request: {settings.registration_enabled}")
+    if not settings.registration_enabled:
+        logger.warning(f"[REGISTER] Bloqueado por registration_enabled=False")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El registro está deshabilitado.")
     """
     Endpoint de registro de nuevo usuario.
@@ -72,7 +78,7 @@ def register(
         email=usuario_data.email,
         password=usuario_data.password
     )
-
+    logger.info(f"[REGISTER] Usuario creado exitosamente - email: {usuario_data.email}")
     return usuario
 
 
