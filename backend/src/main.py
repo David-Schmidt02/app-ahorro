@@ -7,6 +7,7 @@ root_path = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_path))
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,6 +72,9 @@ async def lifespan(app: FastAPI):
     else:
         task = None
 
+    raw_reg = os.environ.get("REGISTRATION_ENABLED", "<NOT SET>")
+    logger.info(f"[DIAG] REGISTRATION_ENABLED env var raw value: '{raw_reg}'")
+    logger.info(f"[DIAG] registration_enabled parsed: {settings.registration_enabled}")
     logger.info(f"✅ {settings.app.name} v{settings.app.version} started")
 
     yield
