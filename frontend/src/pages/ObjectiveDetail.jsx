@@ -562,11 +562,11 @@ const ObjectiveDetail = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                            <div className="movement-item-amount" style={{ textAlign: 'right' }}>
                               <p style={{ margin: 0 }}>
-                                {mov.tipo === 'aporte' ? '+' : '-'}${Number(mov.monto).toLocaleString(undefined, { maximumFractionDigits: 2 })} {mov.moneda}
+                                {mov.tipo === 'aporte' ? '+' : '-'}${convert(Number(mov.monto), mov.moneda).toLocaleString(undefined, { maximumFractionDigits: 2 })} {displayMoneda}
                               </p>
                               {dolarRate && (
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                   ≈ USD ${(mov.moneda === 'USD' ? Number(mov.monto) : Number(mov.monto) / dolarRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                   ≈ {displayMoneda === 'USD' ? 'ARS' : 'USD'} ${(displayMoneda === 'USD' ? convert(Number(mov.monto), mov.moneda) * dolarRate : convert(Number(mov.monto), mov.moneda) / dolarRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                                 </p>
                               )}
                            </div>

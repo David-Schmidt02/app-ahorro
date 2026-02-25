@@ -129,13 +129,13 @@
     border-top: 1px solid var(--border-light);
   }
 
-.auth-register-link {
+.auth-link-highlight {
   color: var(--accent-green);
   text-decoration: none;
   transition: filter 0.2s ease, color 0.2s ease;
 }
 
-.auth-register-link:hover {
+.auth-link-highlight:hover {
   color: #FFD600;
   filter: drop-shadow(0 0 4px #FFD600);
 }

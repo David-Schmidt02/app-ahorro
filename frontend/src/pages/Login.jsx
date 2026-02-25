@@ -114,7 +114,7 @@ const Login = () => {
         <div className="auth-footer">
           <p className="text-muted">
             ¿No tenés cuenta? Create una bichito de luz <span className="material-symbols-outlined" style={{ fontSize: '1em', verticalAlign: 'middle', color: '#FFD600', filter: 'drop-shadow(0 0 4px #FFD600)' }}>lightbulb_2</span>{' '}
-            <Link to="/register" className="auth-register-link">
+            <Link to="/register" className="auth-link-highlight">
               Registrate
             </Link>
           </p>

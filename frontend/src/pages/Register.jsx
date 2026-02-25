@@ -129,7 +129,7 @@ const Register = () => {
         <div className="auth-footer">
           <p className="text-muted">
             ¿Ya tenés cuenta?{' '}
-            <Link to="/login" style={{ color: 'var(--accent-green)', textDecoration: 'none' }}>
+            <Link to="/login" className="auth-link-highlight">
               Iniciá sesión
             </Link>
           </p>
