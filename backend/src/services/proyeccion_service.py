@@ -114,6 +114,8 @@ class ProyeccionService:
                     mensaje = "A este ritmo, alcanzarás tu objetivo en aproximadamente 1 año"
                 elif años == 1:
                     mensaje = f"A este ritmo, alcanzarás tu objetivo en 1 año y {meses} meses"
+                elif años == 0:
+                    mensaje = f"A este ritmo, alcanzarás tu objetivo en {meses_estimados_int} meses"
                 elif meses == 0:
                     mensaje = f"A este ritmo, alcanzarás tu objetivo en {años} años"
                 else:

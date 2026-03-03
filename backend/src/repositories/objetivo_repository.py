@@ -145,12 +145,13 @@ class ObjetivoRepository:
             logger.error(f"Error al listar objetivos prioritarios: {e}")
             return []
 
-    def actualizar(self, objetivo: Objetivo) -> Objetivo:
+    def actualizar(self, objetivo: Objetivo, commit: bool = True) -> Objetivo:
         """
         Actualiza un objetivo existente.
 
         Args:
             objetivo: Entidad de dominio con datos actualizados
+            commit: Si True hace commit, si False solo flush (para operaciones atómicas con otras tablas)
 
         Returns:
             Optional[Objetivo]: Entidad actualizada o None si no existe o hay error
@@ -171,7 +172,10 @@ class ObjetivoRepository:
             orm.completado = objetivo.completado
             orm.historial_progreso = objetivo.historial_progreso
 
-            self.db.commit()
+            if commit:
+                self.db.commit()
+            else:
+                self.db.flush()
             self.db.refresh(orm)
             return self._to_domain(orm)
         except SQLAlchemyError as e:

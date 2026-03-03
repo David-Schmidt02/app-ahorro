@@ -12,8 +12,8 @@ class MovimientoBase(BaseModel):
     monto: Decimal = Field(..., gt=0)
     moneda: Moneda
     tipo: TipoMovimiento
-    motivo: Optional[str] = None
-    nota: Optional[str] = None
+    motivo: Optional[str] = Field(None, max_length=300)
+    nota: Optional[str] = Field(None, max_length=300)
 
 
 class MovimientoCreate(MovimientoBase):
@@ -26,8 +26,8 @@ class MovimientoUpdate(BaseModel):
     monto: Optional[Decimal] = Field(None, gt=0)
     moneda: Optional[Moneda] = None
     tipo: Optional[TipoMovimiento] = None
-    motivo: Optional[str] = None
-    nota: Optional[str] = None
+    motivo: Optional[str] = Field(None, max_length=300)
+    nota: Optional[str] = Field(None, max_length=300)
 
 
 class MovimientoResponse(MovimientoBase):
