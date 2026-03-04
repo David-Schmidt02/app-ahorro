@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
-import Patito from './Patito';
+import Mascota from './Mascota';
 
 const Layout = () => {
   return (
@@ -11,7 +11,7 @@ const Layout = () => {
       </main>
       
       {/* Easter Egg */}
-      <Patito />
+      <Mascota />
     </div>
   );
 };
