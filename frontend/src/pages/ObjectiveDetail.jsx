@@ -14,6 +14,7 @@ import confetti from 'canvas-confetti';
 
 import cheerSound from '../assets/sounds/festejo.mp3';
 import sadSound from '../assets/sounds/trompeta_triste.mp3';
+import '../styles/objective-detail.css';
 
 const DETAIL_TUTORIAL_STEPS = [
   {

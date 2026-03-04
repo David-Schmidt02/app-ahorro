@@ -4,7 +4,13 @@ import buocitoImg from '../assets/mascotas/pngs/buocito.png';
 import cuervitoImg from '../assets/mascotas/pngs/cuervito.png';
 import gatitoImg from '../assets/mascotas/pngs/gatito.png';
 import loritoImg from '../assets/mascotas/pngs/lorito.gif';
-import lobitoImg from '../assets/mascotas/pngs/lobito.gif'; 
+import lobitoImg from '../assets/mascotas/pngs/lobito.gif';
+import patitoIcon from '../assets/mascotas/icons/patito.svg';
+import buoIcon from '../assets/mascotas/icons/buo.svg';
+import cuervoIcon from '../assets/mascotas/icons/cuervo.svg';
+import gatitoIcon from '../assets/mascotas/icons/gatito.svg';
+import loritoIcon from '../assets/mascotas/icons/lorito.svg';
+import lobitoIcon from '../assets/mascotas/icons/lobito.svg';
 import sonidoPato from '../assets/sounds/pato.mp3';
 import sonidoLobito from '../assets/sounds/lobito.mp3';
 import sonidoBuo from '../assets/sounds/buo.mp3';
@@ -15,13 +21,15 @@ import sonidoRuleta from '../assets/sounds/ruleta.mp3';
 import '../styles/mascota.css';
 
 const MASCOTAS = [
-    { id: 'pato', name: 'Patito', img: patitoImg, sound: sonidoPato },
-    { id: 'buo', name: 'Buocito', img: buocitoImg, sound: sonidoBuo }, 
-    { id: 'cuervo', name: 'Cuervito', img: cuervitoImg, sound: sonidoCuervo },
-    { id: 'gato', name: 'Gatito', img: gatitoImg, sound: sonidoGato },
-    { id: 'loro', name: 'Lorito', img: loritoImg, sound: sonidoLoro },
-    { id: 'lobito', name: 'Lobito', img: lobitoImg, sound: sonidoLobito },
+    { id: 'pato', name: 'Patito', icon: patitoIcon, img: patitoImg, sound: sonidoPato },
+    { id: 'buo', name: 'Buocito', icon: buoIcon, img: buocitoImg, sound: sonidoBuo },
+    { id: 'cuervo', name: 'Cuervito', icon: cuervoIcon, img: cuervitoImg, sound: sonidoCuervo },
+    { id: 'gato', name: 'Gatito', icon: gatitoIcon, img: gatitoImg, sound: sonidoGato },
+    { id: 'loro', name: 'Lorito', icon: loritoIcon, img: loritoImg, sound: sonidoLoro },
+    { id: 'lobito', name: 'Lobito', icon: lobitoIcon, img: lobitoImg, sound: sonidoLobito },
 ];
+
+export { MASCOTAS };
 
 const Mascota = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -37,17 +45,19 @@ const Mascota = () => {
     const rollIntervalRef = useRef(null);
 
     const showMascota = () => {
-        setIsVisible(true);
+        // La card NO aparece todavía, solo empieza la ruleta en el ícono del navbar
         setIsRolling(true);
         setClickCount(0);
 
         const rouletteAudio = rouletteAudioRef.current;
 
-        // Efecto de "ruleta" (cambiar mascota rápido)
+        // Efecto de "ruleta": cicla íconos en el navbar
         let rollIndex = 0;
         if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
         rollIntervalRef.current = setInterval(() => {
-            setCurrentMascota(MASCOTAS[rollIndex % MASCOTAS.length]);
+            const mascota = MASCOTAS[rollIndex % MASCOTAS.length];
+            setCurrentMascota(mascota);
+            window.dispatchEvent(new CustomEvent('mascota:change', { detail: { mascota, isRolling: true } }));
             rollIndex++;
         }, 150);
 
@@ -63,6 +73,9 @@ const Mascota = () => {
             const randomMascota = MASCOTAS[Math.floor(Math.random() * MASCOTAS.length)];
             setCurrentMascota(randomMascota);
 
+            // Notificar al navbar la mascota seleccionada (ya no rolling)
+            window.dispatchEvent(new CustomEvent('mascota:change', { detail: { mascota: randomMascota, isRolling: false } }));
+
             // Cargar audio de la mascota elegida
             if (randomMascota.sound) {
                 audioRef.current = new Audio(randomMascota.sound);
@@ -70,6 +83,9 @@ const Mascota = () => {
             } else {
                 audioRef.current = null;
             }
+
+            // Ahora sí aparece la card con la PNG/GIF
+            setIsVisible(true);
 
             // Ocultar después de unos segundos
             if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
@@ -188,7 +204,7 @@ const Mascota = () => {
     };
 
     return (
-        <div className={`patito-container ${isVisible ? 'is-visible' : ''} ${isClicked ? 'is-clicked' : ''} ${isRolling ? 'is-rolling' : ''}`} onClick={handleClick}>
+        <div className={`patito-container ${isVisible ? 'is-visible' : ''} ${isClicked ? 'is-clicked' : ''}`} onClick={handleClick}>
             <div style={{ position: 'relative' }}>
                 <img src={currentMascota.img} alt={currentMascota.name} className="patito-img" />
                 
