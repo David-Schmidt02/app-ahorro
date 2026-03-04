@@ -12,9 +12,8 @@ import { formatAmount, cleanAmount } from '../utils/formatters';
 import { useCurrency } from '../context/CurrencyContext';
 import confetti from 'canvas-confetti';
 
-// Importar sonidos (se asume que existen o se agregarán placeholders)
-// import cheerSound from '../assets/sounds/cheer.mp3';
-// import sadSound from '../assets/sounds/sad_trombone.mp3';
+import cheerSound from '../assets/sounds/festejo.mp3';
+import sadSound from '../assets/sounds/trompeta_triste.mp3';
 
 const DETAIL_TUTORIAL_STEPS = [
   {
@@ -167,10 +166,10 @@ const ObjectiveDetail = () => {
           origin: { y: 0.6 },
           colors: ['#e11d48', '#fbbf24', '#10b981', '#3b82f6']
         });
-        const cheer = new Audio('/src/assets/sounds/festejo.mp3'); 
+        const cheer = new Audio(cheerSound);
         cheer.play().catch(e => console.log('Audio error', e));
       } else {
-        const sad = new Audio('/src/assets/sounds/trompeta_triste.mp3');
+        const sad = new Audio(sadSound);
         sad.play().catch(e => console.log('Audio error', e));
       }
 

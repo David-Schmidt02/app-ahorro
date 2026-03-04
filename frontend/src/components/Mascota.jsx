@@ -11,6 +11,7 @@ import sonidoBuo from '../assets/sounds/buo.mp3';
 import sonidoCuervo from '../assets/sounds/cuervo.mp3';
 import sonidoGato from '../assets/sounds/gato.mp3';
 import sonidoLoro from '../assets/sounds/loro.mp3';
+import sonidoRuleta from '../assets/sounds/ruleta.mp3';
 import '../styles/mascota.css';
 
 const MASCOTAS = [
@@ -31,7 +32,7 @@ const Mascota = () => {
     const [currentMascota, setCurrentMascota] = useState(MASCOTAS[0]);
     
     const audioRef = useRef(null);
-    const rouletteAudioRef = useRef(new Audio('/src/assets/sounds/ruleta.mp3'));
+    const rouletteAudioRef = useRef(new Audio(sonidoRuleta));
     const hideTimeoutRef = useRef(null);
 
     const showMascota = () => {
@@ -134,6 +135,7 @@ const Mascota = () => {
             if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
             if (localTimeout) clearTimeout(localTimeout);
             window.removeEventListener('storage', handleStorageChange);
+            rouletteAudioRef.current?.pause();
         };
     }, []);
 
