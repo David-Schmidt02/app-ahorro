@@ -43,6 +43,8 @@ const Mascota = () => {
     const rouletteAudioRef = useRef(new Audio(sonidoRuleta));
     const hideTimeoutRef = useRef(null);
     const rollIntervalRef = useRef(null);
+    // Mascota seleccionada al final del gambling — desacoplada del ciclo del intervalo
+    const selectedMascotaRef = useRef(MASCOTAS[0]);
 
     const showMascota = () => {
         // La card NO aparece todavía, solo empieza la ruleta en el ícono del navbar
@@ -69,8 +71,9 @@ const Mascota = () => {
             rollIntervalRef.current = null;
             setIsRolling(false);
 
-            // Elegir mascota final
+            // Elegir mascota final y fijarla en el ref ANTES de hacer visible la card
             const randomMascota = MASCOTAS[Math.floor(Math.random() * MASCOTAS.length)];
+            selectedMascotaRef.current = randomMascota;
             setCurrentMascota(randomMascota);
 
             // Notificar al navbar la mascota seleccionada (ya no rolling)
@@ -206,7 +209,7 @@ const Mascota = () => {
     return (
         <div className={`patito-container ${isVisible ? 'is-visible' : ''} ${isClicked ? 'is-clicked' : ''}`} onClick={handleClick}>
             <div style={{ position: 'relative' }}>
-                <img src={currentMascota.img} alt={currentMascota.name} className="patito-img" />
+                <img src={selectedMascotaRef.current.img} alt={selectedMascotaRef.current.name} className="patito-img" />
                 
                 {particles.map(p => (
                     <div 
