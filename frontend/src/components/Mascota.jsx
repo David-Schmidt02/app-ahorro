@@ -34,6 +34,7 @@ const Mascota = () => {
     const audioRef = useRef(null);
     const rouletteAudioRef = useRef(new Audio(sonidoRuleta));
     const hideTimeoutRef = useRef(null);
+    const rollIntervalRef = useRef(null);
 
     const showMascota = () => {
         setIsVisible(true);
@@ -44,19 +45,24 @@ const Mascota = () => {
 
         // Efecto de "ruleta" (cambiar mascota rápido)
         let rollIndex = 0;
-        const rollInterval = setInterval(() => {
+        if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
+        rollIntervalRef.current = setInterval(() => {
             setCurrentMascota(MASCOTAS[rollIndex % MASCOTAS.length]);
             rollIndex++;
         }, 150);
 
         const finishRolling = () => {
-            clearInterval(rollInterval);
+            // Evitar doble llamada (fallback + onended)
+            rouletteAudio.onended = null;
+
+            clearInterval(rollIntervalRef.current);
+            rollIntervalRef.current = null;
             setIsRolling(false);
-            
+
             // Elegir mascota final
             const randomMascota = MASCOTAS[Math.floor(Math.random() * MASCOTAS.length)];
             setCurrentMascota(randomMascota);
-            
+
             // Cargar audio de la mascota elegida
             if (randomMascota.sound) {
                 audioRef.current = new Audio(randomMascota.sound);
@@ -134,6 +140,7 @@ const Mascota = () => {
         return () => {
             if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
             if (localTimeout) clearTimeout(localTimeout);
+            if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
             window.removeEventListener('storage', handleStorageChange);
             rouletteAudioRef.current?.pause();
         };
