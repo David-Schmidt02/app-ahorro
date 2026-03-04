@@ -1,14 +1,25 @@
 /* Huevo de Pascua: Mascota */
 
-/* Animación del ícono en el navbar durante la ruleta */
-.mascota-nav-rolling {
-  animation: nav-mascota-roll 0.15s infinite;
+/* Ícono de mascota en el navbar */
+.mascota-nav-icon {
+  filter: brightness(0) invert(1) drop-shadow(0 0 4px #8B1A2A);
+  transition: filter 0.2s ease;
 }
 
-@keyframes nav-mascota-roll {
-  0%   { transform: scale(1) rotate(0deg);    filter: drop-shadow(0px 0px 6px rgba(225, 29, 72, 0.4)); }
-  50%  { transform: scale(1.2) rotate(15deg); filter: drop-shadow(0px 0px 10px rgba(251, 191, 36, 0.8)); }
-  100% { transform: scale(1) rotate(0deg);    filter: drop-shadow(0px 0px 6px rgba(225, 29, 72, 0.4)); }
+.mascota-nav-disabled {
+  filter: brightness(0) invert(0.25) !important;
+}
+
+/* Animación por cambio de mascota durante la ruleta — se re-dispara con cada key change */
+.mascota-nav-rolling {
+  animation: mascota-icon-change 0.18s ease-out forwards;
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px #8B1A2A) drop-shadow(0 0 3px #fff) !important;
+}
+
+@keyframes mascota-icon-change {
+  0%   { opacity: 0.2; transform: scale(0.8) rotate(-10deg); }
+  55%  { opacity: 1;   transform: scale(1.25) rotate(7deg); }
+  100% { opacity: 1;   transform: scale(1) rotate(0deg); }
 }
 
 .patito-container {

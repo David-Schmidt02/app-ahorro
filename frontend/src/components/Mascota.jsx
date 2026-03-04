@@ -101,10 +101,10 @@ const Mascota = () => {
             rouletteAudio.play().catch(e => {
                 console.log('Roulette sound error', e);
                 // Fallback si falla el audio (ej: interacción del usuario requerida)
-                setTimeout(finishRolling, 2000);
+                setTimeout(finishRolling, 3500);
             });
         } else {
-            setTimeout(finishRolling, 2000);
+            setTimeout(finishRolling, 3500);
         }
     };
 

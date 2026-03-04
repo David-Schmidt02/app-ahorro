@@ -13,6 +13,7 @@ const Navbar = () => {
   const [patitoEnabled, setPatitoEnabled] = useState(localStorage.getItem('patito_enabled') !== 'false');
   const [navIcon, setNavIcon] = useState(patitoIcon);
   const [navRolling, setNavRolling] = useState(false);
+  const [navKey, setNavKey] = useState(0);
 
   useEffect(() => {
     const handleStorage = () => setPatitoEnabled(localStorage.getItem('patito_enabled') !== 'false');
@@ -24,6 +25,7 @@ const Navbar = () => {
     const handler = (e) => {
       setNavIcon(e.detail.mascota.icon);
       setNavRolling(e.detail.isRolling);
+      setNavKey(k => k + 1);
     };
     window.addEventListener('mascota:change', handler);
     return () => window.removeEventListener('mascota:change', handler);
@@ -69,16 +71,13 @@ const Navbar = () => {
               }}
             >
               <img
+                key={navKey}
                 src={navIcon}
                 alt="mascota"
-                width="28"
-                height="28"
-                className={navRolling ? 'mascota-nav-rolling' : ''}
-                style={{
-                  filter: patitoEnabled ? 'drop-shadow(0px 0px 6px rgba(225, 29, 72, 0.4))' : 'grayscale(1) opacity(0.5)',
-                  transition: 'filter 0.3s ease',
-                  objectFit: 'contain',
-                }}
+                width="32"
+                height="32"
+                className={`mascota-nav-icon${navRolling ? ' mascota-nav-rolling' : ''}${!patitoEnabled ? ' mascota-nav-disabled' : ''}`}
+                style={{ objectFit: 'contain' }}
               />
             </button>
             <span className="navbar-greeting">¡Hola, {userName}!</span>
