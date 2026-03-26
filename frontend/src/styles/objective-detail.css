@@ -239,7 +239,7 @@
 .movements-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .movements-list::-webkit-scrollbar {
@@ -260,7 +260,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.4rem 0.75rem;
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-sm);
   border-left: 3px solid transparent;
@@ -277,7 +277,7 @@
 .movement-item-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
 
 .movement-item-date {
@@ -292,7 +292,7 @@
 
 .movement-item-amount {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 .movement-item.type-aporte .movement-item-amount {

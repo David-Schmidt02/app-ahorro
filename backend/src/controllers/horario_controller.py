@@ -1,6 +1,6 @@
 """Controller para horarios de usuarios."""
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -24,7 +24,10 @@ def obtener_mi_horario(
     current_user: Usuario = Depends(obtener_usuario_actual),
 ):
     """Obtiene el horario del usuario autenticado."""
-    return service.obtener_mi_horario(usuario_id=current_user.id)
+    try:
+        return service.obtener_mi_horario(usuario_id=current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener horario: {str(e)}")
 
 
 @router.get("/todos", response_model=List[HorarioResponse])
@@ -33,7 +36,10 @@ def obtener_todos_los_horarios(
     current_user: Usuario = Depends(obtener_usuario_actual),
 ):
     """Obtiene los horarios de todos los usuarios."""
-    return service.obtener_todos()
+    try:
+        return service.obtener_todos()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al listar horarios: {str(e)}")
 
 
 @router.put("/mio", response_model=HorarioResponse)
@@ -43,8 +49,11 @@ async def guardar_mi_horario(
     current_user: Usuario = Depends(obtener_usuario_actual),
 ):
     """Crea o actualiza el horario del usuario autenticado."""
-    return service.guardar_horario(
-        usuario_id=current_user.id,
-        nombre_usuario=current_user.nombre,
-        data=data.data,
-    )
+    try:
+        return service.guardar_horario(
+            usuario_id=current_user.id,
+            nombre_usuario=current_user.nombre,
+            data=data.data,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al guardar horario: {str(e)}")
