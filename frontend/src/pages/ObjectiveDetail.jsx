@@ -419,9 +419,9 @@ const ObjectiveDetail = () => {
         </div>
         
         <div className="dashboard-header-right">
-          <button className="tutorial-help-btn" onClick={tutorial.start}>
+          {/* <button className="tutorial-help-btn" onClick={tutorial.start}>
             <HelpOutlineIcon fontSize="small" /> Tutorial
-          </button>
+          </button> */}
           
           <div className="dashboard-controls" style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
              <button 
@@ -716,7 +716,7 @@ const ObjectiveDetail = () => {
         </div>
       </div>
 
-      <TutorialOverlay
+      {/* <TutorialOverlay
         active={tutorial.active}
         step={tutorial.currentStep}
         currentIndex={tutorial.currentIndex}
@@ -727,7 +727,7 @@ const ObjectiveDetail = () => {
         onNext={tutorial.next}
         onPrev={tutorial.prev}
         onFinish={tutorial.finish}
-      />
+      /> */}
 
       {/* Edit Modal */}
       <Modal

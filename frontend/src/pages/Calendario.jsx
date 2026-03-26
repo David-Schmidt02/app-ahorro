@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -207,6 +208,7 @@ const Calendario = () => {
     else setViewMonth(m => m + 1);
   };
 
+  const isMobile = useIsMobile();
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
 
@@ -235,130 +237,9 @@ const Calendario = () => {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '1.5rem', alignItems: 'start' }}>
-
-        {/* Grilla del calendario */}
-        <div className="glass-panel" style={{ padding: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <button onClick={prevMonth} style={navBtnStyle}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-            >‹</button>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{MESES[viewMonth]} {viewYear}</h2>
-            <button onClick={nextMonth} style={navBtnStyle}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-            >›</button>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
-            {DIAS_SEMANA.map(d => (
-              <div key={d} style={{ textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', padding: '0.3rem 0', textTransform: 'uppercase' }}>{d}</div>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-              const dayEvents = eventsForDay(dateStr);
-              const isToday = dateStr === todayStr;
-              const isSelected = dateStr === selectedDay;
-
-              return (
-                <div
-                  key={day}
-                  onClick={() => setSelectedDay(isSelected ? null : dateStr)}
-                  style={{
-                    minHeight: '52px',
-                    padding: '0.3rem',
-                    borderRadius: 'var(--radius-sm)',
-                    cursor: 'pointer',
-                    border: isSelected
-                      ? '1px solid var(--accent-primary)'
-                      : isToday
-                        ? '1px solid rgba(225,29,72,0.3)'
-                        : '1px solid transparent',
-                    background: isSelected
-                      ? 'rgba(225,29,72,0.1)'
-                      : isToday
-                        ? 'rgba(225,29,72,0.05)'
-                        : 'rgba(255,255,255,0.02)',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)'; }}
-                >
-                  <span style={{ fontSize: '0.82rem', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>{day}</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', marginTop: '2px' }}>
-                    {dayEvents.slice(0, 3).map(ev => {
-                      const t = TIPO_MAP[ev.tipo];
-                      return (
-                        <span key={ev.id} title={ev.titulo} style={{
-                          width: '6px', height: '6px', borderRadius: '50%',
-                          background: t?.color || '#64748b', flexShrink: 0,
-                        }} />
-                      );
-                    })}
-                    {dayEvents.length > 3 && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>+{dayEvents.length - 3}</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Panel lateral */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Eventos del día seleccionado */}
-          {selectedDay && (
-            <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <h3 style={{ fontSize: '0.95rem', margin: 0 }}>
-                  {new Date(selectedDay + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </h3>
-                <button
-                  className="btn-primary"
-                  onClick={() => setIsModalOpen(true)}
-                  style={{ padding: '0.3rem 0.7rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                >
-                  <AddIcon style={{ fontSize: '0.9rem' }} /> Evento
-                </button>
-              </div>
-
-              {selectedEvents.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sin eventos. ¡Agregá uno!</p>
-              ) : (
-                selectedEvents.map(ev => (
-                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <TipoIcon tipo={ev.tipo} size={28} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.titulo}</p>
-                      <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{TIPO_MAP[ev.tipo]?.label}{ev.hora ? ` · ${ev.hora}` : ''}</p>
-                    </div>
-                    {ev.foto && (
-                      <img
-                        src={ev.foto}
-                        alt={ev.titulo}
-                        onClick={() => setLightboxSrc(ev.foto)}
-                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'zoom-in', flexShrink: 0 }}
-                      />
-                    )}
-                    <button onClick={() => handleDelete(ev.id)}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '4px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'opacity 0.15s, background 0.15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(225,29,72,0.12)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Próximos 7 días */}
+      {/* Paneles reutilizables */}
+      {(() => {
+        const panelUpcoming = (
           <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Próximos 7 días</h3>
             {loading ? (
@@ -383,11 +264,54 @@ const Calendario = () => {
               })
             )}
           </div>
+        );
 
-          {/* Leyenda */}
+        const panelSelectedDay = selectedDay && (
+          <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '0.95rem', margin: 0 }}>
+                {new Date(selectedDay + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h3>
+              <button
+                className="btn-primary"
+                onClick={() => setIsModalOpen(true)}
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+              >
+                <AddIcon style={{ fontSize: '0.9rem' }} /> Evento
+              </button>
+            </div>
+            {selectedEvents.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sin eventos. ¡Agregá uno!</p>
+            ) : (
+              selectedEvents.map(ev => (
+                <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <TipoIcon tipo={ev.tipo} size={28} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.titulo}</p>
+                    <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{TIPO_MAP[ev.tipo]?.label}{ev.hora ? ` · ${ev.hora}` : ''}</p>
+                  </div>
+                  {ev.foto && (
+                    <img src={ev.foto} alt={ev.titulo} onClick={() => setLightboxSrc(ev.foto)}
+                      style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'zoom-in', flexShrink: 0 }}
+                    />
+                  )}
+                  <button onClick={() => handleDelete(ev.id)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '4px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'opacity 0.15s, background 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(225,29,72,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        );
+
+        const panelLeyenda = (
           <div className="glass-panel card-hover" style={{ padding: '1rem' }}>
             <h3 style={{ fontSize: '0.85rem', marginBottom: '0.6rem', color: 'var(--text-muted)' }}>TIPOS</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div className="cal-tipos-grid">
               {TIPOS.map(t => (
                 <span key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   <TipoIcon tipo={t.id} size={20} fontSize="inherit" />
@@ -396,8 +320,83 @@ const Calendario = () => {
               ))}
             </div>
           </div>
-        </div>
-      </div>
+        );
+
+        const panelCalendar = (
+          <div className="glass-panel card-hover cal-main-panel" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <button onClick={prevMonth} style={navBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              >‹</button>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{MESES[viewMonth]} {viewYear}</h2>
+              <button onClick={nextMonth} style={navBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              >›</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+              {DIAS_SEMANA.map(d => (
+                <div key={d} style={{ textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', padding: '0.3rem 0', textTransform: 'uppercase' }}>{d}</div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+              {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = eventsForDay(dateStr);
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDay;
+                return (
+                  <div key={day} onClick={() => setSelectedDay(isSelected ? null : dateStr)}
+                    style={{
+                      minHeight: isMobile ? '36px' : '52px',
+                      padding: '0.3rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                      border: isSelected ? '1px solid var(--accent-primary)' : isToday ? '1px solid rgba(225,29,72,0.3)' : '1px solid transparent',
+                      background: isSelected ? 'rgba(225,29,72,0.1)' : isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)'; }}
+                  >
+                    <span style={{ fontSize: '0.82rem', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>{day}</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', marginTop: '2px' }}>
+                      {dayEvents.slice(0, 3).map(ev => {
+                        const t = TIPO_MAP[ev.tipo];
+                        return <span key={ev.id} title={ev.titulo} style={{ width: '6px', height: '6px', borderRadius: '50%', background: t?.color || '#64748b', flexShrink: 0 }} />;
+                      })}
+                      {dayEvents.length > 3 && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>+{dayEvents.length - 3}</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+        if (isMobile) {
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {panelUpcoming}
+              {panelCalendar}
+              {panelSelectedDay}
+              {panelLeyenda}
+            </div>
+          );
+        }
+
+        return (
+          <div className="calendario-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '1.5rem', alignItems: 'start' }}>
+            {panelCalendar}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {panelUpcoming}
+              {panelSelectedDay}
+              {panelLeyenda}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal agregar evento */}
       <Modal

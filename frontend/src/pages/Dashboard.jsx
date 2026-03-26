@@ -223,9 +223,9 @@ const Dashboard = () => {
             <div className="dashboard-header">
                 <h1>Resumen de Ahorros</h1>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <button className="tutorial-help-btn" onClick={tutorial.start}>
+                    {/* <button className="tutorial-help-btn" onClick={tutorial.start}>
                         <HelpOutlineIcon fontSize="small" /> Tutorial
-                    </button>
+                    </button> */}
                     <button className="btn-primary btn-nuevo-objetivo" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <AddIcon fontSize="small" /> Nuevo Objetivo
                     </button>
@@ -422,7 +422,7 @@ const Dashboard = () => {
                 )}
             </div>
 
-            <TutorialOverlay
+            {/* <TutorialOverlay
                 active={tutorial.active}
                 step={tutorial.currentStep}
                 currentIndex={tutorial.currentIndex}
@@ -433,7 +433,7 @@ const Dashboard = () => {
                 onNext={tutorial.next}
                 onPrev={tutorial.prev}
                 onFinish={tutorial.finish}
-            />
+            /> */}
 
             {/* Modal Movimiento Rápido */}
             <Modal
