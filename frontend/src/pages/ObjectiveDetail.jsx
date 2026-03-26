@@ -65,8 +65,7 @@ const ObjectiveDetail = () => {
   const [monedaMove, setMonedaMove] = useState('ARS');
   const [motivoMove, setMotivoMove] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { dolarRate } = useCurrency();
-  const [viewMoneda, setViewMoneda] = useState(null); // Se setea al cargar el objetivo
+  const { dolarRate, viewMoneda } = useCurrency();
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -118,7 +117,6 @@ const ObjectiveDetail = () => {
       ]);
       
       setObjective(objRes.data);
-      if (!viewMoneda) setViewMoneda(objRes.data.moneda);
       setProjection(projRes.data);
       
       if (loadMore) {
@@ -381,7 +379,7 @@ const ObjectiveDetail = () => {
     return amount;
   };
 
-  const displayMoneda = viewMoneda || objective.moneda || 'ARS';
+  const displayMoneda = viewMoneda || 'ARS';
 
   const chartData = [{ name: 'Inicio', Acumulado: 0 }];
 
@@ -419,42 +417,6 @@ const ObjectiveDetail = () => {
           </div>
         </div>
         
-        <div className="dashboard-header-right">
-          {/* <button className="tutorial-help-btn" onClick={tutorial.start}>
-            <HelpOutlineIcon fontSize="small" /> Tutorial
-          </button> */}
-          
-          <div className="dashboard-controls" style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
-             <button 
-                onClick={() => setViewMoneda('ARS')}
-                style={{ 
-                  padding: '0.3rem 0.8rem', 
-                  fontSize: '0.75rem', 
-                  borderRadius: 'var(--radius-full)', 
-                  border: 'none',
-                  background: displayMoneda === 'ARS' ? 'var(--accent-primary)' : 'transparent',
-                  color: displayMoneda === 'ARS' ? 'white' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'all 0.2s'
-                }}
-             >ARS</button>
-             <button 
-                onClick={() => setViewMoneda('USD')}
-                style={{ 
-                  padding: '0.3rem 0.8rem', 
-                  fontSize: '0.75rem', 
-                  borderRadius: 'var(--radius-full)', 
-                  border: 'none',
-                  background: displayMoneda === 'USD' ? 'var(--accent-primary)' : 'transparent',
-                  color: displayMoneda === 'USD' ? 'white' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'all 0.2s'
-                }}
-             >USD</button>
-          </div>
-        </div>
       </header>
       
       <div className="objective-detail-layout">
@@ -666,14 +628,48 @@ const ObjectiveDetail = () => {
       </div>
 
       <HistorialMovimientos
-        movimientos={movimientos}
-        convert={convert}
-        displayMoneda={displayMoneda}
-        dolarRate={dolarRate}
-        onEdit={handleEditMove}
-        onDelete={handleDeleteMove}
+        items={movimientos}
+        emptyMessage="No hay movimientos para este objetivo todavía."
         hasMore={hasMore}
         onLoadMore={() => fetchObjectiveData(true)}
+        renderItem={(mov) => ({
+          key: mov.id,
+          tipo: mov.tipo,
+          content: (
+            <>
+              <div className="movement-item-info">
+                <span className="movement-item-reason">{mov.motivo}</span>
+                <span className="movement-item-date">{new Date(mov.fecha).toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="movement-item-amount" style={{ textAlign: 'right' }}>
+                  <p style={{ margin: 0 }}>
+                    {mov.tipo === 'aporte' ? '+' : '-'}$
+                    {convert(Number(mov.monto), mov.moneda).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    {' '}{displayMoneda}
+                  </p>
+                  {dolarRate && (
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      ≈ {displayMoneda === 'USD' ? 'ARS' : 'USD'} $
+                      {(displayMoneda === 'USD'
+                        ? convert(Number(mov.monto), mov.moneda) * dolarRate
+                        : convert(Number(mov.monto), mov.moneda) / dolarRate
+                      ).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </p>
+                  )}
+                </div>
+                <div className="movement-actions" style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button className="btn-icon-small" onClick={() => handleEditMove(mov)} title="Editar">
+                    <Edit style={{ fontSize: '1rem' }} />
+                  </button>
+                  <button className="btn-icon-small btn-danger-text" onClick={() => handleDeleteMove(mov.id)} title="Eliminar">
+                    <DeleteOutline style={{ fontSize: '1rem' }} />
+                  </button>
+                </div>
+              </div>
+            </>
+          ),
+        })}
       />
 
       {/* <TutorialOverlay

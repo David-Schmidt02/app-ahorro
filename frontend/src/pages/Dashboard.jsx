@@ -9,10 +9,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import TutorialOverlay from '../components/TutorialOverlay';
@@ -20,6 +16,7 @@ import { useTutorial } from '../hooks/useTutorial';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
+import HistorialMovimientos from '../components/HistorialMovimientos';
 
 const TUTORIAL_STEPS = [
   {
@@ -77,8 +74,7 @@ const Dashboard = () => {
         objetivos_totales: 0
     });
 
-    const [busqueda, setBusqueda] = useState('');
-    const [filtroEstado, setFiltroEstado] = useState('todos');
+    const [filtroEstado] = useState('todos');
 
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
     const [newFormData, setNewFormData] = useState({
@@ -103,14 +99,6 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const params = {};
-
-            if (filtroEstado !== 'todos') {
-                params.estado = filtroEstado;
-            }
-
-            if (busqueda) {
-                params.busqueda = busqueda;
-            }
 
             const [objetivosRes, movimientosRes, estadisticasRes] = await Promise.all([
                 api.get('/objetivos/', { params }),
@@ -152,7 +140,7 @@ const Dashboard = () => {
 
     const loadData = useCallback(() => {
         fetchDashboardData();
-    }, [busqueda, filtroEstado]);
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -271,40 +259,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="dashboard-controls glass-panel" style={{ marginTop: '2rem', padding: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="search-bar" style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                    <SearchIcon style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem' }} />
-                    <input 
-                        type="text" 
-                        placeholder="Buscar por nombre o descripción..." 
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                        style={{ paddingLeft: '2.8rem', width: '100%', background: 'rgba(0,0,0,0.2)', height: '2rem' }}
-                    />
-                    {busqueda && (
-                        <CloseIcon 
-                            onClick={() => setBusqueda('')}
-                            style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1rem', cursor: 'pointer' }} 
-                        />
-                    )}
-                </div>
-
-                {/* Filtro de estado comentado — muestra todos por defecto
-                <div className="status-filters" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {['todos', 'activo', 'pausado', 'completado'].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setFiltroEstado(status)}
-                            className={`filter-chip ${filtroEstado === status ? 'active' : ''}`}
-                        >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </button>
-                    ))}
-                </div>
-                */}
-            </div>
-
-            <div className="dashboard-section" style={{ marginTop: '3rem' }}>
+            <div className="dashboard-section" style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center' }}>
                         Todos los Objetivos
@@ -380,46 +335,30 @@ const Dashboard = () => {
                 )}
             </div>
 
-            <div className="dashboard-section movements-section" style={{ marginTop: '3rem', paddingBottom: '3rem' }}>
-                <h2 style={{ marginBottom: '1.5rem' }}>Últimos Movimientos</h2>
-
-                {movimientos.length === 0 ? (
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', marginTop: '1.5rem' }}>
-                        <p>No hay movimientos registrados recientes.</p>
+            <HistorialMovimientos
+              title="Últimos Movimientos"
+              items={movimientos}
+              emptyMessage="No hay movimientos registrados recientes."
+              renderItem={(mov) => ({
+                key: mov.id,
+                tipo: mov.tipo,
+                content: (
+                  <>
+                    <div className="movement-item-info">
+                      <span className="movement-item-reason">
+                        {objetivos.find(o => o.id === mov.objetivo_id)?.nombre || mov.motivo}
+                      </span>
+                      <span className="movement-item-date">
+                        {mov.motivo} · {new Date(mov.fecha).toLocaleDateString()}
+                      </span>
                     </div>
-                ) : (
-                    <div className="glass-panel table-container">
-                        <table className="movements-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Objetivo</th>
-                                    <th>Motivo</th>
-                                    <th>Tipo</th>
-                                    <th>Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {movimientos.map((mov) => (
-                                    <tr key={mov.id}>
-                                        <td>{new Date(mov.fecha).toLocaleDateString()}</td>
-                                        <td>{objetivos.find(o => o.id === mov.objetivo_id)?.nombre || `ID: ${mov.objetivo_id}`}</td>
-                                        <td>{mov.motivo}</td>
-                                        <td>
-                                            <span className={`move-type type-${mov.tipo}`}>
-                                                {mov.tipo}
-                                            </span>
-                                        </td>
-                                        <td className={mov.tipo === 'aporte' ? 'amount-positive' : 'amount-negative'}>
-                                            {mov.tipo === 'aporte' ? '+' : '-'}${Math.round(mov.monto).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                    <span className="movement-item-amount">
+                      {mov.tipo === 'aporte' ? '+' : '-'}${Math.round(mov.monto).toLocaleString()}
+                    </span>
+                  </>
+                ),
+              })}
+            />
 
             {/* <TutorialOverlay
                 active={tutorial.active}

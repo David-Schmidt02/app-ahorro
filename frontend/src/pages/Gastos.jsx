@@ -19,6 +19,7 @@ import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CategoryIcon from '@mui/icons-material/Category';
 import { Tooltip } from '@mui/material';
 import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
+import HistorialMovimientos from '../components/HistorialMovimientos';
 
 const CATEGORIAS = [
   { id: 'comida',          label: 'Comida',          Icon: RestaurantIcon,   color: '#f97316' },
@@ -311,57 +312,38 @@ const Gastos = () => {
         </div>
       </div>
 
-      {/* Historial */}
-      <div style={{ marginTop: '2rem', paddingBottom: '3rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Historial</h2>
-        {gastos.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <p>Todavía no hay gastos registrados.</p>
-          </div>
-        ) : (
-          <div className="glass-panel" style={{ overflow: 'hidden' }}>
-            {gastos.map((g, i) => {
-              const cat = CAT_MAP[g.categoria] || CAT_MAP.otros;
-              return (
-                <div key={g.id} style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  padding: '0.85rem 1.25rem',
-                  borderBottom: i < gastos.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  transition: 'background 0.15s',
-                }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <CatIcon cat={cat} />
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>{g.descripcion || cat.label}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                      {cat.label} · {new Date(g.fecha).toLocaleDateString('es-AR')}
-                    </p>
+      <HistorialMovimientos
+        title="Historial"
+        items={gastos}
+        emptyMessage="Todavía no hay gastos registrados."
+        renderItem={(g) => {
+          const cat = CAT_MAP[g.categoria] || CAT_MAP.otros;
+          return {
+            key: g.id,
+            tipo: 'retiro',
+            content: (
+              <>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <CatIcon cat={cat} size={32} />
+                  <div className="movement-item-info">
+                    <span className="movement-item-reason">{g.descripcion || cat.label}</span>
+                    <span className="movement-item-date">{cat.label} · {new Date(g.fecha).toLocaleDateString('es-AR')}</span>
                   </div>
-
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontWeight: 700, color: 'var(--accent-danger)', margin: 0 }}>
-                      -{monedaSymbol} {Math.round(convert(g.monto, g.moneda)).toLocaleString()}
-                    </p>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>{g.moneda}</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                  <div className="movement-item-amount" style={{ textAlign: 'right' }}>
+                    <p style={{ margin: 0 }}>-{monedaSymbol} {formatK(convert(g.monto, g.moneda))}</p>
+                    <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{g.moneda}</p>
                   </div>
-
-                  <button
-                    className="btn-icon"
-                    onClick={() => handleDelete(g.id)}
-                    title="Eliminar"
-                    style={{ color: 'var(--accent-danger)', opacity: 0.6, width: '28px', height: '28px' }}
-                  >
+                  <button className="btn-icon-small btn-danger-text" onClick={() => handleDelete(g.id)} title="Eliminar">
                     <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
                   </button>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              </>
+            ),
+          };
+        }}
+      />
     </div>
   );
 };

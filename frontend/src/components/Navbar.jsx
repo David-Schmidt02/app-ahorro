@@ -11,7 +11,9 @@ const Navbar = () => {
   const { dolarRate, viewMoneda, setViewMoneda } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
-  const isGastos = location.pathname === '/gastos';
+  const isGastos   = location.pathname === '/gastos';
+  const isDetalle  = location.pathname.startsWith('/objetivo/');
+  const showToggle = isGastos || isDetalle;
   const [patitoEnabled, setPatitoEnabled] = useState(localStorage.getItem('patito_enabled') !== 'false');
   const [navIcon, setNavIcon] = useState(patitoIcon);
   const [navRolling, setNavRolling] = useState(false);
@@ -43,7 +45,7 @@ const Navbar = () => {
   return (
     <nav className="navbar glass-panel">
       <div className="navbar-content">
-        {/* Brand + logout */}
+        {/* Brand + logout al mismo nivel */}
         <div className="navbar-brand-section">
           <Link to="/" className="navbar-brand">
             <AccountBalanceWalletIcon className="brand-icon" />
@@ -55,54 +57,47 @@ const Navbar = () => {
             </button>
           )}
         </div>
-
-        {/* Right actions */}
-        {user && (
-          <div className="navbar-actions">
-            {dolarRate && (
-              <div className="dolar-widget glass-panel" title="Cotización centralizada (Backend)">
-                <span className="dolar-label">USD</span>
-                <span className="dolar-value">${dolarRate.toLocaleString()}</span>
-              </div>
-            )}
-            {isGastos && (
-              <div className="moneda-toggle">
-                {['ARS', 'USD'].map(m => (
-                  <button key={m} onClick={() => setViewMoneda(m)}
-                    className={`moneda-toggle-btn${viewMoneda === m ? ' active' : ''}`}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              className="btn-icon"
-              onClick={() => {
-                const current = localStorage.getItem('patito_enabled') !== 'false';
-                localStorage.setItem('patito_enabled', !current);
-                window.dispatchEvent(new Event('storage'));
-              }}
-              title={patitoEnabled ? 'Desactivar Mascota' : 'Activar Mascota'}
-              style={{ opacity: patitoEnabled ? 1 : 0.4, transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <img
-                key={navKey}
-                src={navIcon}
-                alt="mascota"
-                width="32"
-                height="32"
-                className={`mascota-nav-icon${navRolling ? ' mascota-nav-rolling' : ''}${!patitoEnabled ? ' mascota-nav-disabled' : ''}`}
-                style={{ objectFit: 'contain' }}
-              />
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Sub-bar: greeting — solo cuando hay sesión */}
+      {/* Barra de utilidades: dolar + toggle + patito */}
       {user && (
-        <div className="navbar-greeting-bar">
-          <span className="navbar-greeting">¡Hola, {userName}!</span>
+        <div className="navbar-utility-bar">
+          {dolarRate && (
+            <div className="dolar-widget glass-panel" title="Cotización centralizada (Backend)">
+              <span className="dolar-label">USD</span>
+              <span className="dolar-value">${dolarRate.toLocaleString()}</span>
+            </div>
+          )}
+          {showToggle && (
+            <div className="moneda-toggle">
+              {['ARS', 'USD'].map(m => (
+                <button key={m} onClick={() => setViewMoneda(m)}
+                  className={`moneda-toggle-btn${viewMoneda === m ? ' active' : ''}`}>
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            className="btn-icon"
+            onClick={() => {
+              const current = localStorage.getItem('patito_enabled') !== 'false';
+              localStorage.setItem('patito_enabled', !current);
+              window.dispatchEvent(new Event('storage'));
+            }}
+            title={patitoEnabled ? 'Desactivar Mascota' : 'Activar Mascota'}
+            style={{ opacity: patitoEnabled ? 1 : 0.4, transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <img
+              key={navKey}
+              src={navIcon}
+              alt="mascota"
+              width="32"
+              height="32"
+              className={`mascota-nav-icon${navRolling ? ' mascota-nav-rolling' : ''}${!patitoEnabled ? ' mascota-nav-disabled' : ''}`}
+              style={{ objectFit: 'contain' }}
+            />
+          </button>
         </div>
       )}
     </nav>

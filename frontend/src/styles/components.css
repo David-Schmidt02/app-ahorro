@@ -275,16 +275,13 @@
   gap: 1rem;
 }
 
-.navbar-greeting-bar {
-  text-align: center;
-  padding: 0.2rem 2rem 0.5rem;
+.navbar-utility-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.35rem 2rem 0.55rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.navbar-greeting {
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.85rem;
 }
 
 /* ARS/USD toggle */
