@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SavingsIcon from '@mui/icons-material/Savings';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -25,66 +25,113 @@ const MobileLayout = ({ badges = {} }) => {
   const containerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
   const [activeIdx, setActiveIdx] = useState(() => getIndexFromPath(location.pathname));
+  const [dragOffset, setDragOffset] = useState(0);
+  const [pageWidth, setPageWidth] = useState(window.innerWidth);
 
-  // Scroll to correct page on mount (no animation — restores position when coming back from detail)
+  const activeIdxRef = useRef(activeIdx);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const isHorizontalRef = useRef(false);
+
+  useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
+
+  // Get real container width after mount (avoids window.innerWidth mismatches on iOS)
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const idx = getIndexFromPath(location.pathname);
-    container.scrollTo({ left: idx * container.offsetWidth, behavior: 'instant' });
+    const update = () => {
+      if (containerRef.current) setPageWidth(containerRef.current.offsetWidth);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const goToTab = useCallback((idx) => {
+    if (idx < 0 || idx >= TABS.length) return;
+    setDragOffset(0);
     setActiveIdx(idx);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Detect which page is visible after scroll ends → update tab + URL
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let timer;
-    const onScrollSettle = () => {
-      const idx = Math.round(container.scrollLeft / container.offsetWidth);
-      setActiveIdx(prev => {
-        if (idx !== prev) {
-          navigate(TABS[idx].path, { replace: true });
-          return idx;
-        }
-        return prev;
-      });
-    };
-
-    // Use scrollend if supported, fallback to debounced scroll
-    const supportsScrollEnd = 'onscrollend' in window;
-    if (supportsScrollEnd) {
-      container.addEventListener('scrollend', onScrollSettle);
-    } else {
-      const debounced = () => { clearTimeout(timer); timer = setTimeout(onScrollSettle, 80); };
-      container.addEventListener('scroll', debounced);
-    }
-
-    return () => {
-      container.removeEventListener('scrollend', onScrollSettle);
-      container.removeEventListener('scroll', onScrollSettle);
-      clearTimeout(timer);
-    };
+    activeIdxRef.current = idx;
+    navigate(TABS[idx].path, { replace: true });
   }, [navigate]);
 
-  const handleTabClick = (idx) => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.scrollTo({ left: idx * container.offsetWidth, behavior: 'smooth' });
-    setActiveIdx(idx);
-    navigate(TABS[idx].path, { replace: true });
+  // Non-passive touchmove to allow preventDefault on horizontal swipes
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onMove = (e) => {
+      if (touchStartX.current === null) return;
+      const dx = e.touches[0].clientX - touchStartX.current;
+      const dy = e.touches[0].clientY - touchStartY.current;
+
+      if (!isHorizontalRef.current) {
+        if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll — don't interfere
+        if (Math.abs(dx) < 8) return;
+        isHorizontalRef.current = true;
+      }
+
+      e.preventDefault(); // block vertical scroll during horizontal swipe
+
+      const idx = activeIdxRef.current;
+      let clamped = dx;
+      if (idx === 0 && dx > 0) clamped = dx / 3;           // resist past first
+      if (idx === TABS.length - 1 && dx < 0) clamped = dx / 3; // resist past last
+
+      setDragOffset(clamped);
+    };
+
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalRef.current = false;
   };
+
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (!isHorizontalRef.current) return;
+    setDragOffset(0);
+    const threshold = 60;
+    const idx = activeIdxRef.current;
+    if (dx < -threshold && idx < TABS.length - 1) goToTab(idx + 1);
+    else if (dx > threshold && idx > 0) goToTab(idx - 1);
+  };
+
+  const isDragging = dragOffset !== 0;
 
   return (
     <>
-      <div ref={containerRef} className="mobile-swipe-container">
-        {TABS.map(({ path, Component }) => (
-          <div key={path} className="mobile-swipe-page">
-            <Component />
-          </div>
-        ))}
+      <div
+        ref={containerRef}
+        className="mobile-swipe-outer"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {TABS.map(({ path, Component }, idx) => {
+          // Each page positioned absolutely; slides via its own translateX
+          const translateX = (idx - activeIdx) * pageWidth + dragOffset;
+          const isAdjacent = Math.abs(idx - activeIdx) <= 1;
+
+          return (
+            <div
+              key={path}
+              className="mobile-swipe-page"
+              style={{
+                transform: `translateX(${translateX}px)`,
+                transition: isDragging || !isAdjacent ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                pointerEvents: idx === activeIdx ? 'auto' : 'none',
+              }}
+            >
+              <Component />
+            </div>
+          );
+        })}
       </div>
 
       <nav className="mobile-tabbar">
@@ -92,13 +139,11 @@ const MobileLayout = ({ badges = {} }) => {
           <button
             key={path}
             className={`mobile-tabbar-tab${idx === activeIdx ? ' active' : ''}`}
-            onClick={() => handleTabClick(idx)}
+            onClick={() => goToTab(idx)}
           >
             <Icon fontSize="small" />
             <span className="mobile-tabbar-label">{label}</span>
-            {badges[path] > 0 && (
-              <span className="tab-badge">{badges[path]}</span>
-            )}
+            {badges[path] > 0 && <span className="tab-badge">{badges[path]}</span>}
           </button>
         ))}
       </nav>

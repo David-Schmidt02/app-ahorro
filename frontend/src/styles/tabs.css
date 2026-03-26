@@ -87,21 +87,16 @@
   position: relative;
 }
 
-/* Track: all pages side by side, slides via transform */
-.mobile-swipe-track {
-  display: flex;
-  height: 100%;
-  will-change: transform;
-}
-
-/* Each page: full viewport width, scrolls vertically */
+/* Each page: absolutely fills the container, slides independently */
 .mobile-swipe-page {
-  flex-shrink: 0;
-  width: 100vw;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 1rem 5rem; /* bottom padding leaves room for tab bar */
+  padding: 1rem 1rem 5rem;
+  will-change: transform;
 }
 
 /* ── Mobile Bottom Tab Bar ────────────────────────────────── */

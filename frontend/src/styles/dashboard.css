@@ -251,25 +251,49 @@
 
   .summary-cards {
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
   }
 
   .summary-card {
-    padding: 0.75rem 0.5rem;
+    padding: 0.6rem 0.4rem;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 
   .summary-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 
   .summary-icon svg {
-    font-size: 1.2rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Ocultar título y texto secundario; solo mostrar el valor principal */
+  .summary-info h3 {
+    display: none;
+  }
+
+  .summary-info p:nth-of-type(2) {
+    display: none;
+  }
+
+  .summary-info p {
+    font-size: 0.78rem !important;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .summary-info .progress-bar-bg {
+    display: none;
+  }
+
+  /* Chips centrados en mobile */
+  .status-filters {
+    justify-content: center;
   }
 
   .dashboard-controls {

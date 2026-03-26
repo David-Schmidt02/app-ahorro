@@ -289,10 +289,7 @@ const Dashboard = () => {
                     )}
                 </div>
 
-                <div className="status-filters" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginRight: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <FilterListIcon fontSize="small" /> Filtrar:
-                    </span>
+                <div className="status-filters" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     {['todos', 'activo', 'pausado', 'completado'].map((status) => (
                         <button
                             key={status}
