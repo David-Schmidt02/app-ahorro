@@ -19,7 +19,7 @@ import TutorialOverlay from '../components/TutorialOverlay';
 import { useTutorial } from '../hooks/useTutorial';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
-import { formatAmount, cleanAmount } from '../utils/formatters';
+import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
 
 const TUTORIAL_STEPS = [
   {
@@ -239,9 +239,9 @@ const Dashboard = () => {
                     </div>
                     <div className="summary-info">
                         <h3>Patrimonio Total</h3>
-                        <p style={{ fontSize: '1.2rem' }}>AR$ {Number(totales.patrimonio_ars || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        <p style={{ fontSize: '1.2rem' }}>AR$ {formatK(Number(totales.patrimonio_ars || 0))}</p>
                         <p style={{ fontSize: '0.9rem', opacity: 0.8, color: 'var(--accent-success)' }}>
-                            US$ {Number(totales.patrimonio_usd || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            US$ {formatK(Number(totales.patrimonio_usd || 0))}
                         </p>
                     </div>
                 </div>
@@ -289,6 +289,7 @@ const Dashboard = () => {
                     )}
                 </div>
 
+                {/* Filtro de estado comentado — muestra todos por defecto
                 <div className="status-filters" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     {['todos', 'activo', 'pausado', 'completado'].map((status) => (
                         <button
@@ -300,12 +301,13 @@ const Dashboard = () => {
                         </button>
                     ))}
                 </div>
+                */}
             </div>
 
             <div className="dashboard-section" style={{ marginTop: '3rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center' }}>
-                        {filtroEstado === 'todos' ? 'Todos los Objetivos' : `Objetivos ${filtroEstado}s`}
+                        Todos los Objetivos
                         <div className="bordo-tooltip-container">
                             <InfoOutlinedIcon fontSize="small" className="tooltip-icon" />
                             <div className="bordo-tooltip-text">

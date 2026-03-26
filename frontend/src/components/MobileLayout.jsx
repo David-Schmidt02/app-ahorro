@@ -34,6 +34,7 @@ const MobileLayout = ({ badges = {} }) => {
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const isHorizontalRef = useRef(false);
+  const skipSwipeRef = useRef(false);
 
   useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
 
@@ -61,7 +62,7 @@ const MobileLayout = ({ badges = {} }) => {
     if (!el) return;
 
     const onMove = (e) => {
-      if (touchStartX.current === null) return;
+      if (touchStartX.current === null || skipSwipeRef.current) return;
       const dx = e.touches[0].clientX - touchStartX.current;
       const dy = e.touches[0].clientY - touchStartY.current;
 
@@ -86,6 +87,19 @@ const MobileLayout = ({ badges = {} }) => {
   }, []);
 
   const onTouchStart = (e) => {
+    // Check if touch is inside a horizontally scrollable element
+    let node = e.target;
+    let insideScrollable = false;
+    while (node && node !== containerRef.current) {
+      const style = window.getComputedStyle(node);
+      const ox = style.overflowX;
+      if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth) {
+        insideScrollable = true;
+        break;
+      }
+      node = node.parentElement;
+    }
+    skipSwipeRef.current = insideScrollable;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isHorizontalRef.current = false;
@@ -95,7 +109,7 @@ const MobileLayout = ({ badges = {} }) => {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     touchStartX.current = null;
-    if (!isHorizontalRef.current) return;
+    if (skipSwipeRef.current || !isHorizontalRef.current) return;
     setDragOffset(0);
     const threshold = 60;
     const idx = activeIdxRef.current;

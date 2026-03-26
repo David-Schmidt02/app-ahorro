@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -8,8 +8,10 @@ import patitoIcon from '../assets/mascotas/icons/patito.svg';
 
 const Navbar = () => {
   const { logout, user } = useAuth();
-  const { dolarRate } = useCurrency();
+  const { dolarRate, viewMoneda, setViewMoneda } = useCurrency();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isGastos = location.pathname === '/gastos';
   const [patitoEnabled, setPatitoEnabled] = useState(localStorage.getItem('patito_enabled') !== 'false');
   const [navIcon, setNavIcon] = useState(patitoIcon);
   const [navRolling, setNavRolling] = useState(false);
@@ -51,6 +53,18 @@ const Navbar = () => {
             {dolarRate && (
               <div className="dolar-widget glass-panel" title={`Cotización centralizada (Backend)`}>
                 <span className="dolar-value">USD ${dolarRate.toLocaleString()}</span>
+              </div>
+            )}
+            {isGastos && (
+              <div style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                {['ARS', 'USD'].map(m => (
+                  <button key={m} onClick={() => setViewMoneda(m)} style={{
+                    padding: '0.3rem 0.8rem', fontSize: '0.75rem', borderRadius: 'var(--radius-full)',
+                    border: 'none', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s',
+                    background: viewMoneda === m ? 'var(--accent-primary)' : 'transparent',
+                    color: viewMoneda === m ? 'white' : 'var(--text-muted)',
+                  }}>{m}</button>
+                ))}
               </div>
             )}
             

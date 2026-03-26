@@ -7,6 +7,7 @@ export const CurrencyProvider = ({ children }) => {
     const saved = localStorage.getItem('dolarRate');
     return saved ? Number(saved) : null;
   });
+  const [viewMoneda, setViewMoneda] = useState('ARS');
 
   const setDolarRate = (rate) => {
     if (rate && rate > 0) {
@@ -16,7 +17,7 @@ export const CurrencyProvider = ({ children }) => {
   };
 
   return (
-    <CurrencyContext.Provider value={{ dolarRate, setDolarRate }}>
+    <CurrencyContext.Provider value={{ dolarRate, setDolarRate, viewMoneda, setViewMoneda }}>
       {children}
     </CurrencyContext.Provider>
   );

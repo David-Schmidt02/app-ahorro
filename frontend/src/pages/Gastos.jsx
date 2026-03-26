@@ -18,7 +18,7 @@ import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CategoryIcon from '@mui/icons-material/Category';
 import { Tooltip } from '@mui/material';
-import { formatAmount, cleanAmount } from '../utils/formatters';
+import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
 
 const CATEGORIAS = [
   { id: 'comida',          label: 'Comida',          Icon: RestaurantIcon,   color: '#f97316' },
@@ -33,12 +33,6 @@ const CATEGORIAS = [
   { id: 'otros',           label: 'Otros',            Icon: CategoryIcon,     color: '#64748b' },
 ];
 const CAT_MAP = Object.fromEntries(CATEGORIAS.map(c => [c.id, c]));
-
-function formatK(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-  return Math.round(n).toString();
-}
 
 /** Ícono de categoría con borde outlined (sin relleno de fondo) */
 const CatIcon = ({ cat, size = 36, fontSize = 'small' }) => {
@@ -56,11 +50,10 @@ const CatIcon = ({ cat, size = 36, fontSize = 'small' }) => {
 };
 
 const Gastos = () => {
-  const { dolarRate } = useCurrency();
+  const { dolarRate, viewMoneda } = useCurrency();
   const [gastos, setGastos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [viewMoneda, setViewMoneda] = useState('ARS');
 
   const [form, setForm] = useState({
     monto: '', moneda: 'ARS', categoria: 'comida', descripcion: '',
@@ -166,18 +159,6 @@ const Gastos = () => {
     <div className="page-container">
       <div className="dashboard-header">
         <h1>Gastos</h1>
-        {/* ARS/USD toggle comentado — por defecto ARS
-        <div style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
-          {['ARS', 'USD'].map(m => (
-            <button key={m} onClick={() => setViewMoneda(m)} style={{
-              padding: '0.3rem 0.8rem', fontSize: '0.75rem', borderRadius: 'var(--radius-full)',
-              border: 'none', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s',
-              background: viewMoneda === m ? 'var(--accent-primary)' : 'transparent',
-              color: viewMoneda === m ? 'white' : 'var(--text-muted)',
-            }}>{m}</button>
-          ))}
-        </div>
-        */}
       </div>
 
       {/* Stats */}
