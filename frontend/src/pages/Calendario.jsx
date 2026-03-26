@@ -377,10 +377,10 @@ const Calendario = () => {
           {/* Leyenda */}
           <div className="glass-panel" style={{ padding: '1rem' }}>
             <h3 style={{ fontSize: '0.85rem', marginBottom: '0.6rem', color: 'var(--text-muted)' }}>TIPOS</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
               {TIPOS.map(t => (
-                <span key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  <TipoIcon tipo={t.id} size={18} fontSize="inherit" />
+                <span key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <TipoIcon tipo={t.id} size={20} fontSize="inherit" />
                   {t.label}
                 </span>
               ))}
