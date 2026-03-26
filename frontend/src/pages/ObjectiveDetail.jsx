@@ -1,54 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowBack, CheckCircleOutline, PauseCircleOutline, PlayCircleOutline, DeleteOutline, Edit, Add, Remove, InfoOutlined } from '@mui/icons-material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../api/axios';
 import Swal from 'sweetalert2';
 import Modal from '../components/Modal';
-import TutorialOverlay from '../components/TutorialOverlay';
-import { useTutorial } from '../hooks/useTutorial';
-import { formatAmount, cleanAmount } from '../utils/formatters';
+import { formatAmount, cleanAmount, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 import { useCurrency } from '../context/CurrencyContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import confetti from 'canvas-confetti';
 
 import cheerSound from '../assets/sounds/festejo.mp3';
 import sadSound from '../assets/sounds/trompeta_triste.mp3';
 import '../styles/objective-detail.css';
 
-const DETAIL_TUTORIAL_STEPS = [
-  {
-    title: 'Los números importantes',
-    description: 'Acá ves cuánto llevamos acumulado, cuánto falta y cuál es la meta total. Todo en la moneda que elijas arriba.',
-    selector: '.detail-info-grid',
-    position: 'bottom',
-  },
-  {
-    title: 'Cómo va el ahorro',
-    description: 'El gráfico muestra cómo fue creciendo el dinero guardado con el tiempo. Abajo tenemos unas fechas tentativas.',
-    selector: '.chart-section',
-    position: 'top',
-  },
-  {
-    title: 'Sumar o retirar plata',
-    description: 'Cada vez que guardamos algo o necesitamos retirar, lo registramos acá. Ponemos el monto, la moneda y opcionalmente el motivo.',
-    selector: '.register-movement-panel',
-    position: 'left',
-  },
-  {
-    title: 'Acciones del objetivo',
-    description: 'Desde acá podés modificar la meta, pausarla si la ponemos en espera, marcarla como cumplida cuando llegamos, o eliminarla.',
-    selector: '.actions-panel',
-    position: 'left',
-  },
-  {
-    title: 'Historial de movimientos',
-    description: 'Todos los aportes y retiros que hicimos en esta meta, ordenados por fecha. Podés editar o borrar cualquiera si te equivocaste.',
-    selector: '.movements-history',
-    position: 'top',
-  },
-];
 
 const ObjectiveDetail = () => {
   const { id } = useParams();
@@ -66,29 +32,13 @@ const ObjectiveDetail = () => {
   const [motivoMove, setMotivoMove] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { dolarRate, viewMoneda } = useCurrency();
-  
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
   // Pagination & Projection State
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [projection, setProjection] = useState(null);
   const LIMIT = 10;
-
-  const detailSteps = useMemo(() => {
-    const hasProjection = projection && projection.meses_estimados_restantes > 0;
-    return hasProjection
-      ? DETAIL_TUTORIAL_STEPS
-      : DETAIL_TUTORIAL_STEPS.filter(s => s.selector !== '.projection-card');
-  }, [projection]);
-
-  const tutorial = useTutorial(detailSteps);
 
   // Movement Edit State
   const [isEditMoveModalOpen, setIsEditMoveModalOpen] = useState(false);
@@ -371,13 +321,7 @@ const ObjectiveDetail = () => {
   const mntObjetivo = Number(objective.monto_objetivo || 0);
   const mntRestante = mntObjetivo - mntActual;
 
-  // Utilidad para convertir montos según la moneda de visualización
-  const convert = (amount, originalMoneda) => {
-    if (!viewMoneda || !dolarRate || viewMoneda === originalMoneda) return amount;
-    if (originalMoneda === 'ARS' && viewMoneda === 'USD') return amount / dolarRate;
-    if (originalMoneda === 'USD' && viewMoneda === 'ARS') return amount * dolarRate;
-    return amount;
-  };
+  const convert = (amount, moneda) => convertCurrency(amount, moneda, viewMoneda, dolarRate);
 
   const displayMoneda = viewMoneda || 'ARS';
 
@@ -671,19 +615,6 @@ const ObjectiveDetail = () => {
           ),
         })}
       />
-
-      {/* <TutorialOverlay
-        active={tutorial.active}
-        step={tutorial.currentStep}
-        currentIndex={tutorial.currentIndex}
-        total={tutorial.total}
-        isFirst={tutorial.isFirst}
-        isLast={tutorial.isLast}
-        progress={tutorial.progress}
-        onNext={tutorial.next}
-        onPrev={tutorial.prev}
-        onFinish={tutorial.finish}
-      /> */}
 
       {/* Edit Modal */}
       <Modal

@@ -18,7 +18,7 @@ import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CategoryIcon from '@mui/icons-material/Category';
 import { Tooltip } from '@mui/material';
-import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
+import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 
 const CATEGORIAS = [
@@ -73,12 +73,7 @@ const Gastos = () => {
 
   useEffect(() => { fetchGastos(); }, []);
 
-  const convert = (amount, moneda) => {
-    if (!dolarRate || viewMoneda === moneda) return amount;
-    if (moneda === 'ARS' && viewMoneda === 'USD') return amount / dolarRate;
-    if (moneda === 'USD' && viewMoneda === 'ARS') return amount * dolarRate;
-    return amount;
-  };
+  const convert = (amount, moneda) => convertCurrency(amount, moneda, viewMoneda, dolarRate);
 
   const now = new Date();
   const mesActual  = now.getMonth();

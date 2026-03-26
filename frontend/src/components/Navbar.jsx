@@ -45,18 +45,15 @@ const Navbar = () => {
   return (
     <nav className="navbar glass-panel">
       <div className="navbar-content">
-        {/* Brand + logout al mismo nivel */}
-        <div className="navbar-brand-section">
-          <Link to="/" className="navbar-brand">
-            <AccountBalanceWalletIcon className="brand-icon" />
-            <span className="text-gradient font-bold">App Ahorro</span>
-          </Link>
-          {user && (
-            <button className="btn-icon" onClick={handleLogout} title="Cerrar Sesión">
-              <LogoutIcon />
-            </button>
-          )}
-        </div>
+        <Link to="/" className="navbar-brand">
+          <AccountBalanceWalletIcon className="brand-icon" />
+          <span className="text-gradient font-bold">App Ahorro</span>
+        </Link>
+        {user && (
+          <button className="btn-icon" onClick={handleLogout} title="Cerrar Sesión">
+            <LogoutIcon />
+          </button>
+        )}
       </div>
 
       {/* Barra de utilidades: dolar + toggle + patito */}

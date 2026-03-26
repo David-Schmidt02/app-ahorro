@@ -1,3 +1,11 @@
+/** Convierte un monto entre ARS y USD usando la tasa dolarRate. */
+export function convertCurrency(amount, fromMoneda, toMoneda, dolarRate) {
+  if (!dolarRate || fromMoneda === toMoneda) return amount;
+  if (fromMoneda === 'ARS' && toMoneda === 'USD') return amount / dolarRate;
+  if (fromMoneda === 'USD' && toMoneda === 'ARS') return amount * dolarRate;
+  return amount;
+}
+
 export function formatK(n) {
   if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';

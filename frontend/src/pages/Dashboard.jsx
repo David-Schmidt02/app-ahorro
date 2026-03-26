@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import api from '../api/axios';
 import { useCurrency } from '../context/CurrencyContext';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import SavingsIcon from '@mui/icons-material/Savings';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -11,55 +9,13 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
-import TutorialOverlay from '../components/TutorialOverlay';
-import { useTutorial } from '../hooks/useTutorial';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 
-const TUTORIAL_STEPS = [
-  {
-    title: 'Hola, bichito de luz 💛',
-    description: 'Te armé esta pequeña app para que los dos podamos ver cómo van nuestros ahorros sin lio.',
-    selector: null,
-    position: 'center',
-  },
-  {
-    title: 'El resumen de todo',
-    description: 'Acá podés ver cuánto tenemos guardado en pesos y en dólares, cuántas metas ya cumplimos y cómo vamos en general.',
-    selector: '.summary-cards',
-    position: 'bottom',
-  },
-  {
-    title: 'Buscá lo que necesitás',
-    description: 'Si tenemos muchos objetivos, desde acá podés buscar por nombre o filtrar los que están activos, pausados o completados.',
-    selector: '.dashboard-controls',
-    position: 'bottom',
-  },
-  {
-    title: 'Nuestros objetivos',
-    description: 'Cada tarjeta es una meta. Hacé click en cualquiera para ver cómo va, cargar un aporte o ver cuándo la estaríamos alcanzando.',
-    selector: '.objectives-grid',
-    position: 'top',
-  },
-  {
-    title: 'Crear una meta nueva',
-    description: 'Cuando se nos ocurra algo nuevo para ahorrar, desde acá lo agregamos. Le ponemos nombre, cuánto queremos juntar, para cuándo y en qué moneda.',
-    selector: '.btn-nuevo-objetivo',
-    position: 'bottom',
-  },
-  {
-    title: 'Los últimos movimientos',
-    description: 'Acá aparece un resumen de lo último que cargamos. Si querés ver todo el historial de una meta en particular, entrá a la tarjeta.',
-    selector: '.movements-section',
-    position: 'top',
-  },
-];
-
 const Dashboard = () => {
     const navigate = useNavigate();
-    const tutorial = useTutorial(TUTORIAL_STEPS);
     const [objetivos, setObjetivos] = useState([]);
     const [movimientos, setMovimientos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -73,8 +29,6 @@ const Dashboard = () => {
         objetivos_completados: 0,
         objetivos_totales: 0
     });
-
-    const [filtroEstado] = useState('todos');
 
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
     const [newFormData, setNewFormData] = useState({
@@ -98,10 +52,8 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const params = {};
-
             const [objetivosRes, movimientosRes, estadisticasRes] = await Promise.all([
-                api.get('/objetivos/', { params }),
+                api.get('/objetivos/'),
                 api.get('/movimientos/', { params: { limite: 5 } }),
                 api.get('/estadisticas/')
             ]);
@@ -211,9 +163,6 @@ const Dashboard = () => {
             <div className="dashboard-header">
                 <h1>Resumen de Ahorros</h1>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    {/* <button className="tutorial-help-btn" onClick={tutorial.start}>
-                        <HelpOutlineIcon fontSize="small" /> Tutorial
-                    </button> */}
                     <button className="btn-primary btn-nuevo-objetivo" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <AddIcon fontSize="small" /> Nuevo Objetivo
                     </button>
@@ -262,7 +211,7 @@ const Dashboard = () => {
             <div className="dashboard-section" style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center' }}>
-                        Todos los Objetivos
+                        Objetivos
                         <div className="bordo-tooltip-container">
                             <InfoOutlinedIcon fontSize="small" className="tooltip-icon" />
                             <div className="bordo-tooltip-text">
@@ -359,19 +308,6 @@ const Dashboard = () => {
                 ),
               })}
             />
-
-            {/* <TutorialOverlay
-                active={tutorial.active}
-                step={tutorial.currentStep}
-                currentIndex={tutorial.currentIndex}
-                total={tutorial.total}
-                isFirst={tutorial.isFirst}
-                isLast={tutorial.isLast}
-                progress={tutorial.progress}
-                onNext={tutorial.next}
-                onPrev={tutorial.prev}
-                onFinish={tutorial.finish}
-            /> */}
 
             {/* Modal Movimiento Rápido */}
             <Modal
