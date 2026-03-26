@@ -34,6 +34,12 @@ const CATEGORIAS = [
 ];
 const CAT_MAP = Object.fromEntries(CATEGORIAS.map(c => [c.id, c]));
 
+function formatK(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return Math.round(n).toString();
+}
+
 /** Ícono de categoría con borde outlined (sin relleno de fondo) */
 const CatIcon = ({ cat, size = 36, fontSize = 'small' }) => {
   const { Icon, color } = cat;
@@ -160,6 +166,7 @@ const Gastos = () => {
     <div className="page-container">
       <div className="dashboard-header">
         <h1>Gastos</h1>
+        {/* ARS/USD toggle comentado — por defecto ARS
         <div style={{ display: 'flex', borderRadius: 'var(--radius-full)', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
           {['ARS', 'USD'].map(m => (
             <button key={m} onClick={() => setViewMoneda(m)} style={{
@@ -170,33 +177,31 @@ const Gastos = () => {
             }}>{m}</button>
           ))}
         </div>
+        */}
       </div>
 
       {/* Stats */}
       <div className="summary-cards" style={{ marginBottom: '2rem' }}>
         <div className="summary-card glass-panel">
-          <CatIcon cat={{ Icon: DeleteOutlineIcon, color: 'var(--accent-primary)' }} size={52} fontSize="medium" />
+          <CatIcon cat={{ Icon: DeleteOutlineIcon, color: 'var(--accent-primary)' }} size={40} fontSize="small" />
           <div className="summary-info">
             <h3>Total este mes</h3>
-            <p style={{ fontSize: '1.4rem' }}>{monedaSymbol} {Math.round(totalMes).toLocaleString()}</p>
+            <p style={{ fontSize: '1.4rem' }}>{monedaSymbol} {formatK(totalMes)}</p>
             <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gastosMes.length} gastos</p>
           </div>
         </div>
-        <div className="summary-card glass-panel">
-          {topCategoria
-            ? <CatIcon cat={CAT_MAP[topCategoria.id]} size={52} fontSize="medium" />
-            : <div style={{ width: 52, height: 52 }} />
-          }
-          <div className="summary-info">
-            <h3>Mayor categoría</h3>
-            <p style={{ fontSize: '1.4rem' }}>{topCategoria?.name || '—'}</p>
-            <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-              {topCategoria ? `${monedaSymbol} ${topCategoria.monto.toLocaleString()}` : 'Sin datos'}
-            </p>
+        {topCategoria && (
+          <div className="summary-card glass-panel">
+            <CatIcon cat={CAT_MAP[topCategoria.id]} size={40} fontSize="small" />
+            <div className="summary-info">
+              <h3>Mayor categoría</h3>
+              <p style={{ fontSize: '1.4rem' }}>{topCategoria.name}</p>
+              <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{monedaSymbol} {formatK(topCategoria.monto)}</p>
+            </div>
           </div>
-        </div>
+        )}
         <div className="summary-card glass-panel">
-          <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={52} fontSize="medium" />
+          <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={40} fontSize="small" />
           <div className="summary-info">
             <h3>Total registros</h3>
             <p style={{ fontSize: '1.4rem' }}>{gastos.length}</p>
@@ -205,7 +210,7 @@ const Gastos = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="gastos-layout" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', alignItems: 'start' }}>
         {/* Formulario */}
         <div className="glass-panel" style={{ padding: '1.25rem' }}>
           <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Registrar Gasto</h3>
