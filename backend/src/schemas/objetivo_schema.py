@@ -10,7 +10,7 @@ from src.domain.enums import Moneda, EstadoObjetivo
 class ObjetivoBase(BaseModel):
     """Schema base para Objetivo."""
     nombre: str = Field(..., min_length=1, max_length=200)
-    descripcion: Optional[str] = None
+    descripcion: Optional[str] = Field(None, max_length=300)
     monto_objetivo: Decimal = Field(..., gt=0)
     moneda: Moneda
     fecha_limite: date

@@ -1,0 +1,111 @@
+/* Huevo de Pascua: Mascota */
+
+/* Ícono de mascota en el navbar */
+.mascota-nav-icon {
+  filter: brightness(0) invert(1) drop-shadow(0 0 4px #8B1A2A);
+  transition: filter 0.2s ease;
+}
+
+.mascota-nav-disabled {
+  filter: brightness(0) invert(0.25) !important;
+}
+
+/* Animación por cambio de mascota durante la ruleta — se re-dispara con cada key change */
+.mascota-nav-rolling {
+  animation: mascota-icon-change 0.18s ease-out forwards;
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px #8B1A2A) drop-shadow(0 0 3px #fff) !important;
+}
+
+@keyframes mascota-icon-change {
+  0%   { opacity: 0.2; transform: scale(0.8) rotate(-10deg); }
+  55%  { opacity: 1;   transform: scale(1.25) rotate(7deg); }
+  100% { opacity: 1;   transform: scale(1) rotate(0deg); }
+}
+
+.patito-container {
+  position: fixed;
+  bottom: -150px; /* Inicialmente escondido abajo */
+  right: 5%; /* Margen derecho */
+  z-index: 9999;
+  cursor: pointer;
+  transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.patito-container.is-visible {
+  transform: translateY(-150px); /* Sube la imagen a la vista */
+}
+
+/* Animación de "asustado" al hacer click */
+.patito-container.is-clicked {
+  animation: patito-shock 0.5s ease;
+}
+
+.patito-container.is-rolling .patito-img {
+  animation: mascot-roll 0.2s infinite;
+}
+
+@keyframes mascot-roll {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    filter: blur(2px);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+}
+
+.patito-img {
+  width: 100px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s;
+}
+
+.patito-container:hover .patito-img {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+/* Confeti basico improvisado para CSS */
+.confetti-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: explode 1s ease-out forwards;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes patito-shock {
+  0% {
+    transform: translateY(-150px) scale(1);
+  }
+  25% {
+    transform: translateY(-160px) scale(1.2) rotate(15deg);
+  }
+  50% {
+    transform: translateY(-150px) scale(0.9) rotate(-15deg);
+  }
+  75% {
+    transform: translateY(-140px) scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: translateY(-150px) scale(1) rotate(0);
+  }
+}
+
+@keyframes explode {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0);
+    opacity: 0;
+  }
+}

@@ -82,8 +82,8 @@ class MovimientoService:
         from datetime import datetime
         objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
-        # Persistir cambios en el objetivo
-        actualizado = self.objetivo_repository.actualizar(objetivo)
+        # Persistir cambios en el objetivo (sin commit, para que sea atómico con el movimiento)
+        actualizado = self.objetivo_repository.actualizar(objetivo, commit=False)
         if not actualizado:
             raise ValueError(f"No se pudo actualizar el objetivo {objetivo_id} al aplicar movimiento")
 
@@ -227,8 +227,8 @@ class MovimientoService:
             from datetime import datetime
             objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
-            # Persistir cambios en el objetivo
-            actualizado = self.objetivo_repository.actualizar(objetivo)
+            # Persistir cambios en el objetivo (sin commit, para que sea atómico con el movimiento)
+            actualizado = self.objetivo_repository.actualizar(objetivo, commit=False)
             if not actualizado:
                 raise ValueError(f"No se pudo actualizar el objetivo {objetivo.id}")
 
@@ -287,8 +287,8 @@ class MovimientoService:
         from datetime import datetime
         objetivo.agregar_historial(datetime.now(), objetivo.monto_actual)
 
-        # Persistir cambios en el objetivo
-        actualizado = self.objetivo_repository.actualizar(objetivo)
+        # Persistir cambios en el objetivo (sin commit, para que sea atómico con la eliminación)
+        actualizado = self.objetivo_repository.actualizar(objetivo, commit=False)
         if not actualizado:
             raise ValueError(f"No se pudo actualizar el objetivo {objetivo.id} al revertir movimiento")
 

@@ -8,9 +8,13 @@ import Swal from 'sweetalert2';
 import Modal from '../components/Modal';
 import TutorialOverlay from '../components/TutorialOverlay';
 import { useTutorial } from '../hooks/useTutorial';
-import '../styles/objective-detail.css';
 import { formatAmount, cleanAmount } from '../utils/formatters';
 import { useCurrency } from '../context/CurrencyContext';
+import confetti from 'canvas-confetti';
+
+import cheerSound from '../assets/sounds/festejo.mp3';
+import sadSound from '../assets/sounds/trompeta_triste.mp3';
+import '../styles/objective-detail.css';
 
 const DETAIL_TUTORIAL_STEPS = [
   {
@@ -154,6 +158,22 @@ const ObjectiveDetail = () => {
       
       setMontoMove('');
       setMotivoMove('');
+      
+      // Feedback Audiovisual
+      if (moveType === 'aporte') {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#e11d48', '#fbbf24', '#10b981', '#3b82f6']
+        });
+        const cheer = new Audio(cheerSound);
+        cheer.play().catch(e => console.log('Audio error', e));
+      } else {
+        const sad = new Audio(sadSound);
+        sad.play().catch(e => console.log('Audio error', e));
+      }
+
       await fetchObjectiveData();
     } catch (err) {
       console.error("Error al registrar movimiento:", err);

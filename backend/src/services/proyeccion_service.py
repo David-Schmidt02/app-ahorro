@@ -75,22 +75,28 @@ class ProyeccionService:
                 "mensaje": "Aún no hay aportes registrados para calcular proyección"
             }
 
-        # Calcular promedio mensual de aportes
+        # Calcular promedio mensual agrupando aportes por mes de calendario
         fecha_primer_aporte = min(m.fecha for m in aportes).date()
         fecha_ultimo_aporte = max(m.fecha for m in aportes).date()
 
-        # Calcular meses transcurridos
-        delta = relativedelta(fecha_ultimo_aporte, fecha_primer_aporte)
-        meses_transcurridos = delta.years * 12 + delta.months + delta.days / 30
+        # Sumar aportes por mes
+        aportes_por_mes: dict = {}
+        for aporte in aportes:
+            clave = (aporte.fecha.year, aporte.fecha.month)
+            aportes_por_mes[clave] = aportes_por_mes.get(clave, Decimal(0)) + aporte.monto
 
-        # Si es menos de un mes, usar ese período
-        if meses_transcurridos < 1:
-            meses_transcurridos = max(Decimal(1), Decimal(delta.days) / Decimal(30))
+        # Generar todos los meses entre el primero y el último (inclusive), contando meses sin aportes como $0
+        meses_calendario = []
+        year, month = fecha_primer_aporte.year, fecha_primer_aporte.month
+        while (year, month) <= (fecha_ultimo_aporte.year, fecha_ultimo_aporte.month):
+            meses_calendario.append((year, month))
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
 
-        # Calcular promedio mensual
-        # Ya no requerimos convertir porque 'aportes' ya están en USD como el objetivo
-        suma_aportes = sum(m.monto for m in aportes)
-        promedio_mensual = suma_aportes / Decimal(meses_transcurridos)
+        totales_mensuales = [aportes_por_mes.get(m, Decimal(0)) for m in meses_calendario]
+        promedio_mensual = sum(totales_mensuales) / Decimal(len(meses_calendario))
 
         # Proyectar meses restantes
         if promedio_mensual > 0:
@@ -114,6 +120,8 @@ class ProyeccionService:
                     mensaje = "A este ritmo, alcanzarás tu objetivo en aproximadamente 1 año"
                 elif años == 1:
                     mensaje = f"A este ritmo, alcanzarás tu objetivo en 1 año y {meses} meses"
+                elif años == 0:
+                    mensaje = f"A este ritmo, alcanzarás tu objetivo en {meses_estimados_int} meses"
                 elif meses == 0:
                     mensaje = f"A este ritmo, alcanzarás tu objetivo en {años} años"
                 else:

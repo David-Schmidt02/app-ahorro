@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import TabBar from './TabBar';
-import Patito from './Patito';
+import Mascota from './Mascota';
 
 function computeCalBadge() {
   try {
@@ -52,7 +52,7 @@ const Layout = () => {
       </main>
 
       {/* Easter Egg */}
-      <Patito />
+      <Mascota />
     </div>
   );
 };
