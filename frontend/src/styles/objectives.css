@@ -153,6 +153,77 @@
     font-weight: 600;
 }
 
+/* Quick action buttons on objective cards */
+.objective-quick-actions {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+}
+
+.quick-action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.quick-action-aporte {
+    border-color: rgba(16, 185, 129, 0.5);
+    color: var(--accent-success);
+}
+
+.quick-action-aporte:hover {
+    background: rgba(16, 185, 129, 0.2);
+    transform: scale(1.15);
+}
+
+.quick-action-retiro {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: var(--accent-danger);
+}
+
+.quick-action-retiro:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.15);
+}
+
+/* Movement tipo tabs (reutilizado en modal rápido y detail page) */
+.movement-tabs {
+    display: flex;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+.movement-tab {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.movement-tab.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.movement-tab:hover:not(.active) {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+}
+
 /* Responsive Objectives */
 @media (max-width: 600px) {
   .objectives-grid {

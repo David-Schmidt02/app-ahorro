@@ -68,6 +68,9 @@ class UsuarioORM(Base):
 
     # Relaciones
     movimientos = relationship("MovimientoORM", back_populates="usuario")
+    gastos = relationship("GastoORM", back_populates="usuario")
+    eventos_calendario = relationship("EventoCalendarioORM", back_populates="usuario")
+    horarios = relationship("HorarioORM", back_populates="usuario", uselist=False)
 
 
 class ObjetivoORM(Base):
@@ -120,6 +123,53 @@ class TasaCambioORM(Base):
     tipo_cotizacion = Column(SQLEnum(TipoCotizacion, values_callable=lambda x: [e.value for e in x]), nullable=False)
     fuente = Column(String(100), nullable=False)
     fecha = Column(DateTime, default=datetime.now, nullable=False, index=True)
+
+
+class GastoORM(Base):
+    """Modelo ORM para la tabla gastos."""
+    __tablename__ = "gastos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    monto = Column(Numeric(precision=15, scale=2), nullable=False)
+    moneda = Column(SQLEnum(Moneda, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    categoria = Column(String(50), nullable=False)
+    descripcion = Column(Text, nullable=True)
+    fecha = Column(DateTime, default=datetime.now, nullable=False, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+
+    # Relaciones
+    usuario = relationship("UsuarioORM", back_populates="gastos")
+
+
+class EventoCalendarioORM(Base):
+    """Modelo ORM para la tabla eventos_calendario."""
+    __tablename__ = "eventos_calendario"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(200), nullable=False)
+    tipo = Column(String(50), nullable=False)
+    fecha = Column(Date, nullable=False, index=True)
+    hora = Column(String(5), nullable=True)
+    foto = Column(Text, nullable=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    creado_en = Column(DateTime, default=datetime.now, nullable=False)
+
+    # Relaciones
+    usuario = relationship("UsuarioORM", back_populates="eventos_calendario")
+
+
+class HorarioORM(Base):
+    """Modelo ORM para la tabla horarios."""
+    __tablename__ = "horarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, unique=True)
+    nombre_usuario = Column(String(100), nullable=True)
+    data = Column(Text, nullable=False, default='{}')
+    actualizado_en = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    # Relaciones
+    usuario = relationship("UsuarioORM", back_populates="horarios")
 
 
 def create_tables():

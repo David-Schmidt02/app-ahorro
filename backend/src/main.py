@@ -17,6 +17,8 @@ from src.config.settings import get_settings, check_and_reload_if_changed
 from src.log.logging_config import setup_logging, reload_logging_config, get_logger
 from src.database import create_tables
 from src.controllers import auth_controller, objetivo_controller, movimiento_controller, estadistica_controller
+from src.controllers import gasto_controller
+from src.controllers import evento_calendario_controller, horario_controller
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -172,6 +174,9 @@ app.include_router(auth_controller.router, prefix=settings.app.api_prefix)
 app.include_router(objetivo_controller.router, prefix=settings.app.api_prefix)
 app.include_router(movimiento_controller.router, prefix=settings.app.api_prefix)
 app.include_router(estadistica_controller.router, prefix=settings.app.api_prefix)
+app.include_router(gasto_controller.router, prefix=settings.app.api_prefix)
+app.include_router(evento_calendario_controller.router, prefix=settings.app.api_prefix)
+app.include_router(horario_controller.router, prefix=settings.app.api_prefix)
 
 
 @app.get("/")

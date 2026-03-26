@@ -2,6 +2,18 @@
 
 Aplicación web para trackear ahorros y alcanzar objetivos financieros. Uso personal para 2 usuarios.
 
+## Usuario de Test (local)
+
+| Campo | Valor |
+|---|---|
+| Email | `test@test.com` |
+| Contraseña | `test1234` |
+| Nombre | `David` |
+
+> Para recrearlo: `cd backend && venv\Scripts\python.exe reset_db.py`
+
+---
+
 ## Stack Técnico
 
 ### Backend: FastAPI (Python)

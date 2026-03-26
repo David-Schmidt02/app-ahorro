@@ -8,6 +8,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -89,6 +90,14 @@ const Dashboard = () => {
         es_prioritario: false
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Quick aporte/retiro modal
+    const [quickMove, setQuickMove] = useState(null); // objetivo seleccionado
+    const [qTipo, setQTipo] = useState('aporte');
+    const [qMonto, setQMonto] = useState('');
+    const [qMoneda, setQMoneda] = useState('ARS');
+    const [qMotivo, setQMotivo] = useState('');
+    const [isQuickSubmitting, setIsQuickSubmitting] = useState(false);
     const { dolarRate, setDolarRate } = useCurrency();
 
     const fetchDashboardData = async () => {
@@ -170,6 +179,39 @@ const Dashboard = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleQuickSubmit = async (e) => {
+        e.preventDefault();
+        if (!qMonto || !quickMove) return;
+        setIsQuickSubmitting(true);
+        try {
+            await api.post('/movimientos/', {
+                objetivo_id: quickMove.id,
+                monto: parseFloat(cleanAmount(qMonto)),
+                moneda: qMoneda,
+                tipo: qTipo,
+                motivo: qMotivo || (qTipo === 'aporte' ? 'Aporte rápido' : 'Retiro rápido'),
+            });
+            setQuickMove(null);
+            setQMonto('');
+            setQMotivo('');
+            await fetchDashboardData();
+        } catch (err) {
+            console.error("Error en movimiento rápido:", err);
+            alert("No se pudo registrar el movimiento.");
+        } finally {
+            setIsQuickSubmitting(false);
+        }
+    };
+
+    const openQuickMove = (e, obj, tipo) => {
+        e.stopPropagation();
+        setQTipo(tipo);
+        setQMonto('');
+        setQMotivo('');
+        setQMoneda('ARS');
+        setQuickMove(obj);
     };
 
     if (isLoading) {
@@ -309,11 +351,29 @@ const Dashboard = () => {
                                         <span>{Number(obj.porcentaje_completado || 0).toFixed(1)}%</span>
                                     </div>
                                     <div className="progress-bar-bg">
-                                        <div 
-                                            className="progress-bar-fill" 
+                                        <div
+                                            className="progress-bar-fill"
                                             style={{ width: `${Math.min(Number(obj.porcentaje_completado || 0), 100)}%` }}
                                         ></div>
                                     </div>
+                                </div>
+
+                                {/* Acciones rápidas */}
+                                <div className="objective-quick-actions" onClick={e => e.stopPropagation()}>
+                                    <button
+                                        className="quick-action-btn quick-action-aporte"
+                                        onClick={(e) => openQuickMove(e, obj, 'aporte')}
+                                        title="Aporte rápido"
+                                    >
+                                        <AddIcon style={{ fontSize: '0.85rem' }} />
+                                    </button>
+                                    <button
+                                        className="quick-action-btn quick-action-retiro"
+                                        onClick={(e) => openQuickMove(e, obj, 'retiro')}
+                                        title="Retiro rápido"
+                                    >
+                                        <RemoveIcon style={{ fontSize: '0.85rem' }} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -374,6 +434,76 @@ const Dashboard = () => {
                 onPrev={tutorial.prev}
                 onFinish={tutorial.finish}
             />
+
+            {/* Modal Movimiento Rápido */}
+            <Modal
+                isOpen={!!quickMove}
+                onClose={() => setQuickMove(null)}
+                title={quickMove ? `${qTipo === 'aporte' ? '+ Aporte' : '− Retiro'} — ${quickMove.nombre}` : ''}
+                footer={
+                    <>
+                        <button type="button" className="btn-secondary" onClick={() => setQuickMove(null)}>
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            form="quick-move-form"
+                            className={qTipo === 'aporte' ? 'btn-success' : 'btn-danger'}
+                            disabled={isQuickSubmitting}
+                        >
+                            {isQuickSubmitting ? 'Registrando...' : (qTipo === 'aporte' ? 'Sumar Aporte' : 'Registrar Retiro')}
+                        </button>
+                    </>
+                }
+            >
+                <div className="movement-tabs" style={{ marginBottom: '1.25rem' }}>
+                    <button
+                        type="button"
+                        className={`movement-tab ${qTipo === 'aporte' ? 'active' : ''}`}
+                        onClick={() => setQTipo('aporte')}
+                    >Aporte</button>
+                    <button
+                        type="button"
+                        className={`movement-tab ${qTipo === 'retiro' ? 'active' : ''}`}
+                        onClick={() => setQTipo('retiro')}
+                    >Retiro</button>
+                </div>
+                <form id="quick-move-form" onSubmit={handleQuickSubmit}>
+                    <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: '1rem' }}>
+                        <div className="form-group">
+                            <label>Monto</label>
+                            <div className="amount-input-wrapper">
+                                <span className="amount-input-prefix">$</span>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="0"
+                                    value={qMonto}
+                                    onChange={(e) => setQMonto(formatAmount(e.target.value))}
+                                    autoFocus
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Moneda</label>
+                            <select value={qMoneda} onChange={(e) => setQMoneda(e.target.value)} className="glass-select">
+                                <option value="ARS">ARS</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Motivo (opcional)</label>
+                        <input
+                            type="text"
+                            placeholder={qTipo === 'aporte' ? 'Ej: Ahorro quincena' : 'Ej: Compra imprevista'}
+                            value={qMotivo}
+                            onChange={(e) => setQMotivo(e.target.value)}
+                        />
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal Nuevo Objetivo */}
             <Modal
