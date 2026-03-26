@@ -226,13 +226,13 @@
   flex: 1;
 }
 
-.movement-tab:hover {
+.movement-tab:hover:not(.active) {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.03);
 }
 
 .movement-tab.active {
-  color: var(--accent-primary);
+  color: var(--text-primary);
   border-bottom-color: var(--accent-primary);
 }
 

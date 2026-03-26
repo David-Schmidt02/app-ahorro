@@ -64,6 +64,16 @@ body {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
+.card-hover {
+  transition: var(--transition-normal);
+  cursor: default;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.55);
+  background: rgba(30, 41, 59, 0.9);
+}
+
 .text-gradient {
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;

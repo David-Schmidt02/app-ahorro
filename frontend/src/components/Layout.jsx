@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import TabBar from './TabBar';
 import Mascota from './Mascota';
+import MobileLayout from './MobileLayout';
+import { useIsMobile } from '../hooks/useIsMobile';
+
+const TAB_PATHS = ['/', '/gastos', '/horarios', '/calendario'];
 
 function computeCalBadge() {
   try {
@@ -20,6 +24,9 @@ function computeCalBadge() {
 
 const Layout = () => {
   const [calBadge, setCalBadge] = useState(computeCalBadge);
+  const isMobile = useIsMobile();
+  const location = useLocation();
+  const isTabRoute = TAB_PATHS.includes(location.pathname);
 
   useEffect(() => {
     // Actualizar badge cuando cambian los eventos del calendario
@@ -40,6 +47,18 @@ const Layout = () => {
       window.removeEventListener('cal_viewed', onCalViewed);
     };
   }, []);
+
+  if (isMobile && isTabRoute) {
+    return (
+      <div className="app-layout app-layout--mobile">
+        <div className="app-header">
+          <Navbar />
+        </div>
+        <MobileLayout badges={{ '/calendario': calBadge }} />
+        <Mascota />
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout">

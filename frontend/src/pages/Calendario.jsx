@@ -240,9 +240,15 @@ const Calendario = () => {
         {/* Grilla del calendario */}
         <div className="glass-panel" style={{ padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <button onClick={prevMonth} style={navBtnStyle}>‹</button>
+            <button onClick={prevMonth} style={navBtnStyle}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+            >‹</button>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{MESES[viewMonth]} {viewYear}</h2>
-            <button onClick={nextMonth} style={navBtnStyle}>›</button>
+            <button onClick={nextMonth} style={navBtnStyle}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+            >›</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
@@ -307,7 +313,7 @@ const Calendario = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Eventos del día seleccionado */}
           {selectedDay && (
-            <div className="glass-panel" style={{ padding: '1.25rem' }}>
+            <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <h3 style={{ fontSize: '0.95rem', margin: 0 }}>
                   {new Date(selectedDay + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -339,7 +345,11 @@ const Calendario = () => {
                         style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'zoom-in', flexShrink: 0 }}
                       />
                     )}
-                    <button onClick={() => handleDelete(ev.id)} style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '2px', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => handleDelete(ev.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '4px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'opacity 0.15s, background 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(225,29,72,0.12)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'transparent'; }}
+                    >
                       <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
                     </button>
                   </div>
@@ -349,7 +359,7 @@ const Calendario = () => {
           )}
 
           {/* Próximos 7 días */}
-          <div className="glass-panel" style={{ padding: '1.25rem' }}>
+          <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Próximos 7 días</h3>
             {loading ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Cargando...</p>
@@ -375,7 +385,7 @@ const Calendario = () => {
           </div>
 
           {/* Leyenda */}
-          <div className="glass-panel" style={{ padding: '1rem' }}>
+          <div className="glass-panel card-hover" style={{ padding: '1rem' }}>
             <h3 style={{ fontSize: '0.85rem', marginBottom: '0.6rem', color: 'var(--text-muted)' }}>TIPOS</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
               {TIPOS.map(t => (
