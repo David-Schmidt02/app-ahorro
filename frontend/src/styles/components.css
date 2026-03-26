@@ -263,35 +263,70 @@
 }
 .tutorial-help-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.12); }
 
+.navbar-brand-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+.navbar-greeting-bar {
+  text-align: center;
+  padding: 0.2rem 2rem 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .navbar-greeting {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
+}
+
+/* ARS/USD toggle */
+.moneda-toggle {
+  display: flex;
+  border-radius: var(--radius-md);
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.moneda-toggle-btn {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.72rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.moneda-toggle-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
 }
 
 /* Responsive General Components */
 @media (max-width: 768px) {
   .navbar-content {
-    padding: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
+    padding: 0.75rem 1rem;
   }
 
   .navbar-actions {
-    gap: 0.75rem;
-    width: 100%;
-    justify-content: center;
+    gap: 0.6rem;
   }
 
-  .navbar-greeting {
-    font-size: 0.95rem;
+  .dolar-label {
+    display: none;
   }
 
   .main-content {

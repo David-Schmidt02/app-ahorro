@@ -24,6 +24,7 @@
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
   --radius-lg: 1.5rem;
+  --radius-full: 9999px;
 
   /* Transiciones */
   --transition-fast: 0.15s ease-in-out;
