@@ -78,7 +78,8 @@ const TimeInput = ({ value, onChange, mobile }) => (
       ...baseSt,
       padding: '0.18rem 0.3rem',
       fontSize: '0.72rem',
-      width: '100%',
+      flex: 1,
+      minWidth: 0,
       cursor: 'pointer',
       colorScheme: 'dark',
     }}
@@ -112,19 +113,23 @@ const SlotEditor = ({ slot, onChange, onDelete, error, mobile }) => {
   }
 
   return (
-    <div style={{ marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
-      <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginBottom: '0.2rem' }}>
+    <div style={{ marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.35rem' }}>
+      {/* Inicio → Fin en fila */}
+      <div style={{ display: 'flex', gap: '3px', alignItems: 'center', marginBottom: '0.25rem' }}>
         <TimeInput value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} />
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', flexShrink: 0 }}>→</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', flexShrink: 0 }}>→</span>
         <TimeInput value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} />
+      </div>
+      {/* Actividad + delete en fila */}
+      <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+        <input type="text" placeholder="Actividad" value={slot.actividad}
+          onChange={e => onChange({ ...slot, actividad: e.target.value })}
+          style={{ ...inputSt, flex: 1, minWidth: 0 }} />
         <button onClick={onDelete}
-          style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.7, padding: '1px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          <DeleteOutlineIcon style={{ fontSize: '0.8rem' }} />
+          style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.75, padding: '2px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+          <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
         </button>
       </div>
-      <input type="text" placeholder="Actividad" value={slot.actividad}
-        onChange={e => onChange({ ...slot, actividad: e.target.value })}
-        style={inputSt} />
       {error && <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block', marginTop: '2px' }}>{error}</span>}
     </div>
   );
@@ -148,8 +153,8 @@ const tdSt = (isOdd) => ({
   border: '1px solid rgba(255,255,255,0.07)',
   verticalAlign: 'top',
   background: isOdd ? 'rgba(255,255,255,0.012)' : 'transparent',
-  minWidth: '82px',
-  width: '82px',
+  minWidth: '120px',
+  width: '120px',
 });
 
 /* ─────────────────────────────────────────────────────── */
