@@ -52,6 +52,7 @@ const MobileLayout = ({ badges = {} }) => {
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const isHorizontalRef = useRef(false);
+  const isVerticalRef = useRef(false);
   const skipSwipeRef = useRef(false);
 
   useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
@@ -85,8 +86,9 @@ const MobileLayout = ({ badges = {} }) => {
       const dy = e.touches[0].clientY - touchStartY.current;
 
       if (!isHorizontalRef.current) {
-        if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll — don't interfere
-        if (Math.abs(dx) < 8) return;
+        if (isVerticalRef.current) return; // locked vertical — never re-evaluate
+        if (Math.abs(dy) > Math.abs(dx) * 1.1) { isVerticalRef.current = true; return; }
+        if (Math.abs(dx) < 12) return;
         isHorizontalRef.current = true;
       }
 
@@ -121,6 +123,7 @@ const MobileLayout = ({ badges = {} }) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isHorizontalRef.current = false;
+    isVerticalRef.current = false;
   };
 
   const onTouchEnd = (e) => {

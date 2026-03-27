@@ -5,7 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import api from '../api/axios';
 import Swal from 'sweetalert2';
 import Modal from '../components/Modal';
-import { formatAmount, cleanAmount, convertCurrency } from '../utils/formatters';
+import { formatAmount, cleanAmount, convertCurrency, formatK } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 import { useCurrency } from '../context/CurrencyContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -343,7 +343,7 @@ const ObjectiveDetail = () => {
       <header className="dashboard-header">
         <div className="dashboard-header-left">
           <button className="btn-volver" onClick={() => navigate(-1)}>
-            <ArrowBack fontSize="small" /> Volver
+            <ArrowBack fontSize="small" />{!isMobile && ' Volver'}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <h1 style={{ margin: 0, fontSize: '1.8rem' }}>{objective.nombre}</h1>
@@ -372,12 +372,12 @@ const ObjectiveDetail = () => {
                 <div className="detail-metrics-group">
                   <div className="detail-metric-item">
                     <h4 className="secondary-label">ACUMULADO</h4>
-                    <p style={{ color: 'var(--accent-success)' }}>${convert(mntActual, objective.moneda).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                    <p style={{ color: 'var(--accent-success)' }}>${formatK(convert(mntActual, objective.moneda))}</p>
                   </div>
                   <div className="detail-metric-item" style={{ textAlign: 'right' }}>
                     <h4 className="secondary-label">RESTANTE</h4>
                     <p style={{ color: mntRestante > 0 ? 'var(--text-primary)' : 'var(--accent-success)' }}>
-                      ${Math.max(0, convert(mntRestante, objective.moneda)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      ${formatK(Math.max(0, convert(mntRestante, objective.moneda)))}
                     </p>
                   </div>
                 </div>
