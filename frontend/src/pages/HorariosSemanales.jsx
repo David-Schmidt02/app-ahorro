@@ -3,13 +3,32 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import api from '../api/axios';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const SLOT_TEMPLATE = { inicio: '09:00', fin: '17:00', actividad: '' };
 const EMPTY_SEMANA = Object.fromEntries(DIAS.map(d => [d, []]));
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = [0, 15, 30, 45];
 
 function toMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function toTime(m) { return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
+
+function sortSlots(slots) {
+  return [...slots].sort((a, b) => toMin(a.inicio) - toMin(b.inicio));
+}
+
+function getOverlapError(slots, newSlot, excludeIdx) {
+  const nS = toMin(newSlot.inicio);
+  const nE = toMin(newSlot.fin);
+  if (nE <= nS) return 'El fin debe ser posterior al inicio';
+  for (let i = 0; i < slots.length; i++) {
+    if (i === excludeIdx) continue;
+    const s = toMin(slots[i].inicio);
+    const e = toMin(slots[i].fin);
+    if (nS < e && nE > s) return `Se superpone con ${slots[i].inicio}–${slots[i].fin}`;
+  }
+  return null;
+}
 
 function calcLibres(slotsA, slotsB) {
   const occ = [...slotsA, ...slotsB].map(s => [toMin(s.inicio), toMin(s.fin)]).sort((a, b) => a[0] - b[0]);
@@ -25,25 +44,57 @@ function calcLibres(slotsA, slotsB) {
   return libres.filter(([s, e]) => e - s >= 30);
 }
 
-const inputSt = {
+const baseSt = {
   background: 'rgba(0,0,0,0.35)',
   border: '1px solid rgba(255,255,255,0.12)',
   borderRadius: 'var(--radius-sm)',
   color: 'var(--text-primary)',
+  fontFamily: 'inherit',
+};
+
+const selectSt = {
+  ...baseSt,
+  padding: '0.2rem 0.1rem',
+  fontSize: '0.75rem',
+  width: '38px',
+  textAlign: 'center',
+  cursor: 'pointer',
+};
+
+const inputSt = {
+  ...baseSt,
   padding: '0.25rem 0.4rem',
   fontSize: '0.75rem',
-  fontFamily: 'inherit',
   width: '100%',
 };
 
-const SlotEditor = ({ slot, onChange, onDelete }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
-    <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-      <input type="time" value={slot.inicio} onChange={e => onChange({ ...slot, inicio: e.target.value })}
-        style={{ ...inputSt, flex: 1 }} />
+/* ── Custom time select ───────────────────────────────── */
+const TimeSelect = ({ value, onChange }) => {
+  const [hStr, mStr] = value.split(':');
+  const h = parseInt(hStr, 10) || 0;
+  const rawM = parseInt(mStr, 10) || 0;
+  const m = MINUTES.reduce((prev, curr) => Math.abs(curr - rawM) < Math.abs(prev - rawM) ? curr : prev, 0);
+
+  return (
+    <div style={{ display: 'flex', gap: '1px', alignItems: 'center' }}>
+      <select value={h} onChange={e => onChange(`${String(+e.target.value).padStart(2, '0')}:${String(m).padStart(2, '0')}`)} style={selectSt}>
+        {HOURS.map(hr => <option key={hr} value={hr}>{String(hr).padStart(2, '00')}</option>)}
+      </select>
+      <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', padding: '0 1px' }}>:</span>
+      <select value={m} onChange={e => onChange(`${String(h).padStart(2, '0')}:${String(+e.target.value).padStart(2, '0')}`)} style={selectSt}>
+        {MINUTES.map(mn => <option key={mn} value={mn}>{String(mn).padStart(2, '00')}</option>)}
+      </select>
+    </div>
+  );
+};
+
+/* ── Slot editor ─────────────────────────────────────── */
+const SlotEditor = ({ slot, onChange, onDelete, error }) => (
+  <div style={{ marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
+    <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginBottom: '0.2rem' }}>
+      <TimeSelect value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} />
       <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', flexShrink: 0 }}>→</span>
-      <input type="time" value={slot.fin} onChange={e => onChange({ ...slot, fin: e.target.value })}
-        style={{ ...inputSt, flex: 1 }} />
+      <TimeSelect value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} />
       <button onClick={onDelete}
         style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.7, padding: '1px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
         <DeleteOutlineIcon style={{ fontSize: '0.8rem' }} />
@@ -51,17 +102,18 @@ const SlotEditor = ({ slot, onChange, onDelete }) => (
     </div>
     <input type="text" placeholder="Actividad" value={slot.actividad}
       onChange={e => onChange({ ...slot, actividad: e.target.value })}
-      style={{ ...inputSt }} />
+      style={inputSt} />
+    {error && <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block', marginTop: '2px' }}>{error}</span>}
   </div>
 );
 
-/* ── Tabla genérica con días como columnas ───────────── */
+/* ── Table styles ────────────────────────────────────── */
 const thSt = (color) => ({
-  padding: '0.55rem 0.5rem',
+  padding: '0.5rem 0.3rem',
   textAlign: 'center',
-  fontSize: '0.68rem',
+  fontSize: '0.65rem',
   fontWeight: 700,
-  letterSpacing: '0.06em',
+  letterSpacing: '0.05em',
   color,
   background: 'rgba(0,0,0,0.4)',
   border: '1px solid rgba(255,255,255,0.08)',
@@ -69,20 +121,23 @@ const thSt = (color) => ({
 });
 
 const tdSt = (isOdd) => ({
-  padding: '0.5rem',
+  padding: '0.4rem 0.3rem',
   border: '1px solid rgba(255,255,255,0.07)',
   verticalAlign: 'top',
   background: isOdd ? 'rgba(255,255,255,0.012)' : 'transparent',
-  minWidth: '110px',
+  minWidth: '82px',
+  width: '82px',
 });
 
-/* ────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────── */
 const HorariosSemanales = () => {
+  const isMobile = useIsMobile();
   const [miData,   setMiData]   = useState(EMPTY_SEMANA);
   const [otros,    setOtros]    = useState([]);
   const [saved,    setSaved]    = useState('');
   const [loading,  setLoading]  = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [warnings, setWarnings] = useState({});
 
   useEffect(() => {
     const load = async () => {
@@ -127,9 +182,38 @@ const HorariosSemanales = () => {
     }
   };
 
-  const addSlot    = (dia)         => setMiData(p => ({ ...p, [dia]: [...p[dia], { ...SLOT_TEMPLATE }] }));
-  const updateSlot = (dia, i, upd) => setMiData(p => { const s = [...p[dia]]; s[i] = upd; return { ...p, [dia]: s }; });
-  const deleteSlot = (dia, i)      => setMiData(p => ({ ...p, [dia]: p[dia].filter((_, j) => j !== i) }));
+  const addSlot = (dia) => {
+    const slots = miData[dia];
+    // Find first available 1-hour block starting from 07:00
+    let found = null;
+    for (let h = 7; h < 22 && !found; h++) {
+      const candidate = { inicio: toTime(h * 60), fin: toTime((h + 1) * 60), actividad: '' };
+      if (!getOverlapError(slots, candidate, -1)) found = candidate;
+    }
+    if (!found) {
+      setWarnings(w => ({ ...w, [dia]: 'No hay espacio disponible' }));
+      setTimeout(() => setWarnings(w => ({ ...w, [dia]: '' })), 2500);
+      return;
+    }
+    setMiData(p => ({ ...p, [dia]: sortSlots([...p[dia], found]) }));
+  };
+
+  const updateSlot = (dia, i, upd) => {
+    const currentSlots = miData[dia];
+    const err = getOverlapError(currentSlots, upd, i);
+    if (err) {
+      setWarnings(w => ({ ...w, [`${dia}-${i}`]: err }));
+      return;
+    }
+    setWarnings(w => ({ ...w, [`${dia}-${i}`]: '' }));
+    setMiData(p => {
+      const s = [...p[dia]];
+      s[i] = upd;
+      return { ...p, [dia]: sortSlots(s) };
+    });
+  };
+
+  const deleteSlot = (dia, i) => setMiData(p => ({ ...p, [dia]: p[dia].filter((_, j) => j !== i) }));
 
   if (loading) return (
     <div className="page-container">
@@ -138,7 +222,6 @@ const HorariosSemanales = () => {
     </div>
   );
 
-  // Solo tomamos el primer "otro" usuario (el sistema asume 2 usuarios)
   const partner = otros[0] || null;
 
   return (
@@ -157,7 +240,8 @@ const HorariosSemanales = () => {
           )}
           <button className="btn-primary" onClick={save} disabled={isSaving}
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}>
-            <SaveIcon fontSize="small" /> {isSaving ? 'Guardando...' : 'Guardar mi horario'}
+            <SaveIcon fontSize="small" />
+            {isSaving ? 'Guardando...' : (isMobile ? 'Guardar' : 'Guardar mi horario')}
           </button>
         </div>
       </div>
@@ -168,10 +252,10 @@ const HorariosSemanales = () => {
           Mi horario
         </h2>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-primary)')}>{dia.toUpperCase()}</th>)}
+                {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-primary)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -180,12 +264,16 @@ const HorariosSemanales = () => {
                   <td key={dia} style={tdSt(i % 2 === 1)}>
                     {miData[dia].map((slot, si) => (
                       <SlotEditor key={si} slot={slot}
+                        error={warnings[`${dia}-${si}`]}
                         onChange={upd => updateSlot(dia, si, upd)}
                         onDelete={() => deleteSlot(dia, si)}
                       />
                     ))}
+                    {warnings[dia] && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block' }}>{warnings[dia]}</span>
+                    )}
                     <button onClick={() => addSlot(dia)} style={{
-                      fontSize: '0.7rem', color: 'var(--accent-primary)', background: 'transparent',
+                      fontSize: '0.68rem', color: 'var(--accent-primary)', background: 'transparent',
                       border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                       gap: '0.15rem', padding: '2px 0', opacity: 0.75, marginTop: '2px',
                     }}>
@@ -206,10 +294,10 @@ const HorariosSemanales = () => {
             {partner.nombre}
           </h2>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-secondary)')}>{dia.toUpperCase()}</th>)}
+                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-secondary)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -223,14 +311,14 @@ const HorariosSemanales = () => {
                         ) : (
                           slots.map((slot, si) => (
                             <div key={si} style={{
-                              fontSize: '0.75rem', marginBottom: '0.3rem',
+                              fontSize: '0.73rem', marginBottom: '0.3rem',
                               background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-sm)', padding: '0.3rem',
                             }}>
                               <span style={{ color: 'var(--accent-secondary)', fontVariantNumeric: 'tabular-nums', display: 'block' }}>
                                 {slot.inicio} → {slot.fin}
                               </span>
                               {slot.actividad && (
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{slot.actividad}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>{slot.actividad}</span>
                               )}
                             </div>
                           ))
@@ -256,10 +344,10 @@ const HorariosSemanales = () => {
             Libres juntos
           </h2>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-success)')}>{dia.toUpperCase()}</th>)}
+                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-success)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -269,15 +357,15 @@ const HorariosSemanales = () => {
                     return (
                       <td key={dia} style={{ ...tdSt(i % 2 === 1), background: i % 2 === 1 ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.02)' }}>
                         {libres.length === 0 ? (
-                          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem' }}>—</span>
+                          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.73rem' }}>—</span>
                         ) : (
                           libres.map(([s, e], li) => (
                             <span key={li} style={{
-                              display: 'block', fontSize: '0.73rem',
+                              display: 'block', fontSize: '0.71rem',
                               background: 'rgba(16,185,129,0.15)',
                               border: '1px solid rgba(16,185,129,0.3)',
                               color: 'var(--accent-success)',
-                              borderRadius: '4px', padding: '2px 6px',
+                              borderRadius: '4px', padding: '2px 4px',
                               marginBottom: '3px', fontVariantNumeric: 'tabular-nums',
                             }}>
                               {toTime(s)} – {toTime(e)}

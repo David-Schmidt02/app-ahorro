@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
-import { formatAmount, cleanAmount, formatK } from '../utils/formatters';
+import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 
 const Dashboard = () => {
@@ -48,7 +48,7 @@ const Dashboard = () => {
     const [qMoneda, setQMoneda] = useState('ARS');
     const [qMotivo, setQMotivo] = useState('');
     const [isQuickSubmitting, setIsQuickSubmitting] = useState(false);
-    const { dolarRate, setDolarRate } = useCurrency();
+    const { dolarRate, setDolarRate, viewMoneda } = useCurrency();
 
     const fetchDashboardData = async () => {
         try {
@@ -176,9 +176,11 @@ const Dashboard = () => {
                     </div>
                     <div className="summary-info">
                         <h3>Patrimonio Total</h3>
-                        <p style={{ fontSize: '1.2rem' }}>AR$ {formatK(Number(totales.patrimonio_ars || 0))}</p>
+                        <p style={{ fontSize: '1.2rem' }}>
+                          {viewMoneda === 'USD' ? 'US$' : 'AR$'} {formatK(viewMoneda === 'USD' ? Number(totales.patrimonio_usd || 0) : Number(totales.patrimonio_ars || 0))}
+                        </p>
                         <p style={{ fontSize: '0.9rem', opacity: 0.8, color: 'var(--accent-success)' }}>
-                            US$ {formatK(Number(totales.patrimonio_usd || 0))}
+                          {viewMoneda === 'USD' ? 'AR$' : 'US$'} {formatK(viewMoneda === 'USD' ? Number(totales.patrimonio_ars || 0) : Number(totales.patrimonio_usd || 0))}
                         </p>
                     </div>
                 </div>
@@ -241,7 +243,7 @@ const Dashboard = () => {
                                         <h3 className="objective-title">{obj.nombre}</h3>
                                     </div>
                                     <div className="objective-monto">
-                                        ${Math.round(Number(obj.monto_objetivo || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                        {viewMoneda === 'USD' ? 'US$' : 'AR$'} {formatK(convertCurrency(Number(obj.monto_objetivo || 0), obj.moneda, viewMoneda, dolarRate))}
                                     </div>
                                     <div className="objective-dates">
                                         Vence: {obj.fecha_limite ? new Date(obj.fecha_limite + 'T00:00:00').toLocaleDateString() : 'Sin fecha'}
@@ -302,7 +304,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <span className="movement-item-amount">
-                      {mov.tipo === 'aporte' ? '+' : '-'}${Math.round(mov.monto).toLocaleString()}
+                      {mov.tipo === 'aporte' ? '+' : '-'}{viewMoneda === 'USD' ? 'US$' : 'AR$'} {formatK(convertCurrency(Number(mov.monto), mov.moneda || 'ARS', viewMoneda, dolarRate))}
                     </span>
                   </>
                 ),

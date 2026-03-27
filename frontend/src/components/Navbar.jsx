@@ -13,7 +13,8 @@ const Navbar = () => {
   const location = useLocation();
   const isGastos   = location.pathname === '/gastos';
   const isDetalle  = location.pathname.startsWith('/objetivo/');
-  const showToggle = isGastos || isDetalle;
+  const isDashboard = location.pathname === '/';
+  const showToggle = isGastos || isDetalle || isDashboard;
   const [patitoEnabled, setPatitoEnabled] = useState(localStorage.getItem('patito_enabled') !== 'false');
   const [navIcon, setNavIcon] = useState(patitoIcon);
   const [navRolling, setNavRolling] = useState(false);

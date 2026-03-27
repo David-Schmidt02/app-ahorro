@@ -12,25 +12,47 @@ const TABS = [
   { path: '/calendario', label: 'Calendario',  Icon: CalendarMonthIcon },
 ];
 
-const TabBar = ({ badges = {} }) => (
-  <div className="tabbar-wrapper">
-    <nav className="tabbar">
-      {TABS.map(({ path, label, Icon, end }) => (
-        <NavLink
-          key={path}
-          to={path}
-          end={end}
-          className={({ isActive }) => `tabbar-tab${isActive ? ' active' : ''}`}
-        >
-          <Icon fontSize="small" />
-          <span className="tabbar-label">{label}</span>
-          {badges[path] > 0 && (
-            <span className="tab-badge">{badges[path]}</span>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-  </div>
-);
+const TabBar = ({ badges = {}, mobile = false }) => {
+  if (mobile) {
+    return (
+      <nav className="mobile-tabbar">
+        {TABS.map(({ path, label, Icon, end }) => (
+          <NavLink
+            key={path}
+            to={path}
+            end={end}
+            className={({ isActive }) => `mobile-tabbar-tab${isActive ? ' active' : ''}`}
+            style={{ textDecoration: 'none' }}
+          >
+            <Icon fontSize="small" />
+            <span className="mobile-tabbar-label">{label}</span>
+            {badges[path] > 0 && <span className="tab-badge">{badges[path]}</span>}
+          </NavLink>
+        ))}
+      </nav>
+    );
+  }
+
+  return (
+    <div className="tabbar-wrapper">
+      <nav className="tabbar">
+        {TABS.map(({ path, label, Icon, end }) => (
+          <NavLink
+            key={path}
+            to={path}
+            end={end}
+            className={({ isActive }) => `tabbar-tab${isActive ? ' active' : ''}`}
+          >
+            <Icon fontSize="small" />
+            <span className="tabbar-label">{label}</span>
+            {badges[path] > 0 && (
+              <span className="tab-badge">{badges[path]}</span>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+};
 
 export default TabBar;

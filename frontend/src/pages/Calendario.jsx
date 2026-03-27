@@ -357,8 +357,6 @@ const Calendario = () => {
                       background: isSelected ? 'rgba(225,29,72,0.1)' : isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)',
                       transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)'; }}
                   >
                     <span style={{ fontSize: '0.82rem', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>{day}</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', marginTop: '2px' }}>

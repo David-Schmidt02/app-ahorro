@@ -64,11 +64,12 @@ const Layout = () => {
     <div className="app-layout">
       <div className="app-header">
         <Navbar />
-        <TabBar badges={{ '/calendario': calBadge }} />
+        {!isMobile && <TabBar badges={{ '/calendario': calBadge }} />}
       </div>
-      <main className="main-content">
+      <main className="main-content" style={isMobile ? { paddingBottom: '70px' } : undefined}>
         <Outlet />
       </main>
+      {isMobile && <TabBar badges={{ '/calendario': calBadge }} mobile />}
 
       {/* Easter Egg */}
       <Mascota />
