@@ -12,11 +12,19 @@ import HorariosSemanales from '../pages/HorariosSemanales';
 import Calendario from '../pages/Calendario';
 import FAB from './FAB';
 
+// color = FAB gradient key, tabColor = bottom-bar active color, glowColor = FAB shadow
 const FAB_CONFIGS = {
-  '/':           { Icon: AddIcon,  color: 'primary', title: 'Nuevo Objetivo' },
-  '/gastos':     { Icon: AddIcon,  color: 'primary', title: 'Registrar Gasto' },
-  '/horarios':   { Icon: SaveIcon, color: 'success', title: 'Guardar horario' },
-  '/calendario': { Icon: AddIcon,  color: 'primary', title: 'Nuevo Evento' },
+  '/':           { Icon: AddIcon,  color: 'primary', glowColor: 'rgba(225,29,72,0.55)',   title: 'Nuevo Objetivo' },
+  '/gastos':     { Icon: AddIcon,  color: 'warning', glowColor: 'rgba(245,158,11,0.55)',  title: 'Registrar Gasto' },
+  '/horarios':   { Icon: SaveIcon, color: 'success', glowColor: 'rgba(16,185,129,0.55)',  title: 'Guardar horario' },
+  '/calendario': { Icon: AddIcon,  color: 'info',    glowColor: 'rgba(56,189,248,0.55)',  title: 'Nuevo Evento' },
+};
+
+const TAB_COLORS = {
+  '/':           '#ff719a',
+  '/gastos':     '#f59e0b',
+  '/horarios':   '#10b981',
+  '/calendario': '#38bdf8',
 };
 
 const TABS = [
@@ -170,22 +178,28 @@ const MobileLayout = ({ badges = {} }) => {
           icon={<fabConfig.Icon />}
           animKey={activePath}
           color={fabConfig.color}
+          glowColor={fabConfig.glowColor}
           title={fabConfig.title}
         />
       )}
 
       <nav className="mobile-tabbar">
-        {TABS.map(({ path, label, Icon }, idx) => (
-          <button
-            key={path}
-            className={`mobile-tabbar-tab${idx === activeIdx ? ' active' : ''}`}
-            onClick={() => goToTab(idx)}
-          >
-            <Icon fontSize="small" />
-            <span className="mobile-tabbar-label">{label}</span>
-            {badges[path] > 0 && <span className="tab-badge">{badges[path]}</span>}
-          </button>
-        ))}
+        {TABS.map(({ path, label, Icon }, idx) => {
+          const isActive = idx === activeIdx;
+          const accentColor = TAB_COLORS[path];
+          return (
+            <button
+              key={path}
+              className={`mobile-tabbar-tab${isActive ? ' active' : ''}`}
+              style={isActive ? { color: accentColor } : undefined}
+              onClick={() => goToTab(idx)}
+            >
+              <Icon fontSize="small" />
+              <span className="mobile-tabbar-label">{label}</span>
+              {badges[path] > 0 && <span className="tab-badge">{badges[path]}</span>}
+            </button>
+          );
+        })}
       </nav>
     </>
   );
