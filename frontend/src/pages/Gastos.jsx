@@ -21,7 +21,6 @@ import { Tooltip } from '@mui/material';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
 import Modal from '../components/Modal';
-import FAB from '../components/FAB';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const CATEGORIAS = [
@@ -149,6 +148,12 @@ const Gastos = () => {
 
   useEffect(() => { fetchGastos(); }, []);
 
+  useEffect(() => {
+    const handler = () => setIsFormOpen(true);
+    window.addEventListener('fab:click', handler);
+    return () => window.removeEventListener('fab:click', handler);
+  }, []);
+
   const convert = (amount, moneda) => convertCurrency(amount, moneda, viewMoneda, dolarRate);
 
   const now = new Date();
@@ -267,7 +272,6 @@ const Gastos = () => {
       {/* Form inline (desktop) / Modal (mobile) */}
       {isMobile ? (
         <>
-          <FAB onClick={() => setIsFormOpen(true)} icon={<AddIcon />} title="Registrar Gasto" />
           <Modal
             isOpen={isFormOpen}
             onClose={() => setIsFormOpen(false)}

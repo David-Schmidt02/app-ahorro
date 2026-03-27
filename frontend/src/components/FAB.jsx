@@ -9,7 +9,7 @@ import React from 'react';
  *   disabled  – boolean
  *   color     – 'primary' (default) | 'success'
  */
-const FAB = ({ onClick, icon, title, disabled = false, color = 'primary' }) => {
+const FAB = ({ onClick, icon, title, disabled = false, color = 'primary', animKey }) => {
   const bg = color === 'success'
     ? 'linear-gradient(135deg, #10b981, #059669)'
     : 'linear-gradient(135deg, var(--accent-primary), #be123c)';
@@ -22,7 +22,7 @@ const FAB = ({ onClick, icon, title, disabled = false, color = 'primary' }) => {
       title={title}
       style={{ background: bg }}
     >
-      {icon}
+      <span key={animKey} className="fab-icon-anim">{icon}</span>
     </button>
   );
 };

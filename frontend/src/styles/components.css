@@ -307,6 +307,17 @@
 }
 
 /* ── FAB (Floating Action Button) ──────────────────────── */
+@keyframes fabIconPop {
+  from { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1)   rotate(0deg);   opacity: 1; }
+}
+.fab-icon-anim {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fabIconPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .fab {
   position: fixed;
   bottom: 80px; /* por encima del mobile-tabbar (60px) */

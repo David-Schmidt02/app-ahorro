@@ -4,10 +4,20 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
 import Dashboard from '../pages/Dashboard';
 import Gastos from '../pages/Gastos';
 import HorariosSemanales from '../pages/HorariosSemanales';
 import Calendario from '../pages/Calendario';
+import FAB from './FAB';
+
+const FAB_CONFIGS = {
+  '/':           { Icon: AddIcon,  color: 'primary', title: 'Nuevo Objetivo' },
+  '/gastos':     { Icon: AddIcon,  color: 'primary', title: 'Registrar Gasto' },
+  '/horarios':   { Icon: SaveIcon, color: 'success', title: 'Guardar horario' },
+  '/calendario': { Icon: AddIcon,  color: 'primary', title: 'Nuevo Evento' },
+};
 
 const TABS = [
   { path: '/',           label: 'Objetivos',  Icon: SavingsIcon,       Component: Dashboard },
@@ -118,6 +128,12 @@ const MobileLayout = ({ badges = {} }) => {
   };
 
   const isDragging = dragOffset !== 0;
+  const activePath = TABS[activeIdx]?.path;
+  const fabConfig = FAB_CONFIGS[activePath];
+
+  const handleFAB = () => {
+    window.dispatchEvent(new CustomEvent('fab:click'));
+  };
 
   return (
     <>
@@ -147,6 +163,16 @@ const MobileLayout = ({ badges = {} }) => {
           );
         })}
       </div>
+
+      {fabConfig && (
+        <FAB
+          onClick={handleFAB}
+          icon={<fabConfig.Icon />}
+          animKey={activePath}
+          color={fabConfig.color}
+          title={fabConfig.title}
+        />
+      )}
 
       <nav className="mobile-tabbar">
         {TABS.map(({ path, label, Icon }, idx) => (

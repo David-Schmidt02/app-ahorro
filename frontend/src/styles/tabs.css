@@ -141,6 +141,12 @@
   text-transform: uppercase;
 }
 
+/* ── Calendario: hover mínimo en celdas del mes ──────────── */
+.cal-day-cell:hover {
+  border-color: rgba(225, 29, 72, 0.4) !important;
+  box-shadow: 0 0 8px rgba(225, 29, 72, 0.18);
+}
+
 /* ── Calendario: tipos en columna por defecto ─────────────── */
 .cal-tipos-grid {
   display: flex;

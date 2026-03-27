@@ -9,7 +9,6 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
-import FAB from '../components/FAB';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
@@ -104,6 +103,12 @@ const Dashboard = () => {
         return () => clearTimeout(timer);
     }, [loadData]);
 
+    useEffect(() => {
+        const handler = () => setIsNewModalOpen(true);
+        window.addEventListener('fab:click', handler);
+        return () => window.removeEventListener('fab:click', handler);
+    }, []);
+
     const handleNewSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -171,13 +176,6 @@ const Dashboard = () => {
                     </button>
                 )}
             </div>
-            {isMobile && (
-                <FAB
-                    onClick={() => setIsNewModalOpen(true)}
-                    icon={<AddIcon />}
-                    title="Nuevo Objetivo"
-                />
-            )}
 
             <div className="summary-cards">
                 <div className="summary-card glass-panel">

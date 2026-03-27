@@ -4,7 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import api from '../api/axios';
 import { useIsMobile } from '../hooks/useIsMobile';
-import FAB from '../components/FAB';
+import Modal from '../components/Modal';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const EMPTY_SEMANA = Object.fromEntries(DIAS.map(d => [d, []]));
@@ -139,6 +139,13 @@ const HorariosSemanales = () => {
   const [loading,  setLoading]  = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [warnings, setWarnings] = useState({});
+  const [editingSlot, setEditingSlot] = useState(null); // { dia, index } | null
+
+  useEffect(() => {
+    const handler = () => save();
+    window.addEventListener('fab:click', handler);
+    return () => window.removeEventListener('fab:click', handler);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -247,27 +254,16 @@ const HorariosSemanales = () => {
           </div>
         )}
       </div>
-      {isMobile && (
-        <>
-          {saved && (
-            <div style={{
-              position: 'fixed', bottom: '145px', right: '1.25rem', zIndex: 91,
-              fontSize: '0.78rem',
-              color: saved.startsWith('Error') ? 'var(--accent-danger)' : 'var(--accent-success)',
-              background: saved.startsWith('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-              padding: '0.3rem 0.7rem', borderRadius: 'var(--radius-sm)',
-              border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
-              backdropFilter: 'blur(8px)',
-            }}>{saved}</div>
-          )}
-          <FAB
-            onClick={save}
-            icon={<SaveIcon />}
-            title="Guardar mi horario"
-            disabled={isSaving}
-            color="success"
-          />
-        </>
+      {isMobile && saved && (
+        <div style={{
+          position: 'fixed', bottom: '145px', right: '1.25rem', zIndex: 91,
+          fontSize: '0.78rem',
+          color: saved.startsWith('Error') ? 'var(--accent-danger)' : 'var(--accent-success)',
+          background: saved.startsWith('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+          padding: '0.3rem 0.7rem', borderRadius: 'var(--radius-sm)',
+          border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+          backdropFilter: 'blur(8px)',
+        }}>{saved}</div>
       )}
 
       {/* ── TABLA 1: Mi horario ─────────────────────────────── */}
@@ -287,11 +283,26 @@ const HorariosSemanales = () => {
                 {DIAS.map((dia, i) => (
                   <td key={dia} style={tdSt(i % 2 === 1)}>
                     {miData[dia].map((slot, si) => (
-                      <SlotEditor key={si} slot={slot}
-                        error={warnings[`${dia}-${si}`]}
-                        onChange={upd => updateSlot(dia, si, upd)}
-                        onDelete={() => deleteSlot(dia, si)}
-                      />
+                      isMobile ? (
+                        // Mobile: chip compacto, tap abre modal
+                        <div key={si}
+                          onClick={() => setEditingSlot({ dia, index: si })}
+                          style={{
+                            fontSize: '0.68rem', marginBottom: '3px',
+                            background: 'rgba(225,29,72,0.1)', border: '1px solid rgba(225,29,72,0.3)',
+                            borderRadius: '4px', padding: '2px 4px', cursor: 'pointer',
+                            color: 'var(--accent-primary)', fontVariantNumeric: 'tabular-nums',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          }}>
+                          {slot.inicio}–{slot.fin}
+                        </div>
+                      ) : (
+                        <SlotEditor key={si} slot={slot}
+                          error={warnings[`${dia}-${si}`]}
+                          onChange={upd => updateSlot(dia, si, upd)}
+                          onDelete={() => deleteSlot(dia, si)}
+                        />
+                      )
                     ))}
                     {warnings[dia] && (
                       <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block' }}>{warnings[dia]}</span>
@@ -405,6 +416,35 @@ const HorariosSemanales = () => {
           </div>
         </section>
       )}
+
+      {/* Modal edición de slot (mobile) */}
+      {editingSlot && (() => {
+        const { dia, index } = editingSlot;
+        const slot = miData[dia]?.[index];
+        if (!slot) return null;
+        return (
+          <Modal
+            isOpen
+            onClose={() => setEditingSlot(null)}
+            title={`${dia} — actividad`}
+            footer={
+              <>
+                <button className="btn-danger" onClick={() => { deleteSlot(dia, index); setEditingSlot(null); }}>
+                  <DeleteOutlineIcon fontSize="small" /> Eliminar
+                </button>
+                <button className="btn-primary" onClick={() => setEditingSlot(null)}>Listo</button>
+              </>
+            }
+          >
+            <SlotEditor
+              slot={slot}
+              error={warnings[`${dia}-${index}`]}
+              onChange={upd => updateSlot(dia, index, upd)}
+              onDelete={() => { deleteSlot(dia, index); setEditingSlot(null); }}
+            />
+          </Modal>
+        );
+      })()}
     </div>
   );
 };

@@ -149,6 +149,15 @@ const Calendario = () => {
     loadEvents();
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      if (!selectedDay) setSelectedDay(new Date().toISOString().split('T')[0]);
+      setIsModalOpen(true);
+    };
+    window.addEventListener('fab:click', handler);
+    return () => window.removeEventListener('fab:click', handler);
+  }, [selectedDay]);
+
   const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -240,7 +249,7 @@ const Calendario = () => {
       {/* Paneles reutilizables */}
       {(() => {
         const panelUpcoming = (
-          <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
+          <div className="glass-panel" style={{ padding: '1.25rem' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Próximos 7 días</h3>
             {loading ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Cargando...</p>
@@ -267,7 +276,7 @@ const Calendario = () => {
         );
 
         const panelSelectedDay = selectedDay && (
-          <div className="glass-panel card-hover" style={{ padding: '1.25rem' }}>
+          <div className="glass-panel" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '0.95rem', margin: 0 }}>
                 {new Date(selectedDay + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -309,7 +318,7 @@ const Calendario = () => {
         );
 
         const panelLeyenda = (
-          <div className="glass-panel card-hover" style={{ padding: '1rem' }}>
+          <div className="glass-panel" style={{ padding: '1rem' }}>
             <h3 style={{ fontSize: '0.85rem', marginBottom: '0.6rem', color: 'var(--text-muted)' }}>TIPOS</h3>
             <div className="cal-tipos-grid">
               {TIPOS.map(t => (
@@ -323,7 +332,7 @@ const Calendario = () => {
         );
 
         const panelCalendar = (
-          <div className="glass-panel card-hover cal-main-panel" style={{ padding: '1.25rem' }}>
+          <div className="glass-panel cal-main-panel" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <button onClick={prevMonth} style={navBtnStyle}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
@@ -350,12 +359,13 @@ const Calendario = () => {
                 const isSelected = dateStr === selectedDay;
                 return (
                   <div key={day} onClick={() => setSelectedDay(isSelected ? null : dateStr)}
+                    className="cal-day-cell"
                     style={{
                       minHeight: isMobile ? '36px' : '52px',
                       padding: '0.3rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                       border: isSelected ? '1px solid var(--accent-primary)' : isToday ? '1px solid rgba(225,29,72,0.3)' : '1px solid transparent',
                       background: isSelected ? 'rgba(225,29,72,0.1)' : isToday ? 'rgba(225,29,72,0.05)' : 'rgba(255,255,255,0.02)',
-                      transition: 'all 0.15s',
+                      transition: 'border-color 0.15s, box-shadow 0.15s',
                     }}
                   >
                     <span style={{ fontSize: '0.82rem', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>{day}</span>
