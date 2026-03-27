@@ -8,8 +8,6 @@ import Modal from '../components/Modal';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const EMPTY_SEMANA = Object.fromEntries(DIAS.map(d => [d, []]));
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = [0, 15, 30, 45];
 
 function toMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function toTime(m) { return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
@@ -53,15 +51,6 @@ const baseSt = {
   fontFamily: 'inherit',
 };
 
-const selectSt = {
-  ...baseSt,
-  padding: '0.2rem 0.1rem',
-  fontSize: '0.75rem',
-  width: '38px',
-  textAlign: 'center',
-  cursor: 'pointer',
-};
-
 const inputSt = {
   ...baseSt,
   padding: '0.25rem 0.4rem',
@@ -69,44 +58,76 @@ const inputSt = {
   width: '100%',
 };
 
-/* ── Custom time select ───────────────────────────────── */
-const TimeSelect = ({ value, onChange }) => {
-  const [hStr, mStr] = value.split(':');
-  const h = parseInt(hStr, 10) || 0;
-  const rawM = parseInt(mStr, 10) || 0;
-  const m = MINUTES.reduce((prev, curr) => Math.abs(curr - rawM) < Math.abs(prev - rawM) ? curr : prev, 0);
+/* ── Time input (usa picker nativo del SO) ────────────── */
+const TimeInput = ({ value, onChange, mobile }) => (
+  <input
+    type="time"
+    step="900"
+    value={value}
+    onChange={e => { if (e.target.value) onChange(e.target.value); }}
+    style={mobile ? {
+      ...baseSt,
+      padding: '0.65rem 0.75rem',
+      fontSize: '1.05rem',
+      fontWeight: 600,
+      width: '100%',
+      cursor: 'pointer',
+      colorScheme: 'dark',
+    } : {
+      ...baseSt,
+      padding: '0.18rem 0.3rem',
+      fontSize: '0.72rem',
+      width: '100%',
+      cursor: 'pointer',
+      colorScheme: 'dark',
+    }}
+  />
+);
+
+/* ── Slot editor ─────────────────────────────────────── */
+const SlotEditor = ({ slot, onChange, onDelete, error, mobile }) => {
+  if (mobile) {
+    return (
+      <div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Inicio</label>
+            <TimeInput value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} mobile />
+          </div>
+          <div>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Fin</label>
+            <TimeInput value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} mobile />
+          </div>
+        </div>
+        <div>
+          <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Actividad</label>
+          <input type="text" placeholder="Ej: Trabajo, Gym..." value={slot.actividad}
+            onChange={e => onChange({ ...slot, actividad: e.target.value })}
+            style={{ ...baseSt, padding: '0.65rem 0.75rem', fontSize: '1rem', width: '100%' }} />
+        </div>
+        {error && <span style={{ fontSize: '0.78rem', color: 'var(--accent-danger)', display: 'block', marginTop: '0.5rem' }}>{error}</span>}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', gap: '1px', alignItems: 'center' }}>
-      <select value={h} onChange={e => onChange(`${String(+e.target.value).padStart(2, '0')}:${String(m).padStart(2, '0')}`)} style={selectSt}>
-        {HOURS.map(hr => <option key={hr} value={hr}>{String(hr).padStart(2, '00')}</option>)}
-      </select>
-      <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', padding: '0 1px' }}>:</span>
-      <select value={m} onChange={e => onChange(`${String(h).padStart(2, '0')}:${String(+e.target.value).padStart(2, '0')}`)} style={selectSt}>
-        {MINUTES.map(mn => <option key={mn} value={mn}>{String(mn).padStart(2, '00')}</option>)}
-      </select>
+    <div style={{ marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
+      <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginBottom: '0.2rem' }}>
+        <TimeInput value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} />
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', flexShrink: 0 }}>→</span>
+        <TimeInput value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} />
+        <button onClick={onDelete}
+          style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.7, padding: '1px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+          <DeleteOutlineIcon style={{ fontSize: '0.8rem' }} />
+        </button>
+      </div>
+      <input type="text" placeholder="Actividad" value={slot.actividad}
+        onChange={e => onChange({ ...slot, actividad: e.target.value })}
+        style={inputSt} />
+      {error && <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block', marginTop: '2px' }}>{error}</span>}
     </div>
   );
 };
-
-/* ── Slot editor ─────────────────────────────────────── */
-const SlotEditor = ({ slot, onChange, onDelete, error }) => (
-  <div style={{ marginBottom: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
-    <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginBottom: '0.2rem' }}>
-      <TimeSelect value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} />
-      <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', flexShrink: 0 }}>→</span>
-      <TimeSelect value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} />
-      <button onClick={onDelete}
-        style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.7, padding: '1px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-        <DeleteOutlineIcon style={{ fontSize: '0.8rem' }} />
-      </button>
-    </div>
-    <input type="text" placeholder="Actividad" value={slot.actividad}
-      onChange={e => onChange({ ...slot, actividad: e.target.value })}
-      style={inputSt} />
-    {error && <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block', marginTop: '2px' }}>{error}</span>}
-  </div>
-);
 
 /* ── Table styles ────────────────────────────────────── */
 const thSt = (color) => ({
