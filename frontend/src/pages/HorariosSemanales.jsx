@@ -147,8 +147,8 @@ const HorariosSemanales = () => {
 
   useEffect(() => {
     const handler = () => save();
-    window.addEventListener('fab:click', handler);
-    return () => window.removeEventListener('fab:click', handler);
+    window.addEventListener('fab:click:/horarios', handler);
+    return () => window.removeEventListener('fab:click:/horarios', handler);
   }, []);
 
   useEffect(() => {

@@ -105,8 +105,8 @@ const Dashboard = () => {
 
     useEffect(() => {
         const handler = () => setIsNewModalOpen(true);
-        window.addEventListener('fab:click', handler);
-        return () => window.removeEventListener('fab:click', handler);
+        window.addEventListener('fab:click:/', handler);
+        return () => window.removeEventListener('fab:click:/', handler);
     }, []);
 
     const handleNewSubmit = async (e) => {

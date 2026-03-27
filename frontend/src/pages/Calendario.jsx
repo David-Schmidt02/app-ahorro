@@ -154,8 +154,8 @@ const Calendario = () => {
       if (!selectedDay) setSelectedDay(new Date().toISOString().split('T')[0]);
       setIsModalOpen(true);
     };
-    window.addEventListener('fab:click', handler);
-    return () => window.removeEventListener('fab:click', handler);
+    window.addEventListener('fab:click:/calendario', handler);
+    return () => window.removeEventListener('fab:click:/calendario', handler);
   }, [selectedDay]);
 
   const handlePhotoChange = async (e) => {

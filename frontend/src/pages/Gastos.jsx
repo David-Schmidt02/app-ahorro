@@ -150,8 +150,8 @@ const Gastos = () => {
 
   useEffect(() => {
     const handler = () => setIsFormOpen(true);
-    window.addEventListener('fab:click', handler);
-    return () => window.removeEventListener('fab:click', handler);
+    window.addEventListener('fab:click:/gastos', handler);
+    return () => window.removeEventListener('fab:click:/gastos', handler);
   }, []);
 
   const convert = (amount, moneda) => convertCurrency(amount, moneda, viewMoneda, dolarRate);

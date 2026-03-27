@@ -140,7 +140,7 @@ const MobileLayout = ({ badges = {} }) => {
   const fabConfig = FAB_CONFIGS[activePath];
 
   const handleFAB = () => {
-    window.dispatchEvent(new CustomEvent('fab:click'));
+    window.dispatchEvent(new CustomEvent(`fab:click:${activePath}`));
   };
 
   return (
