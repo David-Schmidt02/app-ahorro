@@ -301,7 +301,7 @@ const HorariosSemanales = () => {
                       border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                       gap: '0.15rem', padding: '2px 0', opacity: 0.75, marginTop: '2px',
                     }}>
-                      <AddIcon style={{ fontSize: '0.75rem' }} /> actividad
+                      <AddIcon style={{ fontSize: '0.75rem' }} />{!isMobile && ' actividad'}
                     </button>
                   </td>
                 ))}
