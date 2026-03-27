@@ -67,12 +67,13 @@ const TimeInput = ({ value, onChange, mobile }) => (
     onChange={e => { if (e.target.value) onChange(e.target.value); }}
     style={mobile ? {
       ...baseSt,
-      padding: '0.65rem 0.75rem',
-      fontSize: '1.05rem',
+      padding: '0.9rem 1rem',
+      fontSize: '1.3rem',
       fontWeight: 600,
       width: '100%',
       cursor: 'pointer',
       colorScheme: 'dark',
+      textAlign: 'center',
     } : {
       ...baseSt,
       padding: '0.18rem 0.3rem',
@@ -89,23 +90,23 @@ const SlotEditor = ({ slot, onChange, onDelete, error, mobile }) => {
   if (mobile) {
     return (
       <div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
-            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Inicio</label>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Inicio</label>
             <TimeInput value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} mobile />
           </div>
           <div>
-            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Fin</label>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Fin</label>
             <TimeInput value={slot.fin} onChange={v => onChange({ ...slot, fin: v })} mobile />
           </div>
         </div>
         <div>
-          <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Actividad</label>
+          <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Actividad</label>
           <input type="text" placeholder="Ej: Trabajo, Gym..." value={slot.actividad}
             onChange={e => onChange({ ...slot, actividad: e.target.value })}
-            style={{ ...baseSt, padding: '0.65rem 0.75rem', fontSize: '1rem', width: '100%' }} />
+            style={{ ...baseSt, padding: '0.9rem 1rem', fontSize: '1.1rem', width: '100%' }} />
         </div>
-        {error && <span style={{ fontSize: '0.78rem', color: 'var(--accent-danger)', display: 'block', marginTop: '0.5rem' }}>{error}</span>}
+        {error && <span style={{ fontSize: '0.85rem', color: 'var(--accent-danger)', display: 'block', marginTop: '0.6rem' }}>{error}</span>}
       </div>
     );
   }
@@ -565,14 +566,15 @@ const HorariosSemanales = () => {
             title={`${dia} — actividad`}
             footer={
               <>
-                <button className="btn-danger" onClick={() => { deleteSlot(dia, index); setEditingSlot(null); }}>
-                  <DeleteOutlineIcon fontSize="small" /> Eliminar
+                <button className="btn-danger" style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => { deleteSlot(dia, index); setEditingSlot(null); }}>
+                  <DeleteOutlineIcon /> Eliminar
                 </button>
-                <button className="btn-primary" onClick={() => setEditingSlot(null)}>Listo</button>
+                <button className="btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }} onClick={() => setEditingSlot(null)}>Listo</button>
               </>
             }
           >
             <SlotEditor
+              mobile
               slot={slot}
               error={warnings[`${dia}-${index}`]}
               onChange={upd => updateSlot(dia, index, upd)}
