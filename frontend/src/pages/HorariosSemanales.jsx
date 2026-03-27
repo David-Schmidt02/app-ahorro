@@ -66,14 +66,21 @@ const TimeInput = ({ value, onChange, mobile }) => (
     value={value}
     onChange={e => { if (e.target.value) onChange(e.target.value); }}
     style={mobile ? {
-      ...baseSt,
-      padding: '0.9rem 1rem',
-      fontSize: '1.3rem',
-      fontWeight: 600,
+      background: 'rgba(225, 29, 72, 0.08)',
+      border: '1px solid rgba(225, 29, 72, 0.4)',
+      borderRadius: 'var(--radius-sm)',
+      color: 'var(--accent-primary)',
+      fontFamily: 'inherit',
+      padding: '0.85rem 0.5rem',
+      fontSize: '1.35rem',
+      fontWeight: 700,
       width: '100%',
+      boxSizing: 'border-box',
+      minWidth: 0,
       cursor: 'pointer',
       colorScheme: 'dark',
       textAlign: 'center',
+      letterSpacing: '0.02em',
     } : {
       ...baseSt,
       padding: '0.18rem 0.3rem',
@@ -91,7 +98,7 @@ const SlotEditor = ({ slot, onChange, onDelete, error, mobile }) => {
   if (mobile) {
     return (
       <div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem', minWidth: 0 }}>
           <div>
             <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Inicio</label>
             <TimeInput value={slot.inicio} onChange={v => onChange({ ...slot, inicio: v })} mobile />
@@ -568,7 +575,23 @@ const HorariosSemanales = () => {
           <Modal
             isOpen
             onClose={() => setEditingSlot(null)}
-            title={`${dia} — actividad`}
+            title={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{dia}</span>
+                <span style={{
+                  background: 'rgba(225,29,72,0.12)',
+                  border: '1px solid rgba(225,29,72,0.3)',
+                  borderRadius: '6px',
+                  padding: '0.15rem 0.55rem',
+                  fontSize: '0.82rem',
+                  color: 'var(--accent-primary)',
+                  fontVariantNumeric: 'tabular-nums',
+                  fontWeight: 600,
+                }}>
+                  {slot.inicio} – {slot.fin}
+                </span>
+              </span>
+            }
             footer={
               <>
                 <button className="btn-danger" style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => { deleteSlot(dia, index); setEditingSlot(null); }}>
