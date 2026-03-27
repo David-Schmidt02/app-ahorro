@@ -309,7 +309,7 @@ const ObjectiveDetail = () => {
       <div className="glass-panel" style={{display: 'inline-block', borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)', padding: '2rem'}}>
         <p style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}>{error}</p>
         <button className="btn-secondary" onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}>
-          <ArrowBack fontSize="small" /> Volver
+          <ArrowBack fontSize="small" />{!isMobile && ' Volver'}
         </button>
       </div>
     </div>
