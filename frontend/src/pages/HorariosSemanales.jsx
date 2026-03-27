@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import api from '../api/axios';
 import { useIsMobile } from '../hooks/useIsMobile';
+import FAB from '../components/FAB';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const EMPTY_SEMANA = Object.fromEntries(DIAS.map(d => [d, []]));
@@ -228,23 +229,46 @@ const HorariosSemanales = () => {
     <div className="page-container" style={{ paddingBottom: '3rem' }}>
       <div className="dashboard-header">
         <h1>Horarios Semanales</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {saved && (
-            <span style={{
-              fontSize: '0.82rem',
-              color: saved.startsWith('Error') ? 'var(--accent-danger)' : 'var(--accent-success)',
-              background: saved.startsWith('Error') ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-              padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-sm)',
-              border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
-            }}>{saved}</span>
-          )}
-          <button className="btn-primary" onClick={save} disabled={isSaving}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}>
-            <SaveIcon fontSize="small" />
-            {isSaving ? 'Guardando...' : (isMobile ? 'Guardar' : 'Guardar mi horario')}
-          </button>
-        </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {saved && (
+              <span style={{
+                fontSize: '0.82rem',
+                color: saved.startsWith('Error') ? 'var(--accent-danger)' : 'var(--accent-success)',
+                background: saved.startsWith('Error') ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-sm)',
+                border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
+              }}>{saved}</span>
+            )}
+            <button className="btn-primary" onClick={save} disabled={isSaving}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}>
+              <SaveIcon fontSize="small" /> {isSaving ? 'Guardando...' : 'Guardar mi horario'}
+            </button>
+          </div>
+        )}
       </div>
+      {isMobile && (
+        <>
+          {saved && (
+            <div style={{
+              position: 'fixed', bottom: '145px', right: '1.25rem', zIndex: 91,
+              fontSize: '0.78rem',
+              color: saved.startsWith('Error') ? 'var(--accent-danger)' : 'var(--accent-success)',
+              background: saved.startsWith('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+              padding: '0.3rem 0.7rem', borderRadius: 'var(--radius-sm)',
+              border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+              backdropFilter: 'blur(8px)',
+            }}>{saved}</div>
+          )}
+          <FAB
+            onClick={save}
+            icon={<SaveIcon />}
+            title="Guardar mi horario"
+            disabled={isSaving}
+            color="success"
+          />
+        </>
+      )}
 
       {/* ── TABLA 1: Mi horario ─────────────────────────────── */}
       <section style={{ marginBottom: '2rem' }}>
@@ -255,7 +279,7 @@ const HorariosSemanales = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-primary)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
+                {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-primary)')}>{(isMobile ? dia.slice(0, 3) : dia).toUpperCase()}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -297,7 +321,7 @@ const HorariosSemanales = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-secondary)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
+                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-secondary)')}>{(isMobile ? dia.slice(0, 3) : dia).toUpperCase()}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -347,7 +371,7 @@ const HorariosSemanales = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-success)')}>{dia.slice(0, 3).toUpperCase()}</th>)}
+                  {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-success)')}>{(isMobile ? dia.slice(0, 3) : dia).toUpperCase()}</th>)}
                 </tr>
               </thead>
               <tbody>

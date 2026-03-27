@@ -9,10 +9,12 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
+import FAB from '../components/FAB';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -49,6 +51,7 @@ const Dashboard = () => {
     const [qMotivo, setQMotivo] = useState('');
     const [isQuickSubmitting, setIsQuickSubmitting] = useState(false);
     const { dolarRate, setDolarRate, viewMoneda } = useCurrency();
+    const isMobile = useIsMobile();
 
     const fetchDashboardData = async () => {
         try {
@@ -162,12 +165,19 @@ const Dashboard = () => {
         <div className="page-container">
             <div className="dashboard-header">
                 <h1>Resumen de Ahorros</h1>
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                {!isMobile && (
                     <button className="btn-primary btn-nuevo-objetivo" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <AddIcon fontSize="small" /> Nuevo Objetivo
                     </button>
-                </div>
+                )}
             </div>
+            {isMobile && (
+                <FAB
+                    onClick={() => setIsNewModalOpen(true)}
+                    icon={<AddIcon />}
+                    title="Nuevo Objetivo"
+                />
+            )}
 
             <div className="summary-cards">
                 <div className="summary-card glass-panel">

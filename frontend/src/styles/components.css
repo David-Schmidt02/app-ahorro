@@ -306,6 +306,36 @@
   box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
 }
 
+/* ── FAB (Floating Action Button) ──────────────────────── */
+.fab {
+  position: fixed;
+  bottom: 80px; /* por encima del mobile-tabbar (60px) */
+  right: 1.25rem;
+  z-index: 90;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+}
+.fab:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.6);
+}
+.fab:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Responsive General Components */
 @media (max-width: 768px) {
   .navbar-content {
