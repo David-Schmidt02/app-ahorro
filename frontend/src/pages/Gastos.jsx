@@ -5,8 +5,14 @@ import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, LineChart, Line,
 } from 'recharts';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddIcon from '@mui/icons-material/Add';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import Modal from '../components/Modal';
+import ActionButton from '../components/ActionButton';
+import PageHeader from '../components/PageHeader';
+import CategoriaSelector from '../components/CategoriaSelector';
+import { useIsMobile } from '../hooks/useIsMobile';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import MovieIcon from '@mui/icons-material/Movie';
@@ -20,8 +26,6 @@ import CategoryIcon from '@mui/icons-material/Category';
 import { Tooltip } from '@mui/material';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
-import Modal from '../components/Modal';
-import { useIsMobile } from '../hooks/useIsMobile';
 
 const CATEGORIAS = [
   { id: 'comida',          label: 'Comida',          Icon: RestaurantIcon,   color: '#f97316' },
@@ -60,7 +64,7 @@ const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
         <div className="amount-input-wrapper">
           <span className="amount-input-prefix">$</span>
           <input
-            type="text" inputMode="numeric" placeholder="0"
+            type="text" inputMode="numeric" placeholder=""
             value={form.monto}
             onChange={e => setForm({ ...form, monto: formatAmount(e.target.value) })}
             required
@@ -79,31 +83,12 @@ const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
 
     <div className="form-group">
       <label>Categoría — <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{CAT_MAP[form.categoria]?.label}</span></label>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginTop: '0.4rem' }}>
-        {CATEGORIAS.map(c => {
-          const isActive = form.categoria === c.id;
-          return (
-            <Tooltip key={c.id} title={c.label} placement="top" arrow>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, categoria: c.id })}
-                style={{
-                  padding: '0.5rem',
-                  border: `1.5px solid ${isActive ? c.color : 'rgba(255,255,255,0.1)'}`,
-                  borderRadius: 'var(--radius-sm)',
-                  background: isActive ? `${c.color}15` : 'rgba(0,0,0,0.2)',
-                  cursor: 'pointer',
-                  color: isActive ? c.color : 'rgba(255,255,255,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <c.Icon fontSize="small" />
-              </button>
-            </Tooltip>
-          );
-        })}
-      </div>
+      <CategoriaSelector
+        categorias={CATEGORIAS}
+        selectedId={form.categoria}
+        onSelect={(id) => setForm({ ...form, categoria: id })}
+        categoryMap={CAT_MAP}
+      />
     </div>
 
     <div className="form-group">
@@ -125,7 +110,7 @@ const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
 
 const Gastos = () => {
   const { dolarRate, viewMoneda } = useCurrency();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const [gastos, setGastos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -235,39 +220,17 @@ const Gastos = () => {
 
   return (
     <div className="page-container">
-      <div className="dashboard-header">
-        <h1>Gastos</h1>
-      </div>
+      <PageHeader
+        title="Gastos"
+        action={!isMobile ? (
+          <ActionButton
+            label="Nuevo Gasto"
+            Icon={AttachMoneyIcon}
+            onClick={() => setIsFormOpen(true)}
+          />
+        ) : null}
+      />
 
-      {/* Stats */}
-      <div className="summary-cards" style={{ marginBottom: '2rem' }}>
-        <div className="summary-card glass-panel">
-          <CatIcon cat={{ Icon: DeleteOutlineIcon, color: 'var(--accent-primary)' }} size={40} fontSize="small" />
-          <div className="summary-info">
-            <h3>Total este mes</h3>
-            <p style={{ fontSize: '1.4rem' }}>{monedaSymbol} {formatK(totalMes)}</p>
-            <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gastosMes.length} gastos</p>
-          </div>
-        </div>
-        {topCategoria && (
-          <div className="summary-card glass-panel">
-            <CatIcon cat={CAT_MAP[topCategoria.id]} size={40} fontSize="small" />
-            <div className="summary-info">
-              <h3>Mayor categoría</h3>
-              <p style={{ fontSize: '1.4rem' }}>{topCategoria.name}</p>
-              <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{monedaSymbol} {formatK(topCategoria.monto)}</p>
-            </div>
-          </div>
-        )}
-        <div className="summary-card glass-panel">
-          <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={40} fontSize="small" />
-          <div className="summary-info">
-            <h3>Total registros</h3>
-            <p style={{ fontSize: '1.4rem' }}>{gastos.length}</p>
-            <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Desde el inicio</p>
-          </div>
-        </div>
-      </div>
 
       {/* Form inline (desktop) / Modal (mobile) */}
       {isMobile ? (
@@ -290,12 +253,34 @@ const Gastos = () => {
         </>
       ) : null}
 
-      <div className="gastos-layout" style={isMobile ? {} : { display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        {/* Formulario inline — solo desktop */}
+      <div className="gastos-layout" style={isMobile ? {} : { display: 'grid', gridTemplateColumns: '380px 240px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        {/* Columna Izquierda: Formulario */}
         {!isMobile && (
           <div className="glass-panel" style={{ padding: '1.25rem' }}>
             <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Registrar Gasto</h3>
             {GastoForm({ form, setForm, handleSubmit, isSubmitting })}
+          </div>
+        )}
+
+        {/* Columna Centro: Stats */}
+        {!isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="summary-card glass-panel">
+              <CatIcon cat={{ Icon: AttachMoneyIcon, color: '#ef4444' }} size={40} fontSize="small" />
+              <div className="summary-info">
+                <h3>Total este mes</h3>
+                <p style={{ fontSize: '1.2rem' }}>{monedaSymbol} {formatK(totalMes)}</p>
+                <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gastosMes.length} gastos</p>
+              </div>
+            </div>
+            <div className="summary-card glass-panel">
+              <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={40} fontSize="small" />
+              <div className="summary-info">
+                <h3>Total registros</h3>
+                <p style={{ fontSize: '1.2rem' }}>{gastos.length}</p>
+                <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Desde el inicio</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -348,7 +333,7 @@ const Gastos = () => {
       </div>
 
       <HistorialMovimientos
-        title="Historial"
+        title="Últimos gastos"
         items={gastos}
         emptyMessage="Todavía no hay gastos registrados."
         renderItem={(g) => {

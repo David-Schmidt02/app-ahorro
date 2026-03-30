@@ -25,3 +25,10 @@ class TipoCotizacion(str, Enum):
     BLUE = "BLUE"
     OFICIAL = "OFICIAL"
     MEP = "MEP"
+
+
+class EstadoPropiedad(str, Enum):
+    """Estados posibles de una propiedad en alquiler."""
+    FAVORITA = "favorita"
+    VISTA = "vista"
+    RECHAZADA = "rechazada"

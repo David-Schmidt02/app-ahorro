@@ -77,6 +77,19 @@ def obtener_usuario_actual(
     Raises:
         HTTPException: Si el token es inválido o el usuario no existe
     """
+    settings = get_settings()
+
+    # Si bypass_auth está habilitado en development, retornar un usuario dummy
+    if settings.development.bypass_auth:
+        # Crear un Usuario dummy sin necesidad de token
+        dummy_user = Usuario(
+            id=settings.development.default_user_id,
+            nombre=settings.development.default_user_name,
+            email=settings.development.default_user_email,
+            password_hash=""
+        )
+        return dummy_user
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="No se pudieron validar las credenciales",

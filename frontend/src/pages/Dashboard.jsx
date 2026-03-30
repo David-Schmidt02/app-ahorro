@@ -7,8 +7,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
+import ActionButton from '../components/ActionButton';
+import PageHeader from '../components/PageHeader';
 import '../styles/dashboard.css';
 import '../styles/objectives.css';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
@@ -168,14 +171,16 @@ const Dashboard = () => {
 
     return (
         <div className="page-container">
-            <div className="dashboard-header">
-                <h1>Resumen de Ahorros</h1>
-                {!isMobile && (
-                    <button className="btn-primary btn-nuevo-objetivo" onClick={() => setIsNewModalOpen(true)} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <AddIcon fontSize="small" /> Nuevo Objetivo
-                    </button>
-                )}
-            </div>
+            <PageHeader
+                title="Resumen de Ahorros"
+                action={!isMobile ? (
+                    <ActionButton
+                        label="Nuevo Objetivo"
+                        Icon={EmojiEventsIcon}
+                        onClick={() => setIsNewModalOpen(true)}
+                    />
+                ) : null}
+            />
 
             <div className="summary-cards">
                 <div className="summary-card glass-panel">

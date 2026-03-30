@@ -8,6 +8,7 @@ import ObjectiveDetail from './pages/ObjectiveDetail';
 import Gastos from './pages/Gastos';
 import HorariosSemanales from './pages/HorariosSemanales';
 import Calendario from './pages/Calendario';
+import Propiedades from './pages/Propiedades';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/gastos" element={<Gastos />} />
             <Route path="/horarios" element={<HorariosSemanales />} />
             <Route path="/calendario" element={<Calendario />} />
+            <Route path="/propiedades" element={<Propiedades />} />
           </Route>
         </Route>
 

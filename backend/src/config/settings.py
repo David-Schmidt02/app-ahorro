@@ -87,6 +87,14 @@ class TestUserConfig(BaseModel):
     password: str
 
 
+class DevelopmentConfig(BaseModel):
+    """Development settings (local testing without login)."""
+    bypass_auth: bool = False
+    default_user_id: int = 1
+    default_user_email: str = "dev@local.com"
+    default_user_name: str = "Dev User"
+
+
 class Settings(BaseModel):
     """Root settings model."""
     app: AppConfig
@@ -97,6 +105,7 @@ class Settings(BaseModel):
     logging: LoggingConfig
     config_reload: ConfigReloadConfig
     test_user: TestUserConfig
+    development: DevelopmentConfig = Field(default_factory=DevelopmentConfig)
     registration_enabled: bool = False
 
 

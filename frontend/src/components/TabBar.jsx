@@ -3,6 +3,7 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import '../styles/tabs.css';
 
 const TABS = [
@@ -10,6 +11,7 @@ const TABS = [
   { path: '/gastos',     label: 'Gastos',      Icon: ReceiptLongIcon },
   { path: '/horarios',   label: 'Horarios',    Icon: EventRepeatIcon },
   { path: '/calendario', label: 'Calendario',  Icon: CalendarMonthIcon },
+  { path: '/propiedades', label: 'Propiedades', Icon: HomeWorkIcon },
 ];
 
 const TabBar = ({ badges = {}, mobile = false }) => {

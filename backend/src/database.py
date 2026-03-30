@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
 from src.config import settings
-from src.domain.enums import Moneda, EstadoObjetivo, TipoMovimiento, TipoCotizacion
+from src.domain.enums import Moneda, EstadoObjetivo, TipoMovimiento, TipoCotizacion, EstadoPropiedad
 
 
 def _build_engine(url: str, pool_size: int, max_overflow: int, echo: bool):
@@ -71,6 +71,7 @@ class UsuarioORM(Base):
     gastos = relationship("GastoORM", back_populates="usuario")
     eventos_calendario = relationship("EventoCalendarioORM", back_populates="usuario")
     horarios = relationship("HorarioORM", back_populates="usuario", uselist=False)
+    propiedades = relationship("PropiedadORM", back_populates="creado_por")
 
 
 class ObjetivoORM(Base):
@@ -170,6 +171,33 @@ class HorarioORM(Base):
 
     # Relaciones
     usuario = relationship("UsuarioORM", back_populates="horarios")
+
+
+class PropiedadORM(Base):
+    """Modelo ORM para la tabla propiedades."""
+    __tablename__ = "propiedades"
+
+    id = Column(Integer, primary_key=True, index=True)
+    url = Column(String(500), nullable=False)
+    creado_por_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    estado = Column(SQLEnum(EstadoPropiedad, values_callable=lambda x: [e.value for e in x]), default=EstadoPropiedad.VISTA, nullable=False)
+    precio = Column(Numeric(precision=15, scale=2), nullable=True)
+    moneda = Column(SQLEnum(Moneda, values_callable=lambda x: [e.value for e in x]), nullable=True)
+    expensas = Column(Numeric(precision=15, scale=2), nullable=True)
+    moneda_expensas = Column(SQLEnum(Moneda, values_callable=lambda x: [e.value for e in x]), nullable=True)
+    direccion = Column(String(500), nullable=True)
+    inmobiliaria = Column(String(200), nullable=True)
+    contacto = Column(String(100), nullable=True)
+    metros_cuadrados = Column(Numeric(precision=10, scale=2), nullable=True)
+    cuartos = Column(Integer, nullable=True)
+    banios = Column(Integer, nullable=True)
+    notas = Column(Text, nullable=True)
+    en_top = Column(Boolean, default=False, nullable=False)
+    posicion_top = Column(Integer, nullable=True)
+    creado_en = Column(DateTime, default=datetime.now, nullable=False, index=True)
+
+    # Relaciones
+    creado_por = relationship("UsuarioORM", back_populates="propiedades")
 
 
 def create_tables():

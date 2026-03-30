@@ -4,12 +4,14 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import Dashboard from '../pages/Dashboard';
 import Gastos from '../pages/Gastos';
 import HorariosSemanales from '../pages/HorariosSemanales';
 import Calendario from '../pages/Calendario';
+import Propiedades from '../pages/Propiedades';
 import FAB from './FAB';
 
 // color = FAB gradient key, tabColor = bottom-bar active color, glowColor = FAB shadow
@@ -18,6 +20,7 @@ const FAB_CONFIGS = {
   '/gastos':     { Icon: AddIcon,  color: 'warning', glowColor: 'rgba(245,158,11,0.55)',  title: 'Registrar Gasto' },
   '/horarios':   { Icon: SaveIcon, color: 'success', glowColor: 'rgba(16,185,129,0.55)',  title: 'Guardar horario' },
   '/calendario': { Icon: AddIcon,  color: 'info',    glowColor: 'rgba(56,189,248,0.55)',  title: 'Nuevo Evento' },
+  '/propiedades': { Icon: AddIcon,  color: 'cyan',   glowColor: 'rgba(6,182,212,0.55)',   title: 'Nueva Propiedad' },
 };
 
 const TAB_COLORS = {
@@ -25,6 +28,7 @@ const TAB_COLORS = {
   '/gastos':     '#f59e0b',
   '/horarios':   '#10b981',
   '/calendario': '#38bdf8',
+  '/propiedades': '#06b6d4',
 };
 
 const TABS = [
@@ -32,6 +36,7 @@ const TABS = [
   { path: '/gastos',     label: 'Gastos',      Icon: ReceiptLongIcon,   Component: Gastos },
   { path: '/horarios',   label: 'Horarios',    Icon: EventRepeatIcon,   Component: HorariosSemanales },
   { path: '/calendario', label: 'Calendario',  Icon: CalendarMonthIcon, Component: Calendario },
+  { path: '/propiedades', label: 'Propiedades', Icon: HomeWorkIcon,      Component: Propiedades },
 ];
 
 const getIndexFromPath = (path) => {

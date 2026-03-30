@@ -19,6 +19,7 @@ from src.database import create_tables
 from src.controllers import auth_controller, objetivo_controller, movimiento_controller, estadistica_controller
 from src.controllers import gasto_controller
 from src.controllers import evento_calendario_controller, horario_controller
+from src.controllers import propiedad_controller
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -177,6 +178,7 @@ app.include_router(estadistica_controller.router, prefix=settings.app.api_prefix
 app.include_router(gasto_controller.router, prefix=settings.app.api_prefix)
 app.include_router(evento_calendario_controller.router, prefix=settings.app.api_prefix)
 app.include_router(horario_controller.router, prefix=settings.app.api_prefix)
+app.include_router(propiedad_controller.router, prefix=settings.app.api_prefix)
 
 
 @app.get("/")

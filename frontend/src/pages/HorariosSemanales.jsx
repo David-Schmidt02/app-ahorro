@@ -5,6 +5,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import api from '../api/axios';
 import { useIsMobile } from '../hooks/useIsMobile';
 import Modal from '../components/Modal';
+import ActionButton from '../components/ActionButton';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const EMPTY_SEMANA = Object.fromEntries(DIAS.map(d => [d, []]));
@@ -285,10 +286,13 @@ const HorariosSemanales = () => {
                 border: `1px solid ${saved.startsWith('Error') ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
               }}>{saved}</span>
             )}
-            <button className="btn-primary" onClick={save} disabled={isSaving}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}>
-              <SaveIcon fontSize="small" /> {isSaving ? 'Guardando...' : 'Guardar mi horario'}
-            </button>
+            <ActionButton
+              label="Guardar mi horario"
+              Icon={SaveIcon}
+              onClick={save}
+              disabled={isSaving}
+              isLoading={isSaving}
+            />
           </div>
         )}
       </div>

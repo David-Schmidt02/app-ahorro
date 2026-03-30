@@ -6,7 +6,7 @@ import Mascota from './Mascota';
 import MobileLayout from './MobileLayout';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-const TAB_PATHS = ['/', '/gastos', '/horarios', '/calendario'];
+const TAB_PATHS = ['/', '/gastos', '/horarios', '/calendario', '/propiedades'];
 
 function computeCalBadge() {
   try {

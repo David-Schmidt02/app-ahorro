@@ -9,8 +9,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import '../styles/auth.css'; // Estilos específicos de Auth
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test@test.com');
+  const [password, setPassword] = useState('test1234');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
