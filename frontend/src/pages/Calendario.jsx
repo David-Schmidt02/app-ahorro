@@ -235,6 +235,15 @@ const Calendario = () => {
 
   const todayStr = today.toISOString().split('T')[0];
 
+  if (loading) {
+    return (
+      <div className="page-container page-loader">
+        <div className="spinner" />
+        <span>Cargando calendario...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <div className="dashboard-header">
@@ -251,9 +260,7 @@ const Calendario = () => {
         const panelUpcoming = (
           <div className="glass-panel" style={{ padding: '1.25rem' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Próximos 7 días</h3>
-            {loading ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Cargando...</p>
-            ) : upcoming.length === 0 ? (
+            {upcoming.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Nada por ahora</p>
             ) : (
               upcoming.map(ev => {

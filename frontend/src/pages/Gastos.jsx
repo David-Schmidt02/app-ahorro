@@ -110,7 +110,7 @@ const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
 
 const Gastos = () => {
   const { dolarRate, viewMoneda } = useCurrency();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const [gastos, setGastos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -157,12 +157,12 @@ const thSt = (color) => ({
 });
 
 const tdSt = (isOdd) => ({
-  padding: '0.4rem 0.3rem',
+  padding: '0.5rem 0.5rem',
   border: '1px solid rgba(255,255,255,0.07)',
   verticalAlign: 'top',
   background: isOdd ? 'rgba(255,255,255,0.012)' : 'transparent',
-  minWidth: '120px',
-  width: '120px',
+  minWidth: '160px',
+  width: '160px',
 });
 
 /* ─────────────────────────────────────────────────────── */
@@ -178,7 +178,6 @@ const HorariosSemanales = () => {
   const [warnings, setWarnings] = useState({});
   const [editingSlot, setEditingSlot] = useState(null); // { dia, index } | null
   const todayDia = DOW_MAP[new Date().getDay()];
-  const [selectedDay, setSelectedDay] = useState(DIAS.includes(todayDia) ? todayDia : 'Lunes');
 
   useEffect(() => {
     const handler = () => save();
@@ -271,6 +270,20 @@ const HorariosSemanales = () => {
 
   const partner = otros[0] || null;
 
+  // Estilos para etiquetas laterales
+  const lateralLabelSt = (color) => ({
+    whiteSpace: 'nowrap',
+    color,
+    fontSize: '0.9rem',
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    padding: '1.25rem 1rem',
+    textAlign: 'center',
+    background: 'rgba(0,0,0,0.5)',
+    borderRight: '1px solid rgba(255,255,255,0.1)',
+  });
+
   return (
     <div className="page-container" style={{ paddingBottom: '3rem' }}>
       <div className="dashboard-header">
@@ -296,6 +309,7 @@ const HorariosSemanales = () => {
           </div>
         )}
       </div>
+
       {isMobile && saved && (
         <div style={{
           position: 'fixed', bottom: '145px', right: '1.25rem', zIndex: 91,
@@ -308,266 +322,243 @@ const HorariosSemanales = () => {
         }}>{saved}</div>
       )}
 
-      {/* ── Mobile: selector de día + vista vertical ─────────── */}
+      {/* ── Mobile: 7 cards apilados ─────────────── */}
       {isMobile ? (
-        <>
-          {/* Day pills */}
-          <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '1.25rem', overflowX: 'auto', paddingBottom: '4px' }}>
-            {DIAS.map(dia => {
-              const isToday = dia === todayDia;
-              const isSelected = dia === selectedDay;
-              return (
-                <button key={dia} onClick={() => setSelectedDay(dia)} style={{
-                  flexShrink: 0,
-                  padding: '0.3rem 0.65rem',
-                  borderRadius: '20px',
-                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
-                  background: isSelected ? 'rgba(225,29,72,0.15)' : 'transparent',
-                  color: isSelected ? 'var(--accent-primary)' : isToday ? 'var(--text-secondary)' : 'var(--text-muted)',
-                  fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em',
-                  cursor: 'pointer',
-                  outline: isToday && !isSelected ? '1px solid rgba(255,255,255,0.15)' : 'none',
-                }}>
-                  {dia.slice(0, 3).toUpperCase()}
-                </button>
-              );
-            })}
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {DIAS.map(dia => {
+            const isToday = dia === todayDia;
+            const miDataDia = miData[dia] || [];
+            const partnerDataDia = partner?.data[dia] || [];
+            const libres = partner ? calcLibres(miDataDia, partnerDataDia) : [];
 
-          {/* Mi horario para el día seleccionado */}
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Mi horario
-            </h2>
-            {miData[selectedDay].length === 0 && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.5rem' }}>Sin actividades</p>
-            )}
-            {miData[selectedDay].map((slot, si) => (
-              <div key={si} onClick={() => setEditingSlot({ dia: selectedDay, index: si })}
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '0.55rem 0.75rem', marginBottom: '0.4rem',
-                  background: 'rgba(225,29,72,0.08)', border: '1px solid rgba(225,29,72,0.2)',
-                  borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                }}>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                  {slot.inicio} – {slot.fin}
-                </span>
-                {slot.actividad && (
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginLeft: '0.5rem' }}>{slot.actividad}</span>
+            return (
+              <div key={dia} className="glass-panel" style={{
+                padding: '1.25rem',
+                border: isToday ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                position: 'relative',
+              }}>
+                {isToday && (
+                  <span style={{
+                    position: 'absolute', top: '-10px', right: '1rem',
+                    background: 'var(--accent-primary)', color: 'white',
+                    fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px',
+                    borderRadius: '4px', letterSpacing: '0.05em'
+                  }}>HOY</span>
                 )}
-              </div>
-            ))}
-            {warnings[selectedDay] && (
-              <span style={{ fontSize: '0.72rem', color: 'var(--accent-danger)', display: 'block', marginBottom: '0.4rem' }}>{warnings[selectedDay]}</span>
-            )}
-            <button onClick={() => addSlot(selectedDay)} style={{
-              display: 'flex', alignItems: 'center', gap: '0.3rem',
-              padding: '0.45rem 0.75rem', marginTop: '0.25rem',
-              background: 'transparent', border: '1px dashed rgba(225,29,72,0.3)',
-              borderRadius: 'var(--radius-sm)', color: 'var(--accent-primary)',
-              fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', width: '100%', justifyContent: 'center',
-            }}>
-              <AddIcon style={{ fontSize: '1rem' }} /> Agregar actividad
-            </button>
-          </section>
+                
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.25rem', color: isToday ? 'var(--accent-primary)' : 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {dia}
+                </h3>
 
-          {/* Partner para el día seleccionado */}
-          {partner ? (
-            <section style={{ marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--accent-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                {partner.nombre}
-              </h2>
-              {(partner.data[selectedDay] || []).length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sin actividades</p>
-              ) : (
-                (partner.data[selectedDay] || []).map((slot, si) => (
-                  <div key={si} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '0.55rem 0.75rem', marginBottom: '0.4rem',
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 'var(--radius-sm)',
+                {/* David Section */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    David <div style={{ flex: 1, height: '1px', background: 'rgba(225,29,72,0.15)' }} />
+                  </h4>
+                  {miDataDia.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>Sin actividades</p>
+                  ) : (
+                    miDataDia.map((slot, si) => (
+                      <div key={si} onClick={() => setEditingSlot({ dia, index: si })}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '0.75rem 1rem', marginBottom: '0.5rem',
+                          background: 'rgba(225,29,72,0.06)', border: '1px solid rgba(225,29,72,0.15)',
+                          borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                        }}>
+                        <span style={{ color: 'var(--accent-primary)', fontSize: '0.9rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                          {slot.inicio} – {slot.fin}
+                        </span>
+                        {slot.actividad && (
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>{slot.actividad}</span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  <button onClick={() => addSlot(dia)} style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    padding: '0.65rem', marginTop: '0.5rem',
+                    background: 'transparent', border: '1px dashed rgba(225,29,72,0.3)',
+                    borderRadius: 'var(--radius-sm)', color: 'var(--accent-primary)',
+                    fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', width: '100%', justifyContent: 'center',
                   }}>
-                    <span style={{ color: 'var(--accent-secondary)', fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                      {slot.inicio} – {slot.fin}
-                    </span>
-                    {slot.actividad && (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginLeft: '0.5rem' }}>{slot.actividad}</span>
+                    <AddIcon style={{ fontSize: '1.1rem' }} /> Agregar actividad
+                  </button>
+                </div>
+
+                {/* Partner Section */}
+                {partner && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {partner.nombre} <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+                    </h4>
+                    {partnerDataDia.length === 0 ? (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>Sin actividades</p>
+                    ) : (
+                      partnerDataDia.map((slot, si) => (
+                        <div key={si} style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '0.75rem 1rem', marginBottom: '0.5rem',
+                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}>
+                          <span style={{ color: 'var(--accent-secondary)', fontSize: '0.9rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                            {slot.inicio} – {slot.fin}
+                          </span>
+                          {slot.actividad && (
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{slot.actividad}</span>
+                          )}
+                        </div>
+                      ))
                     )}
                   </div>
-                ))
-              )}
-            </section>
-          ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Cuando tu pareja guarde su horario aparecerá acá.
-            </p>
-          )}
-
-          {/* Libres juntos para el día seleccionado */}
-          {partner && (() => {
-            const libres = calcLibres(miData[selectedDay] || [], partner.data[selectedDay] || []);
-            return (
-              <section>
-                <h2 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--accent-success)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Libres juntos
-                </h2>
-                {libres.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sin ratos libres en común</p>
-                ) : (
-                  libres.map(([s, e], li) => (
-                    <div key={li} style={{
-                      padding: '0.55rem 0.75rem', marginBottom: '0.4rem',
-                      background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
-                      borderRadius: 'var(--radius-sm)',
-                      color: 'var(--accent-success)', fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums',
-                    }}>
-                      {toTime(s)} – {toTime(e)}
-                    </div>
-                  ))
                 )}
-              </section>
-            );
-          })()}
-        </>
-      ) : (
-        <>
-          {/* ── TABLA 1: Mi horario ─────────────────────────────── */}
-          <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--accent-primary)' }}>
-              Mi horario
-            </h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                <thead>
-                  <tr>
-                    {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-primary)')}>{dia.toUpperCase()}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {DIAS.map((dia, i) => (
-                      <td key={dia} style={tdSt(i % 2 === 1)}>
-                        {miData[dia].map((slot, si) => (
-                          <SlotEditor key={si} slot={slot}
-                            error={warnings[`${dia}-${si}`]}
-                            onChange={upd => updateSlot(dia, si, upd)}
-                            onDelete={() => deleteSlot(dia, si)}
-                          />
+
+                {/* Libres Section */}
+                {partner && (
+                  <div>
+                    <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      Libres juntos <div style={{ flex: 1, height: '1px', background: 'rgba(16,185,129,0.15)' }} />
+                    </h4>
+                    {libres.length === 0 ? (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>Sin ratos libres comunes</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {libres.map(([s, e], li) => (
+                          <div key={li} style={{
+                            padding: '0.4rem 0.75rem',
+                            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                            borderRadius: '20px',
+                            color: 'var(--accent-success)', fontSize: '0.85rem', fontWeight: 700,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>
+                            {toTime(s)} – {toTime(e)}
+                          </div>
                         ))}
-                        {warnings[dia] && (
-                          <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block' }}>{warnings[dia]}</span>
-                        )}
-                        <button onClick={() => addSlot(dia)} style={{
-                          fontSize: '0.68rem', color: 'var(--accent-primary)', background: 'transparent',
-                          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                          gap: '0.15rem', padding: '2px 0', opacity: 0.75, marginTop: '2px',
-                        }}>
-                          <AddIcon style={{ fontSize: '0.75rem' }} /> actividad
-                        </button>
-                      </td>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ── Desktop: Tabla Unificada ─────────────── */
+        <div style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <thead>
+              <tr>
+                <th style={{ width: '60px', background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></th>
+                {DIAS.map(dia => (
+                  <th key={dia} style={{ 
+                    ...thSt(dia === todayDia ? 'var(--accent-primary)' : 'var(--text-secondary)'),
+                    borderBottom: dia === todayDia ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
+                    background: dia === todayDia ? 'rgba(225,29,72,0.05)' : 'rgba(0,0,0,0.4)',
+                    padding: '1rem 0.5rem',
+                    fontSize: '0.8rem'
+                  }}>
+                    {dia.slice(0,3).toUpperCase()}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* FILA DAVID */}
+              <tr>
+                <td style={lateralLabelSt('var(--accent-primary)')}>David</td>
+                {DIAS.map((dia, i) => (
+                  <td key={dia} style={{ ...tdSt(i % 2 === 1), minHeight: '150px' }}>
+                    {miData[dia].map((slot, si) => (
+                      <SlotEditor key={si} slot={slot}
+                        error={warnings[`${dia}-${si}`]}
+                        onChange={upd => updateSlot(dia, si, upd)}
+                        onDelete={() => deleteSlot(dia, si)}
+                      />
                     ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+                    {warnings[dia] && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'block', marginBottom: '4px' }}>{warnings[dia]}</span>
+                    )}
+                    <button onClick={() => addSlot(dia)} style={{
+                      fontSize: '0.72rem', color: 'var(--accent-primary)', background: 'rgba(225,29,72,0.08)',
+                      border: '1px dashed rgba(225,29,72,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', width: '100%',
+                      gap: '0.2rem', padding: '6px 0', borderRadius: '4px', marginTop: '4px',
+                      transition: 'all 0.2s'
+                    }} className="btn-hover-bright">
+                      <AddIcon style={{ fontSize: '0.9rem' }} /> Actividad
+                    </button>
+                  </td>
+                ))}
+              </tr>
 
-          {/* ── TABLA 2: Horario del partner ────────────────────── */}
-          {partner ? (
-            <section style={{ marginBottom: '2rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--accent-secondary)' }}>
-                {partner.nombre}
-              </h2>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr>
-                      {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-secondary)')}>{dia.toUpperCase()}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {DIAS.map((dia, i) => {
-                        const slots = partner.data[dia] || [];
-                        return (
-                          <td key={dia} style={tdSt(i % 2 === 1)}>
-                            {slots.length === 0 ? (
-                              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem' }}>—</span>
-                            ) : (
-                              slots.map((slot, si) => (
-                                <div key={si} style={{
-                                  fontSize: '0.73rem', marginBottom: '0.3rem',
-                                  background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-sm)', padding: '0.3rem',
-                                }}>
-                                  <span style={{ color: 'var(--accent-secondary)', fontVariantNumeric: 'tabular-nums', display: 'block' }}>
-                                    {slot.inicio} → {slot.fin}
-                                  </span>
-                                  {slot.actividad && (
-                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>{slot.actividad}</span>
-                                  )}
-                                </div>
-                              ))
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Cuando tu pareja guarde su horario aparecerá acá automáticamente.
-            </p>
-          )}
+              {/* Separador */}
+              <tr><td colSpan={8} style={{ height: '8px', background: 'rgba(255,255,255,0.02)' }}></td></tr>
 
-          {/* ── TABLA 3: Libres juntos ───────────────────────────── */}
-          {partner && (
-            <section>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--accent-success)' }}>
-                Libres juntos
-              </h2>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr>
-                      {DIAS.map(dia => <th key={dia} style={thSt('var(--accent-success)')}>{dia.toUpperCase()}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {DIAS.map((dia, i) => {
-                        const libres = calcLibres(miData[dia] || [], partner.data[dia] || []);
-                        return (
-                          <td key={dia} style={{ ...tdSt(i % 2 === 1), background: i % 2 === 1 ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.02)' }}>
-                            {libres.length === 0 ? (
-                              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.73rem' }}>—</span>
-                            ) : (
-                              libres.map(([s, e], li) => (
-                                <span key={li} style={{
-                                  display: 'block', fontSize: '0.71rem',
-                                  background: 'rgba(16,185,129,0.15)',
-                                  border: '1px solid rgba(16,185,129,0.3)',
-                                  color: 'var(--accent-success)',
-                                  borderRadius: '4px', padding: '2px 4px',
-                                  marginBottom: '3px', fontVariantNumeric: 'tabular-nums',
-                                }}>
-                                  {toTime(s)} – {toTime(e)}
+              {/* FILA PARTNER */}
+              {partner && (
+                <>
+                  <tr>
+                    <td style={lateralLabelSt('var(--accent-secondary)')}>{partner.nombre}</td>
+                    {DIAS.map((dia, i) => {
+                      const slots = partner.data[dia] || [];
+                      return (
+                        <td key={dia} style={tdSt(i % 2 === 1)}>
+                          {slots.length === 0 ? (
+                            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '0.75rem', fontStyle: 'italic', display: 'block', textAlign: 'center', marginTop: '1rem' }}>—</span>
+                          ) : (
+                            slots.map((slot, si) => (
+                              <div key={si} style={{
+                                fontSize: '0.75rem', marginBottom: '0.4rem',
+                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '0.4rem',
+                              }}>
+                                <span style={{ color: 'var(--accent-secondary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums', display: 'block' }}>
+                                  {slot.inicio} – {slot.fin}
                                 </span>
-                              ))
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-        </>
+                                {slot.actividad && (
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{slot.actividad}</span>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  <tr><td colSpan={8} style={{ height: '8px', background: 'rgba(255,255,255,0.02)' }}></td></tr>
+                </>
+              )}
+
+              {/* FILA LIBRES */}
+              {partner && (
+                <tr>
+                  <td style={lateralLabelSt('var(--accent-success)')}>Libres</td>
+                  {DIAS.map((dia, i) => {
+                    const libres = calcLibres(miData[dia] || [], partner.data[dia] || []);
+                    return (
+                      <td key={dia} style={{ ...tdSt(i % 2 === 1), background: i % 2 === 1 ? 'rgba(16,185,129,0.03)' : 'rgba(16,185,129,0.015)' }}>
+                        {libres.length === 0 ? (
+                          <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '0.75rem', fontStyle: 'italic', display: 'block', textAlign: 'center', marginTop: '1rem' }}>—</span>
+                        ) : (
+                          libres.map(([s, e], li) => (
+                            <div key={li} style={{
+                              textAlign: 'center', fontSize: '0.75rem', fontWeight: 700,
+                              background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
+                              color: 'var(--accent-success)', borderRadius: '4px', padding: '3px 0',
+                              marginBottom: '4px', fontVariantNumeric: 'tabular-nums',
+                            }}>
+                              {toTime(s)} – {toTime(e)}
+                            </div>
+                          ))
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Modal edición de slot (mobile) */}

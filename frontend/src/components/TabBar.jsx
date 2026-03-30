@@ -11,7 +11,7 @@ const TABS = [
   { path: '/gastos',     label: 'Gastos',      Icon: ReceiptLongIcon },
   { path: '/horarios',   label: 'Horarios',    Icon: EventRepeatIcon },
   { path: '/calendario', label: 'Calendario',  Icon: CalendarMonthIcon },
-  { path: '/propiedades', label: 'Propiedades', Icon: HomeWorkIcon },
+  { path: '/propiedades', label: 'Alquiler', Icon: HomeWorkIcon },
 ];
 
 const TabBar = ({ badges = {}, mobile = false }) => {

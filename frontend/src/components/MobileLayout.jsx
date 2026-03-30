@@ -7,6 +7,9 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AddHomeIcon from '@mui/icons-material/AddHome';
 import Dashboard from '../pages/Dashboard';
 import Gastos from '../pages/Gastos';
 import HorariosSemanales from '../pages/HorariosSemanales';
@@ -16,11 +19,11 @@ import FAB from './FAB';
 
 // color = FAB gradient key, tabColor = bottom-bar active color, glowColor = FAB shadow
 const FAB_CONFIGS = {
-  '/':           { Icon: AddIcon,  color: 'primary', glowColor: 'rgba(225,29,72,0.55)',   title: 'Nuevo Objetivo' },
-  '/gastos':     { Icon: AddIcon,  color: 'warning', glowColor: 'rgba(245,158,11,0.55)',  title: 'Registrar Gasto' },
+  '/':           { Icon: EmojiEventsIcon,  color: 'primary', glowColor: 'rgba(225,29,72,0.55)',   title: 'Nuevo Objetivo' },
+  '/gastos':     { Icon: AttachMoneyIcon,  color: 'warning', glowColor: 'rgba(245,158,11,0.55)',  title: 'Registrar Gasto' },
   '/horarios':   { Icon: SaveIcon, color: 'success', glowColor: 'rgba(16,185,129,0.55)',  title: 'Guardar horario' },
   '/calendario': { Icon: AddIcon,  color: 'info',    glowColor: 'rgba(56,189,248,0.55)',  title: 'Nuevo Evento' },
-  '/propiedades': { Icon: AddIcon,  color: 'cyan',   glowColor: 'rgba(6,182,212,0.55)',   title: 'Nueva Propiedad' },
+  '/propiedades': { Icon: AddHomeIcon,  color: 'cyan',   glowColor: 'rgba(6,182,212,0.55)',   title: 'Nueva Propiedad' },
 };
 
 const TAB_COLORS = {
@@ -36,7 +39,7 @@ const TABS = [
   { path: '/gastos',     label: 'Gastos',      Icon: ReceiptLongIcon,   Component: Gastos },
   { path: '/horarios',   label: 'Horarios',    Icon: EventRepeatIcon,   Component: HorariosSemanales },
   { path: '/calendario', label: 'Calendario',  Icon: CalendarMonthIcon, Component: Calendario },
-  { path: '/propiedades', label: 'Propiedades', Icon: HomeWorkIcon,      Component: Propiedades },
+  { path: '/propiedades', label: 'Alquiler', Icon: HomeWorkIcon,      Component: Propiedades },
 ];
 
 const getIndexFromPath = (path) => {

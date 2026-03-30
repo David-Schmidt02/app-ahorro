@@ -173,7 +173,7 @@ function PropiedadCard({ propiedad, onEdit, onDelete, onToggleTop, onViewDetail 
 
 // Componente principal Propiedades
 export default function Propiedades() {
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const [propiedades, setPropiedades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('todos');
@@ -466,7 +466,7 @@ export default function Propiedades() {
   return (
     <div className="page-container propiedades-page-container">
       <PageHeader
-        title="Propiedades"
+        title="Alquiler"
         action={!isMobile ? (
           <ActionButton
             label="Nueva Propiedad"
