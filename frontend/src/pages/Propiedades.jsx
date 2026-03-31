@@ -25,6 +25,7 @@ import PropiedadDetailModal from '../components/PropiedadDetailModal';
 import ActionButton from '../components/ActionButton';
 import PageHeader from '../components/PageHeader';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { formatAmount, cleanAmount } from '../utils/formatters';
 import '../styles/propiedades.css';
 import '../styles/dashboard.css';
 
@@ -276,8 +277,8 @@ export default function Propiedades() {
       if (cleaned[key] === '') cleaned[key] = null;
     });
     // Convertir campos numéricos
-    if (cleaned.precio !== null) cleaned.precio = parseFloat(cleaned.precio);
-    if (cleaned.expensas !== null) cleaned.expensas = parseFloat(cleaned.expensas);
+    if (cleaned.precio !== null) cleaned.precio = parseFloat(cleanAmount(cleaned.precio));
+    if (cleaned.expensas !== null) cleaned.expensas = parseFloat(cleanAmount(cleaned.expensas));
     if (cleaned.metros_cuadrados !== null) cleaned.metros_cuadrados = parseFloat(cleaned.metros_cuadrados);
     if (cleaned.cuartos !== null) cleaned.cuartos = parseInt(cleaned.cuartos);
     if (cleaned.banios !== null) cleaned.banios = parseInt(cleaned.banios);
@@ -338,9 +339,9 @@ export default function Propiedades() {
     setFormData({
       url: propiedad.url || '',
       estado: propiedad.estado || 'vista',
-      precio: propiedad.precio ? String(propiedad.precio) : '',
+      precio: propiedad.precio ? formatAmount(propiedad.precio) : '',
       moneda: propiedad.moneda || 'USD',
-      expensas: propiedad.expensas ? String(propiedad.expensas) : '',
+      expensas: propiedad.expensas ? formatAmount(propiedad.expensas) : '',
       moneda_expensas: propiedad.moneda_expensas || 'ARS',
       direccion: propiedad.direccion || '',
       inmobiliaria: propiedad.inmobiliaria || '',
@@ -597,14 +598,17 @@ export default function Propiedades() {
           <div className="form-row">
             <div className="form-group">
               <label>Alquiler</label>
-              <input
-                type="number"
-                name="precio"
-                value={formData.precio}
-                onChange={handleInputChange}
-                step="0.01"
-                placeholder="0.00"
-              />
+              <div className="amount-input-wrapper">
+                <span className="amount-input-prefix">$</span>
+                <input
+                  type="text"
+                  name="precio"
+                  inputMode="numeric"
+                  value={formData.precio}
+                  onChange={(e) => setFormData({ ...formData, precio: formatAmount(e.target.value) })}
+                  placeholder="0,00"
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Moneda</label>
@@ -623,14 +627,17 @@ export default function Propiedades() {
           <div className="form-row">
             <div className="form-group">
               <label>Expensas</label>
-              <input
-                type="number"
-                name="expensas"
-                value={formData.expensas}
-                onChange={handleInputChange}
-                step="0.01"
-                placeholder="0.00"
-              />
+              <div className="amount-input-wrapper">
+                <span className="amount-input-prefix">$</span>
+                <input
+                  type="text"
+                  name="expensas"
+                  inputMode="numeric"
+                  value={formData.expensas}
+                  onChange={(e) => setFormData({ ...formData, expensas: formatAmount(e.target.value) })}
+                  placeholder="0,00"
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Moneda</label>

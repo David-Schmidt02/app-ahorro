@@ -252,3 +252,29 @@ body {
   color: var(--text-primary);
   padding: 10px;
 }
+
+/* ==========================================================================
+   Amount Input Styles (Global)
+   ========================================================================== */
+.amount-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.amount-input-prefix {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Alta especificidad para evitar que sea sobreescrito por .form-group input */
+.amount-input-wrapper input,
+.form-group .amount-input-wrapper input,
+.propiedad-form .form-group .amount-input-wrapper input {
+  padding-left: 2.5rem !important;
+}

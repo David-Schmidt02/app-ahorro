@@ -191,22 +191,6 @@
   letter-spacing: 0.05em;
 }
 
-.amount-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.amount-input-prefix {
-  position: absolute;
-  left: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.amount-input-wrapper input {
-  padding-left: 2.5rem;
-}
 
 .movement-tabs {
   display: flex;
