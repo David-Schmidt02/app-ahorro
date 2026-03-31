@@ -21,8 +21,9 @@ const HistorialMovimientos = ({
   emptyMessage = 'No hay registros todavía.',
   hasMore = false,
   onLoadMore,
+  style = {},
 }) => (
-  <section className="progress-section movements-history" style={{ marginTop: '2.5rem', paddingBottom: '3rem' }}>
+  <section className="progress-section movements-history" style={{ marginTop: '2.5rem', paddingBottom: '3rem', ...style }}>
     <div className="progress-section-header">
       <h4>{title}</h4>
     </div>

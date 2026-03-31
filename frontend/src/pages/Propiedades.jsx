@@ -481,10 +481,10 @@ export default function Propiedades() {
         <SectionContainer className="all-propiedades-section">
           {/* Filtros */}
           <div className="filter-buttons">
-            {['todos', 'favorita', 'rechazada'].map((f) => (
+            {['todos', 'vista', 'favorita', 'rechazada'].map((f) => (
               <button
                 key={f}
-                className={`filter-btn ${filtro === f ? 'active' : ''}`}
+                className={`filter-btn filter-${f} ${filtro === f ? 'active' : ''}`}
                 onClick={() => setFiltro(f)}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -571,30 +571,32 @@ export default function Propiedades() {
             <label>Estado</label>
             <div className="estado-buttons">
               <button
-                key="sin-estado"
                 type="button"
-                className={`estado-btn ${formData.estado === '' ? 'active' : ''}`}
-                onClick={() => setFormData((prev) => ({ ...prev, estado: '' }))}
-                title="Sin clasificar"
+                className={`estado-btn estado-vista ${formData.estado === 'vista' || formData.estado === '' ? 'active' : ''}`}
+                onClick={() => setFormData((prev) => ({ ...prev, estado: 'vista' }))}
               >
-                Sin estado
+                Vista
               </button>
-              {['favorita', 'rechazada'].map((estado) => (
-                <button
-                  key={estado}
-                  type="button"
-                  className={`estado-btn ${formData.estado === estado ? 'active' : ''}`}
-                  onClick={() => setFormData((prev) => ({ ...prev, estado }))}
-                >
-                  {estado.charAt(0).toUpperCase() + estado.slice(1)}
-                </button>
-              ))}
+              <button
+                type="button"
+                className={`estado-btn estado-favorita ${formData.estado === 'favorita' ? 'active' : ''}`}
+                onClick={() => setFormData((prev) => ({ ...prev, estado: 'favorita' }))}
+              >
+                Favorita
+              </button>
+              <button
+                type="button"
+                className={`estado-btn estado-rechazada ${formData.estado === 'rechazada' ? 'active' : ''}`}
+                onClick={() => setFormData((prev) => ({ ...prev, estado: 'rechazada' }))}
+              >
+                Rechazada
+              </button>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Precio</label>
+              <label>Alquiler</label>
               <input
                 type="number"
                 name="precio"

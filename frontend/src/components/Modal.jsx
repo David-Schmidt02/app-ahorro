@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Close } from '@mui/icons-material';
 
-const Modal = ({ isOpen, onClose, title, children, footer }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, accentColor }) => {
   // Bloquear scroll del body cuando el modal está abierto
   useEffect(() => {
     if (isOpen) {

@@ -23,7 +23,7 @@ const FAB_CONFIGS = {
   '/gastos':     { Icon: AttachMoneyIcon,  color: 'warning', glowColor: 'rgba(245,158,11,0.55)',  title: 'Registrar Gasto' },
   '/horarios':   { Icon: SaveIcon, color: 'success', glowColor: 'rgba(16,185,129,0.55)',  title: 'Guardar horario' },
   '/calendario': { Icon: AddIcon,  color: 'info',    glowColor: 'rgba(56,189,248,0.55)',  title: 'Nuevo Evento' },
-  '/propiedades': { Icon: AddHomeIcon,  color: 'cyan',   glowColor: 'rgba(6,182,212,0.55)',   title: 'Nueva Propiedad' },
+  '/propiedades': { Icon: AddHomeIcon,  color: 'teal',   glowColor: 'rgba(13,148,136,0.55)',  title: 'Nueva Propiedad' },
 };
 
 const TAB_COLORS = {
@@ -31,7 +31,7 @@ const TAB_COLORS = {
   '/gastos':     '#f59e0b',
   '/horarios':   '#10b981',
   '/calendario': '#38bdf8',
-  '/propiedades': '#06b6d4',
+  '/propiedades': '#0d9488',
 };
 
 const TABS = [

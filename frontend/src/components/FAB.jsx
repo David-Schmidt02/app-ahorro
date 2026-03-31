@@ -14,6 +14,7 @@ const GRADIENTS = {
   success: 'linear-gradient(135deg, #10b981, #059669)',
   warning: 'linear-gradient(135deg, #f59e0b, #d97706)',
   info:    'linear-gradient(135deg, #38bdf8, #0284c7)',
+  teal:    'linear-gradient(135deg, #0d9488, #115e59)',
 };
 
 const FAB = ({ onClick, icon, title, disabled = false, color = 'primary', animKey, glowColor }) => {

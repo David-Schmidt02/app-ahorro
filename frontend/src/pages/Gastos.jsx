@@ -229,63 +229,51 @@ const Gastos = () => {
             onClick={() => setIsFormOpen(true)}
           />
         ) : null}
+
       />
 
 
-      {/* Form inline (desktop) / Modal (mobile) */}
-      {isMobile ? (
-        <>
-          <Modal
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            title="Registrar Gasto"
-            footer={
-              <>
-                <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Cancelar</button>
-                <button type="submit" form="gasto-form" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Guardando...' : 'Agregar Gasto'}
-                </button>
-              </>
-            }
-          >
-            {GastoForm({ form, setForm, handleSubmit, isSubmitting, formId: 'gasto-form' })}
-          </Modal>
-        </>
-      ) : null}
+      {/* Modal formulario (mobile + desktop) */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        title="Registrar Gasto"
+        footer={
+          <>
+            <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Cancelar</button>
+            <button type="submit" form="gasto-form" className="btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Guardando...' : 'Agregar Gasto'}
+            </button>
+          </>
+        }
+      >
+        {GastoForm({ form, setForm, handleSubmit, isSubmitting, formId: 'gasto-form' })}
+      </Modal>
 
-      <div className="gastos-layout" style={isMobile ? {} : { display: 'grid', gridTemplateColumns: '380px 240px 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        {/* Columna Izquierda: Formulario */}
-        {!isMobile && (
-          <div className="glass-panel" style={{ padding: '1.25rem' }}>
-            <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Registrar Gasto</h3>
-            {GastoForm({ form, setForm, handleSubmit, isSubmitting })}
-          </div>
-        )}
-
-        {/* Columna Centro: Stats */}
-        {!isMobile && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="summary-card glass-panel">
-              <CatIcon cat={{ Icon: AttachMoneyIcon, color: '#ef4444' }} size={40} fontSize="small" />
-              <div className="summary-info">
-                <h3>Total este mes</h3>
-                <p style={{ fontSize: '1.2rem' }}>{monedaSymbol} {formatK(totalMes)}</p>
-                <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gastosMes.length} gastos</p>
-              </div>
-            </div>
-            <div className="summary-card glass-panel">
-              <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={40} fontSize="small" />
-              <div className="summary-info">
-                <h3>Total registros</h3>
-                <p style={{ fontSize: '1.2rem' }}>{gastos.length}</p>
-                <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Desde el inicio</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Charts */}
+      <div className="gastos-layout" style={isMobile ? {} : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        {/* Columna Izquierda: Stats + Charts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {!isMobile && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="summary-card glass-panel">
+                <CatIcon cat={{ Icon: AttachMoneyIcon, color: '#ef4444' }} size={40} fontSize="small" />
+                <div className="summary-info">
+                  <h3>Total este mes</h3>
+                  <p style={{ fontSize: '1.2rem' }}>{monedaSymbol} {formatK(totalMes)}</p>
+                  <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gastosMes.length} gastos</p>
+                </div>
+              </div>
+              <div className="summary-card glass-panel">
+                <CatIcon cat={{ Icon: CategoryIcon, color: 'var(--accent-success)' }} size={40} fontSize="small" />
+                <div className="summary-info">
+                  <h3>Total registros</h3>
+                  <p style={{ fontSize: '1.2rem' }}>{gastos.length}</p>
+                  <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Desde el inicio</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {barData.length > 0 && (
             <div className="glass-panel" style={{ padding: '1.25rem' }}>
               <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Por categoría — este mes</h3>
@@ -330,9 +318,47 @@ const Gastos = () => {
             </div>
           )}
         </div>
+
+        {/* Columna Derecha: Últimos gastos (solo desktop, inline) */}
+        {!isMobile && (
+          <HistorialMovimientos
+            style={{ marginTop: 0 }}
+            title="Últimos gastos"
+            items={gastos}
+            emptyMessage="Todavía no hay gastos registrados."
+            renderItem={(g) => {
+              const cat = CAT_MAP[g.categoria] || CAT_MAP.otros;
+              return {
+                key: g.id,
+                tipo: 'retiro',
+                content: (
+                  <>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                      <CatIcon cat={cat} size={32} />
+                      <div className="movement-item-info">
+                        <span className="movement-item-reason">{g.descripcion || cat.label}</span>
+                        <span className="movement-item-date">{cat.label} · {new Date(g.fecha).toLocaleDateString('es-AR')}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                      <div className="movement-item-amount" style={{ textAlign: 'right' }}>
+                        <p style={{ margin: 0 }}>-{monedaSymbol} {formatK(convert(g.monto, g.moneda))}</p>
+                        <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{g.moneda}</p>
+                      </div>
+                      <button className="btn-icon-small btn-danger-text" onClick={() => handleDelete(g.id)} title="Eliminar">
+                        <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
+                      </button>
+                    </div>
+                  </>
+                ),
+              };
+            }}
+          />
+        )}
       </div>
 
-      <HistorialMovimientos
+      {/* Últimos gastos mobile (debajo de todo) */}
+      {isMobile && <HistorialMovimientos
         title="Últimos gastos"
         items={gastos}
         emptyMessage="Todavía no hay gastos registrados."
@@ -363,7 +389,7 @@ const Gastos = () => {
             ),
           };
         }}
-      />
+      />}
     </div>
   );
 };

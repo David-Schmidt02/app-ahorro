@@ -202,8 +202,8 @@
 
 .filter-btn {
   padding: 8px 16px;
-  border: 1px solid rgba(217, 70, 239, 0.2);
-  background: rgba(217, 70, 239, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   border-radius: 8px;
   font-size: 13px;
@@ -214,16 +214,38 @@
 }
 
 .filter-btn:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-  background: rgba(233, 30, 99, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .filter-btn.active {
+  color: #111;
+  font-weight: 700;
+}
+
+.filter-btn.active.filter-todos {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
-  color: white;
   box-shadow: 0 0 15px rgba(233, 30, 99, 0.4);
+}
+
+.filter-btn.active.filter-vista {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+.filter-btn.active.filter-favorita {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.filter-btn.active.filter-rechazada {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
 }
 
 /* Properties Grid */
@@ -293,16 +315,22 @@
   letter-spacing: 0.5px;
 }
 
+.estado-badge.vista {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
 .estado-badge.favorita {
-  background: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.4);
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .estado-badge.rechazada {
-  background: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.4);
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .top-badge {
@@ -529,7 +557,7 @@
   flex: 1;
   min-width: 80px;
   padding: 8px 12px;
-  border: 2px solid rgba(217, 70, 239, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.12);
   background: transparent;
   color: var(--text-secondary);
   border-radius: 8px;
@@ -540,15 +568,49 @@
   text-transform: capitalize;
 }
 
-.estado-btn:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+/* Vista — amber/neutral */
+.estado-btn.estado-vista {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: var(--text-secondary);
+}
+.estado-btn.estado-vista:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #f59e0b;
+}
+.estado-btn.estado-vista.active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
-.estado-btn.active {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  color: white;
+/* Favorita — green */
+.estado-btn.estado-favorita {
+  border-color: rgba(16, 185, 129, 0.25);
+  color: var(--text-secondary);
+}
+.estado-btn.estado-favorita:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #10b981;
+}
+.estado-btn.estado-favorita.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+/* Rechazada — red */
+.estado-btn.estado-rechazada {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--text-secondary);
+}
+.estado-btn.estado-rechazada:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+.estado-btn.estado-rechazada.active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 /* Empty State */
@@ -582,6 +644,16 @@
 
   .propiedades-grid {
     grid-template-columns: 1fr;
+  }
+
+  .filter-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .filter-buttons {
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 
   .top-item {
