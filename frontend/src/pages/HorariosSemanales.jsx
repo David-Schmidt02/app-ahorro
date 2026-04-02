@@ -307,6 +307,7 @@ const HorariosSemanales = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [miData,   setMiData]   = useState(EMPTY_SEMANA);
+  const [myName,   setMyName]   = useState('');
   const [otros,    setOtros]    = useState([]);
   const [saved,    setSaved]    = useState('');
   const [loading,  setLoading]  = useState(true);
@@ -318,14 +319,19 @@ const HorariosSemanales = () => {
   const [desktopEdit, setDesktopEdit] = useState(null); // { dia, index } | null
   const [collapsed, setCollapsed] = useState(() => Object.fromEntries(DIAS.map(d => [d, d !== DOW_MAP[new Date().getDay()]])));
   const [dirty, setDirty] = useState(false);
+  const [fabModal, setFabModal] = useState(null); // { dia, slot, error }
   const loadedRef = useRef(false);
   const todayRef = useRef(null);
 
   useEffect(() => {
-    const handler = () => save();
+    const handler = () => setFabModal({
+      dia: todayDia,
+      slot: { inicio: '09:00', fin: '10:00', actividad: '', color: DEFAULT_COLOR },
+      error: null,
+    });
     window.addEventListener('fab:click:/horarios', handler);
     return () => window.removeEventListener('fab:click:/horarios', handler);
-  }, []);
+  }, [todayDia]);
 
   // Marcar dirty cuando miData cambia después de la carga inicial
   const miDataJson = JSON.stringify(miData);
@@ -351,6 +357,8 @@ const HorariosSemanales = () => {
       try {
         const [meRes, todosRes] = await Promise.all([api.get('/auth/me'), api.get('/horarios/todos')]);
         const myId = meRes.data.id;
+        const myNombre = meRes.data.nombre || `Usuario ${myId}`;
+        setMyName(myNombre);
         const todos = todosRes.data || [];
 
         const mio = todos.find(h => h.usuario_id === myId);
@@ -377,19 +385,15 @@ const HorariosSemanales = () => {
     load();
   }, []);
 
-  const save = async () => {
+  const saveData = async (data) => {
     if (isSaving) return;
-    // Validar todos los slots antes de guardar
     const newWarnings = {};
     let hasErrors = false;
     for (const dia of DIAS) {
-      const slots = miData[dia] || [];
+      const slots = data[dia] || [];
       for (let i = 0; i < slots.length; i++) {
         const err = getOverlapError(slots, slots[i], i);
-        if (err) {
-          newWarnings[`${dia}-${i}`] = err;
-          hasErrors = true;
-        }
+        if (err) { newWarnings[`${dia}-${i}`] = err; hasErrors = true; }
       }
     }
     if (hasErrors) {
@@ -400,8 +404,8 @@ const HorariosSemanales = () => {
     }
     setIsSaving(true);
     try {
-      await api.put('/horarios/mio', { data: JSON.stringify(miData) });
-      savedDataRef.current = JSON.stringify(miData);
+      await api.put('/horarios/mio', { data: JSON.stringify(data) });
+      savedDataRef.current = JSON.stringify(data);
       setDirty(false);
       setSaved('Guardado');
       setTimeout(() => setSaved(''), 2000);
@@ -412,6 +416,8 @@ const HorariosSemanales = () => {
       setIsSaving(false);
     }
   };
+
+  const save = () => saveData(miData);
 
   const addSlot = (dia, openModal = false) => {
     const slots = miData[dia];
@@ -447,7 +453,11 @@ const HorariosSemanales = () => {
     });
   };
 
-  const deleteSlot = (dia, i) => setMiData(p => ({ ...p, [dia]: p[dia].filter((_, j) => j !== i) }));
+  const deleteSlot = (dia, i) => {
+    const newData = { ...miData, [dia]: miData[dia].filter((_, j) => j !== i) };
+    setMiData(newData);
+    saveData(newData);
+  };
 
   const toggleCopyDay = (action) => {
     const lvDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
@@ -461,21 +471,21 @@ const HorariosSemanales = () => {
   };
 
   const applyCopyAndClose = (dia, slot, setModal) => {
+    let newData = miData;
     if (copyDays.length > 0) {
-      setMiData(p => {
-        const updated = { ...p };
-        for (const d of copyDays) {
-          if (d === dia) continue;
-          const exists = updated[d].some(s => s.inicio === slot.inicio && s.fin === slot.fin && s.actividad === slot.actividad);
-          if (!exists) {
-            updated[d] = sortSlots([...updated[d], { ...slot }]);
-          }
+      newData = { ...miData };
+      for (const d of copyDays) {
+        if (d === dia) continue;
+        const exists = newData[d].some(s => s.inicio === slot.inicio && s.fin === slot.fin && s.actividad === slot.actividad);
+        if (!exists) {
+          newData[d] = sortSlots([...newData[d], { ...slot }]);
         }
-        return updated;
-      });
+      }
+      setMiData(newData);
     }
     setCopyDays([]);
     setModal(null);
+    saveData(newData);
   };
 
   if (loading) return (
@@ -590,7 +600,7 @@ const HorariosSemanales = () => {
                 {/* David Section */}
                 <div style={{ marginBottom: '1.5rem' }}>
                   <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    David <div style={{ flex: 1, height: '1px', background: 'rgba(225,29,72,0.15)' }} />
+                    {myName} <div style={{ flex: 1, height: '1px', background: 'rgba(225,29,72,0.15)' }} />
                   </h4>
                   {miDataDia.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>Sin actividades</p>
@@ -725,7 +735,7 @@ const HorariosSemanales = () => {
             <tbody>
               {/* FILA DAVID */}
               <tr>
-                <td style={lateralLabelSt('var(--accent-primary)')}>David</td>
+                <td style={lateralLabelSt('var(--accent-primary)')}>{myName}</td>
                 {DIAS.map((dia, i) => (
                   <td key={dia} style={{ ...tdSt(i % 2 === 1) }}>
                     {miData[dia].map((slot, si) => {
@@ -849,6 +859,68 @@ const HorariosSemanales = () => {
           </table>
         </div>
       )}
+
+      {/* Modal FAB: agregar horario con selector de día */}
+      {fabModal && (() => {
+        const slotColor = (getSlotColor(fabModal.slot)).value;
+        return (
+          <Modal
+            isOpen
+            onClose={() => setFabModal(null)}
+            accentColor={slotColor}
+            title="Agregar actividad"
+            footer={
+              <>
+                <button className="btn-secondary" onClick={() => setFabModal(null)}>Cancelar</button>
+                <button style={{
+                  padding: '0.75rem 1.5rem', fontSize: '1rem',
+                  background: `${slotColor}20`, border: `1px solid ${slotColor}50`,
+                  color: slotColor, borderRadius: 'var(--radius-sm)',
+                  fontWeight: 700, cursor: 'pointer',
+                }} onClick={() => {
+                  const { dia, slot } = fabModal;
+                  const err = getOverlapError(miData[dia], slot, -1);
+                  if (err) { setFabModal(m => ({ ...m, error: err })); return; }
+                  const newSlots = sortSlots([...miData[dia], slot]);
+                  const newData = { ...miData, [dia]: newSlots };
+                  setMiData(newData);
+                  setFabModal(null);
+                  saveData(newData);
+                }}>Agregar</button>
+              </>
+            }
+          >
+            {/* Selector de día */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Día</label>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                {DAY_LABELS.map(({ dia, label }) => {
+                  const isOn = fabModal.dia === dia;
+                  return (
+                    <button key={dia} onClick={() => setFabModal(m => ({ ...m, dia, error: null }))} style={{
+                      width: '2.2rem', height: '2.2rem', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', padding: 0,
+                      background: isOn ? `${slotColor}25` : 'rgba(255,255,255,0.04)',
+                      border: isOn ? `2px solid ${slotColor}` : '1px solid rgba(255,255,255,0.12)',
+                      color: isOn ? slotColor : 'var(--text-secondary)',
+                      transform: isOn ? 'scale(1.08)' : 'scale(1)',
+                      transition: 'all 0.15s',
+                    }}>{label}</button>
+                  );
+                })}
+              </div>
+            </div>
+            <SlotEditor
+              mobile
+              slot={fabModal.slot}
+              error={fabModal.error}
+              onChange={upd => setFabModal(m => ({ ...m, slot: upd, error: null }))}
+              onDelete={() => setFabModal(null)}
+            />
+          </Modal>
+        );
+      })()}
 
       {/* Modal edición de slot (desktop) */}
       {desktopEdit && (() => {

@@ -10,6 +10,7 @@ import ExploreIcon from '@mui/icons-material/Explore';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import HomeIcon from '@mui/icons-material/Home';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import Modal from '../components/Modal';
 import api from '../api/axios';
 
@@ -101,6 +102,14 @@ function syncBadgeCache(events) {
   window.dispatchEvent(new Event('cal_events_changed'));
 }
 
+/** Formatea Date a string YYYY-MM-DD en hora local (no UTC) */
+function toLocalDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const SUBTIPO_COLORS = { regular: '#6366f1', impuesto: '#f59e0b', hormiga: '#10b981' };
+const SUBTIPO_LABELS = { regular: 'Pago', impuesto: 'Impuesto', hormiga: 'Hormiga' };
+
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SEMANA = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
@@ -118,6 +127,7 @@ const Calendario = () => {
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [events,    setEvents]    = useState([]);
+  const [pagos,     setPagos]     = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,10 +142,14 @@ const Calendario = () => {
 
   const loadEvents = async () => {
     try {
-      const res = await api.get('/calendario/');
-      setEvents(res.data);
-      syncBadgeCache(res.data);
-      scheduleNotifications(res.data);
+      const [calRes, gastosRes] = await Promise.all([
+        api.get('/calendario/'),
+        api.get('/gastos/'),
+      ]);
+      setEvents(calRes.data);
+      syncBadgeCache(calRes.data);
+      scheduleNotifications(calRes.data);
+      setPagos((gastosRes.data || []).filter(g => g.fecha_pago));
     } catch (err) {
       console.error('Error cargando eventos:', err);
     } finally {
@@ -151,7 +165,7 @@ const Calendario = () => {
 
   useEffect(() => {
     const handler = () => {
-      if (!selectedDay) setSelectedDay(new Date().toISOString().split('T')[0]);
+      if (!selectedDay) setSelectedDay(toLocalDateStr(new Date()));
       setIsModalOpen(true);
     };
     window.addEventListener('fab:click:/calendario', handler);
@@ -223,17 +237,23 @@ const Calendario = () => {
 
   // API returns 'fecha' field (YYYY-MM-DD string from Date column)
   const eventsForDay = (dateStr) => events.filter(ev => ev.fecha === dateStr);
+  const pagosForDay  = (dateStr) => pagos.filter(p => p.fecha_pago === dateStr);
   const selectedEvents = selectedDay ? eventsForDay(selectedDay) : [];
+  const selectedPagos  = selectedDay ? pagosForDay(selectedDay) : [];
 
   const upcoming = (() => {
     const now = new Date(); now.setHours(0,0,0,0);
     const in7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return events
+    const evs = events
       .filter(ev => { const d = new Date(ev.fecha + 'T00:00:00'); return d >= now && d <= in7; })
-      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+      .map(ev => ({ ...ev, _kind: 'evento', _sortDate: ev.fecha }));
+    const pgs = pagos
+      .filter(p => { const d = new Date(p.fecha_pago + 'T00:00:00'); return d >= now && d <= in7; })
+      .map(p => ({ ...p, _kind: 'pago', _sortDate: p.fecha_pago }));
+    return [...evs, ...pgs].sort((a, b) => a._sortDate.localeCompare(b._sortDate));
   })();
 
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = toLocalDateStr(today);
 
   if (loading) {
     return (
@@ -263,14 +283,32 @@ const Calendario = () => {
             {upcoming.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Nada por ahora</p>
             ) : (
-              upcoming.map(ev => {
-                const evDate = new Date(ev.fecha + 'T00:00:00');
-                const isEvToday = ev.fecha === todayStr;
+              upcoming.map(item => {
+                if (item._kind === 'pago') {
+                  const pagoDate = new Date(item.fecha_pago + 'T00:00:00');
+                  const isToday = item.fecha_pago === todayStr;
+                  const color = SUBTIPO_COLORS[item.subtipo] || SUBTIPO_COLORS.regular;
+                  return (
+                    <div key={`pago-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.45rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ width: 24, height: 24, borderRadius: 'var(--radius-sm)', border: `1.5px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+                        <AttachMoneyIcon style={{ fontSize: '0.9rem' }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: '0.85rem' }}>{item.descripcion || item.categoria}</p>
+                        <p style={{ margin: 0, fontSize: '0.72rem', color: isToday ? color : 'var(--text-muted)' }}>
+                          {SUBTIPO_LABELS[item.subtipo]} · {isToday ? '¡Hoy!' : pagoDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                const evDate = new Date(item.fecha + 'T00:00:00');
+                const isEvToday = item.fecha === todayStr;
                 return (
-                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.45rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <TipoIcon tipo={ev.tipo} size={24} fontSize="inherit" />
+                  <div key={`ev-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.45rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <TipoIcon tipo={item.tipo} size={24} fontSize="inherit" />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.85rem' }}>{ev.titulo}</p>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.85rem' }}>{item.titulo}</p>
                       <p style={{ margin: 0, fontSize: '0.72rem', color: isEvToday ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
                         {isEvToday ? '¡Hoy!' : evDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </p>
@@ -296,30 +334,46 @@ const Calendario = () => {
                 <AddIcon style={{ fontSize: '0.9rem' }} /> Evento
               </button>
             </div>
-            {selectedEvents.length === 0 ? (
+            {selectedEvents.length === 0 && selectedPagos.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sin eventos. ¡Agregá uno!</p>
             ) : (
-              selectedEvents.map(ev => (
-                <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <TipoIcon tipo={ev.tipo} size={28} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.titulo}</p>
-                    <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{TIPO_MAP[ev.tipo]?.label}{ev.hora ? ` · ${ev.hora}` : ''}</p>
+              <>
+                {selectedEvents.map(ev => (
+                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <TipoIcon tipo={ev.tipo} size={28} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.titulo}</p>
+                      <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{TIPO_MAP[ev.tipo]?.label}{ev.hora ? ` · ${ev.hora}` : ''}</p>
+                    </div>
+                    {ev.foto && (
+                      <img src={ev.foto} alt={ev.titulo} onClick={() => setLightboxSrc(ev.foto)}
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'zoom-in', flexShrink: 0 }}
+                      />
+                    )}
+                    <button onClick={() => handleDelete(ev.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '4px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'opacity 0.15s, background 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(225,29,72,0.12)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
+                    </button>
                   </div>
-                  {ev.foto && (
-                    <img src={ev.foto} alt={ev.titulo} onClick={() => setLightboxSrc(ev.foto)}
-                      style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'zoom-in', flexShrink: 0 }}
-                    />
-                  )}
-                  <button onClick={() => handleDelete(ev.id)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', opacity: 0.6, padding: '4px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'opacity 0.15s, background 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(225,29,72,0.12)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <DeleteOutlineIcon style={{ fontSize: '1rem' }} />
-                  </button>
-                </div>
-              ))
+                ))}
+                {selectedPagos.map(p => {
+                  const color = SUBTIPO_COLORS[p.subtipo] || SUBTIPO_COLORS.regular;
+                  return (
+                    <div key={`pago-${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', border: `1.5px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
+                        <AttachMoneyIcon style={{ fontSize: '1rem' }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.descripcion || p.categoria}</p>
+                        <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>{SUBTIPO_LABELS[p.subtipo]} · Gastos</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
             )}
           </div>
         );
@@ -362,6 +416,11 @@ const Calendario = () => {
                 const day = i + 1;
                 const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayEvents = eventsForDay(dateStr);
+                const dayPagos  = pagosForDay(dateStr);
+                const allDots   = [
+                  ...dayEvents.map(ev => ({ key: `ev-${ev.id}`, title: ev.titulo, color: TIPO_MAP[ev.tipo]?.color || '#64748b' })),
+                  ...dayPagos.map(p  => ({ key: `p-${p.id}`,   title: p.descripcion || p.categoria, color: SUBTIPO_COLORS[p.subtipo] || SUBTIPO_COLORS.regular })),
+                ];
                 const isToday = dateStr === todayStr;
                 const isSelected = dateStr === selectedDay;
                 return (
@@ -377,11 +436,10 @@ const Calendario = () => {
                   >
                     <span style={{ fontSize: '0.82rem', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>{day}</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', marginTop: '2px' }}>
-                      {dayEvents.slice(0, 3).map(ev => {
-                        const t = TIPO_MAP[ev.tipo];
-                        return <span key={ev.id} title={ev.titulo} style={{ width: '6px', height: '6px', borderRadius: '50%', background: t?.color || '#64748b', flexShrink: 0 }} />;
-                      })}
-                      {dayEvents.length > 3 && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>+{dayEvents.length - 3}</span>}
+                      {allDots.slice(0, 3).map(dot => (
+                        <span key={dot.key} title={dot.title} style={{ width: '6px', height: '6px', borderRadius: '50%', background: dot.color, flexShrink: 0 }} />
+                      ))}
+                      {allDots.length > 3 && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>+{allDots.length - 3}</span>}
                     </div>
                   </div>
                 );

@@ -1,5 +1,5 @@
 """Entidad de dominio Gasto."""
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 
@@ -10,6 +10,8 @@ CATEGORIAS_VALIDAS = {
     'comida', 'transporte', 'entretenimiento', 'salud',
     'hogar', 'ropa', 'viajes', 'tecnologia', 'regalos', 'otros'
 }
+
+SUBTIPOS_VALIDOS = {'regular', 'impuesto', 'hormiga'}
 
 
 class Gasto:
@@ -24,6 +26,8 @@ class Gasto:
         descripcion: Optional[str] = None,
         id: Optional[int] = None,
         fecha: Optional[datetime] = None,
+        subtipo: str = 'regular',
+        fecha_pago: Optional[date] = None,
     ):
         self.id = id
         self.monto = monto
@@ -32,6 +36,8 @@ class Gasto:
         self.usuario_id = usuario_id
         self.descripcion = descripcion
         self.fecha = fecha or datetime.now()
+        self.subtipo = subtipo or 'regular'
+        self.fecha_pago = fecha_pago
 
         self._validar()
 
@@ -40,6 +46,8 @@ class Gasto:
             raise ValueError("El monto del gasto debe ser mayor a cero")
         if self.categoria not in CATEGORIAS_VALIDAS:
             raise ValueError(f"Categoría inválida: {self.categoria}")
+        if self.subtipo not in SUBTIPOS_VALIDOS:
+            raise ValueError(f"Subtipo inválido: {self.subtipo}")
 
     def __repr__(self) -> str:
         return f"<Gasto(id={self.id}, monto={self.monto} {self.moneda}, categoria={self.categoria})>"

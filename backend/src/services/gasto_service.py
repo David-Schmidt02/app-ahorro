@@ -1,5 +1,5 @@
 """Servicio de gastos."""
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from typing import List, Optional
 
@@ -21,6 +21,8 @@ class GastoService:
         usuario_id: int,
         descripcion: Optional[str] = None,
         fecha: Optional[datetime] = None,
+        subtipo: str = 'regular',
+        fecha_pago: Optional[date] = None,
     ) -> Gasto:
         gasto = Gasto(
             monto=Decimal(str(monto)),
@@ -29,6 +31,8 @@ class GastoService:
             usuario_id=usuario_id,
             descripcion=descripcion,
             fecha=fecha or datetime.now(),
+            subtipo=subtipo,
+            fecha_pago=fecha_pago,
         )
         return self.repo.crear(gasto)
 

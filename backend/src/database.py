@@ -136,6 +136,8 @@ class GastoORM(Base):
     categoria = Column(String(50), nullable=False)
     descripcion = Column(Text, nullable=True)
     fecha = Column(DateTime, default=datetime.now, nullable=False, index=True)
+    subtipo = Column(String(20), nullable=False, default='regular')
+    fecha_pago = Column(Date, nullable=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
 
     # Relaciones

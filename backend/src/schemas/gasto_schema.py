@@ -1,5 +1,5 @@
 """Schemas Pydantic para Gasto."""
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel, field_validator
 
@@ -10,6 +10,8 @@ class GastoCreate(BaseModel):
     categoria: str
     descripcion: Optional[str] = None
     fecha: Optional[datetime] = None
+    subtipo: str = "regular"
+    fecha_pago: Optional[date] = None
 
     @field_validator('monto')
     @classmethod
@@ -33,6 +35,8 @@ class GastoResponse(BaseModel):
     categoria: str
     descripcion: Optional[str]
     fecha: datetime
+    subtipo: str
+    fecha_pago: Optional[date]
     usuario_id: int
 
     model_config = {"from_attributes": True}

@@ -8,6 +8,8 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import SavingsIcon from '@mui/icons-material/Savings';
 import Modal from '../components/Modal';
 import ActionButton from '../components/ActionButton';
 import PageHeader from '../components/PageHeader';
@@ -26,6 +28,13 @@ import CategoryIcon from '@mui/icons-material/Category';
 import { Tooltip } from '@mui/material';
 import { formatAmount, cleanAmount, formatK, convertCurrency } from '../utils/formatters';
 import HistorialMovimientos from '../components/HistorialMovimientos';
+
+const SUBTIPOS = [
+  { id: 'regular',   label: 'Regular',   Icon: AttachMoneyIcon, color: '#6366f1' },
+  { id: 'impuesto',  label: 'Impuesto',  Icon: ReceiptIcon,     color: '#f59e0b' },
+  { id: 'hormiga',   label: 'Hormiga',   Icon: SavingsIcon,     color: '#10b981' },
+];
+const SUBTIPO_MAP = Object.fromEntries(SUBTIPOS.map(s => [s.id, s]));
 
 const CATEGORIAS = [
   { id: 'comida',          label: 'Comida',          Icon: RestaurantIcon,   color: '#f97316' },
@@ -58,6 +67,30 @@ const CatIcon = ({ cat, size = 36, fontSize = 'small' }) => {
 
 const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
   <form id={formId} onSubmit={handleSubmit}>
+    {/* Subtipo selector */}
+    <div className="form-group">
+      <label>Tipo de gasto</label>
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+        {SUBTIPOS.map(s => (
+          <button key={s.id} type="button"
+            onClick={() => setForm({ ...form, subtipo: s.id, fecha_pago: form.fecha_pago })}
+            style={{
+              flex: 1, padding: '0.5rem 0.25rem',
+              border: `1px solid ${form.subtipo === s.id ? s.color : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: 'var(--radius-sm)',
+              background: form.subtipo === s.id ? `${s.color}20` : 'rgba(0,0,0,0.2)',
+              cursor: 'pointer', fontSize: '0.78rem', color: 'var(--text-primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
+              transition: 'all 0.15s',
+            }}
+          >
+            <s.Icon style={{ fontSize: '1rem', color: form.subtipo === s.id ? s.color : 'var(--text-muted)' }} />
+            {s.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
     <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: '1rem' }}>
       <div className="form-group">
         <label>Monto</label>
@@ -100,6 +133,20 @@ const GastoForm = ({ form, setForm, handleSubmit, isSubmitting, formId }) => (
       />
     </div>
 
+    {(form.subtipo === 'impuesto' || form.subtipo === 'hormiga') && (
+      <div className="form-group">
+        <label style={{ color: SUBTIPO_MAP[form.subtipo]?.color }}>
+          Fecha de vencimiento (opcional)
+        </label>
+        <input
+          type="date"
+          value={form.fecha_pago}
+          onChange={e => setForm({ ...form, fecha_pago: e.target.value })}
+          style={{ width: 'auto' }}
+        />
+      </div>
+    )}
+
     {!formId && (
       <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={isSubmitting}>
         {isSubmitting ? 'Guardando...' : <><AddIcon fontSize="small" /> Agregar Gasto</>}
@@ -117,7 +164,7 @@ const Gastos = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const [form, setForm] = useState({
-    monto: '', moneda: 'ARS', categoria: 'comida', descripcion: '',
+    monto: '', moneda: 'ARS', categoria: 'comida', descripcion: '', subtipo: 'regular', fecha_pago: '',
   });
 
   const fetchGastos = async () => {
@@ -189,8 +236,10 @@ const Gastos = () => {
         moneda: form.moneda,
         categoria: form.categoria,
         descripcion: form.descripcion || undefined,
+        subtipo: form.subtipo,
+        fecha_pago: form.fecha_pago || undefined,
       });
-      setForm({ monto: '', moneda: 'ARS', categoria: 'comida', descripcion: '' });
+      setForm({ monto: '', moneda: 'ARS', categoria: 'comida', descripcion: '', subtipo: 'regular', fecha_pago: '' });
       setIsFormOpen(false);
       await fetchGastos();
     } catch (err) {
@@ -337,7 +386,7 @@ const Gastos = () => {
                       <CatIcon cat={cat} size={32} />
                       <div className="movement-item-info">
                         <span className="movement-item-reason">{g.descripcion || cat.label}</span>
-                        <span className="movement-item-date">{cat.label} · {new Date(g.fecha).toLocaleDateString('es-AR')}</span>
+                        <span className="movement-item-date">{cat.label} · {new Date(g.fecha).toLocaleDateString('es-AR')}{g.subtipo !== 'regular' ? ` · ${SUBTIPO_MAP[g.subtipo]?.label}` : ''}{g.fecha_pago ? ` · Vence ${new Date(g.fecha_pago + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}` : ''}</span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>

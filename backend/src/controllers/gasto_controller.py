@@ -32,6 +32,8 @@ async def crear_gasto(
         usuario_id=current_user.id,
         descripcion=data.descripcion,
         fecha=data.fecha,
+        subtipo=data.subtipo,
+        fecha_pago=data.fecha_pago,
     )
 
 

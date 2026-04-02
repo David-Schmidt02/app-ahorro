@@ -24,6 +24,8 @@ class GastoRepository:
             usuario_id=orm.usuario_id,
             descripcion=orm.descripcion,
             fecha=orm.fecha,
+            subtipo=orm.subtipo or 'regular',
+            fecha_pago=orm.fecha_pago,
         )
 
     def crear(self, gasto: Gasto) -> Gasto:
@@ -34,6 +36,8 @@ class GastoRepository:
             usuario_id=gasto.usuario_id,
             descripcion=gasto.descripcion,
             fecha=gasto.fecha,
+            subtipo=gasto.subtipo,
+            fecha_pago=gasto.fecha_pago,
         )
         self.db.add(orm)
         self.db.commit()
