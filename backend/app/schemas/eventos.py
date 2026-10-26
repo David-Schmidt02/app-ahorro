@@ -33,3 +33,10 @@ class CalendarioOut(BaseModel):
     mes: str
     vencimientos: list[VencimientoOut]
     eventos: list[EventoDelMes]
+
+
+class ProximosOut(BaseModel):
+    desde: date
+    hasta: date
+    vencimientos: list[VencimientoOut]
+    eventos: list[EventoDelMes]

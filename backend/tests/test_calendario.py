@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.database import SessionLocal
 from app.models import Cotizacion
+from tests.conftest import categoria_id
 
 
 def test_eventos_anuales_y_unicos(api):
@@ -39,3 +40,26 @@ def test_cotizacion_cacheada_y_respaldo(api, cotizacion_falsa):
 def test_sin_cotizacion_y_api_caida(api, cotizacion_falsa):
     cotizacion_falsa.caida = True
     assert api.get("/api/cotizacion").status_code == 503
+
+
+def test_proximos_cruza_el_mes_y_omite_lo_pagado(api):
+    casa = categoria_id(api, "Casa")
+    alquiler = api.post(
+        "/api/programados",
+        json={"nombre": "Alquiler", "tipo": "gasto", "categoria_id": casa, "monto": 1, "frecuencia": "mensual", "dia": 30, "desde": "2026-10"},
+    ).json()
+    api.post(
+        "/api/programados",
+        json={"nombre": "Expensas", "tipo": "gasto", "categoria_id": casa, "monto": 1, "frecuencia": "mensual", "dia": 2, "desde": "2026-10"},
+    )
+    api.post("/api/eventos", json={"titulo": "Cumple", "tipo": "cumpleanos", "fecha": "1990-11-01", "anual": True})
+    api.post("/api/eventos", json={"titulo": "Lejos", "tipo": "otro", "fecha": "2026-11-20"})
+
+    r = api.get("/api/proximos", params={"desde": "2026-10-28", "dias": 7}).json()
+    assert r["hasta"] == "2026-11-03"
+    assert [(v["nombre"], v["fecha"]) for v in r["vencimientos"]] == [("Alquiler", "2026-10-30"), ("Expensas", "2026-11-02")]
+    assert [(e["titulo"], e["dia"]) for e in r["eventos"]] == [("Cumple", "2026-11-01")]
+
+    api.post(f"/api/programados/{alquiler['id']}/pagar", json={"mes": "2026-10"})
+    r = api.get("/api/proximos", params={"desde": "2026-10-28"}).json()
+    assert [v["nombre"] for v in r["vencimientos"]] == ["Expensas"]
