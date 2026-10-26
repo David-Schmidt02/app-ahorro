@@ -55,13 +55,26 @@ function FormEvento({ evento, fechaInicial, onListo }) {
     <form className="formulario" onSubmit={guardar}>
       <label className="campo">
         <span>Título</span>
-        <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={80} placeholder="Ej.: Cumple de mamá" autoFocus={!evento} />
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          maxLength={80}
+          placeholder="Ej.: Cumple de mamá"
+          autoFocus={!evento}
+        />
       </label>
       <fieldset className="campo">
         <legend>Tipo</legend>
         <div className="chips" role="radiogroup">
           {TIPOS_EVENTO.map((t) => (
-            <button key={t.valor} type="button" role="radio" aria-checked={tipo === t.valor} className="chip" onClick={() => elegirTipo(t.valor)}>
+            <button
+              key={t.valor}
+              type="button"
+              role="radio"
+              aria-checked={tipo === t.valor}
+              className="chip"
+              onClick={() => elegirTipo(t.valor)}
+            >
               <span aria-hidden="true">{t.icono}</span>
               {t.nombre}
             </button>
@@ -89,7 +102,11 @@ function FormEvento({ evento, fechaInicial, onListo }) {
       )}
       <div className="acciones">
         {evento && (
-          <button type="button" className="boton boton--peligro" onClick={() => enviar('DELETE', `/eventos/${evento.id}`, undefined, 'Evento borrado')}>
+          <button
+            type="button"
+            className="boton boton--peligro"
+            onClick={() => enviar('DELETE', `/eventos/${evento.id}`, undefined, 'Evento borrado')}
+          >
             <Icono nombre="borrar" tamano={18} /> Borrar
           </button>
         )}
@@ -119,8 +136,11 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
       {dias.map((iso) => {
         const { vencimientos = [], eventos = [] } = porDia.get(iso) ?? {};
         const marcas = [
-          ...vencimientos.map((v) => (v.pagado ? 'hecho' : v.tipo === 'ingreso' ? 'cobro' : iso < hoyIso ? 'vencido' : 'pago')),
-          ...eventos.map(() => 'evento'),
+          ...vencimientos.map((v) => ({
+            estado: v.pagado ? 'hecho' : v.tipo === 'ingreso' ? 'cobro' : iso < hoyIso ? 'vencido' : 'pago',
+            texto: v.nombre,
+          })),
+          ...eventos.map((e) => ({ estado: 'evento', texto: e.titulo })),
         ];
         return (
           <button
@@ -134,8 +154,17 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
             <span>{Number(iso.slice(8))}</span>
             <span className="grilla__marcas" aria-hidden="true">
               {marcas.slice(0, 4).map((m, i) => (
-                <i key={i} className={`punto punto--${m}`} />
+                <i key={i} className={`punto punto--${m.estado}`} />
               ))}
+            </span>
+            {/* En pantallas anchas se ven los nombres en lugar de los puntos */}
+            <span className="grilla__etiquetas" aria-hidden="true">
+              {marcas.slice(0, 3).map((m, i) => (
+                <span key={i} className={`etiqueta etiqueta--${m.estado}`}>
+                  {m.texto}
+                </span>
+              ))}
+              {marcas.length > 3 && <span className="etiqueta-mas">+{marcas.length - 3} más</span>}
             </span>
           </button>
         );
@@ -169,61 +198,75 @@ export default function Calendario() {
         <SelectorMes />
       </header>
       <Estado datos={datos} error={error} reintentar={reintentar}>
-        <Grilla mes={mes} porDia={porDia} seleccionado={seleccionado} onElegir={setElegido} />
-        <ul className="referencias" aria-label="Referencias">
-          <li><i className="punto punto--pago" /> A pagar</li>
-          <li><i className="punto punto--vencido" /> Vencido</li>
-          <li><i className="punto punto--cobro" /> A cobrar</li>
-          <li><i className="punto punto--hecho" /> Registrado</li>
-          <li><i className="punto punto--evento" /> Evento</li>
-        </ul>
-        <section className="seccion">
-          <h2 className="seccion__titulo">
-            {diaLargo(seleccionado)}
-            <button type="button" className="enlace-boton" onClick={() => setHoja({ id: Date.now() })}>
-              + Evento
-            </button>
-          </h2>
-          {vacio && <p className="tenue">Nada anotado para este día.</p>}
-          <ul className="renglones">
-            {delDia.vencimientos.map((v) => (
-              <li key={`v-${v.programado_id}`} className="renglon">
-                {v.pagado ? (
-                  <span className="marca-pago es-hecha" aria-hidden="true">
-                    <Icono nombre="check" tamano={16} grosor={2.6} />
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className={`marca-pago${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}
-                    onClick={() => abrirPago(v)}
-                    aria-label={`Registrar ${v.tipo === 'ingreso' ? 'cobro' : 'pago'} de ${v.nombre}`}
-                  />
-                )}
-                <span className="renglon__texto">
-                  <span className="renglon__titulo">{v.nombre}</span>
-                  <span className="renglon__detalle">{v.pagado ? 'Registrado' : v.tipo === 'ingreso' ? 'A cobrar' : 'A pagar'}</span>
-                </span>
-                <span className={`importe${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(v.monto, v.moneda)}</span>
+        <div className="dos-columnas">
+          <div className="pila">
+            <Grilla mes={mes} porDia={porDia} seleccionado={seleccionado} onElegir={setElegido} />
+            <ul className="referencias" aria-label="Referencias">
+              <li>
+                <i className="punto punto--pago" /> A pagar
               </li>
-            ))}
-            {delDia.eventos.map((e) => (
-              <li key={`e-${e.id}`}>
-                <button type="button" className="renglon renglon--boton" onClick={() => setHoja({ id: e.id, evento: e })}>
-                  <span className="renglon__icono" aria-hidden="true">
-                    {iconoEvento(e.tipo)}
-                  </span>
-                  <span className="renglon__texto">
-                    <span className="renglon__titulo">{e.titulo}</span>
-                    <span className="renglon__detalle">
-                      {[e.hora, e.anual && 'todos los años'].filter(Boolean).join(' · ') || 'Evento'}
+              <li>
+                <i className="punto punto--vencido" /> Vencido
+              </li>
+              <li>
+                <i className="punto punto--cobro" /> A cobrar
+              </li>
+              <li>
+                <i className="punto punto--hecho" /> Registrado
+              </li>
+              <li>
+                <i className="punto punto--evento" /> Evento
+              </li>
+            </ul>
+          </div>
+          <section className="seccion lateral-fijo">
+            <h2 className="seccion__titulo">
+              {diaLargo(seleccionado)}
+              <button type="button" className="enlace-boton" onClick={() => setHoja({ id: Date.now() })}>
+                + Evento
+              </button>
+            </h2>
+            {vacio && <p className="tenue">Nada anotado para este día.</p>}
+            <ul className="renglones">
+              {delDia.vencimientos.map((v) => (
+                <li key={`v-${v.programado_id}`} className="renglon">
+                  {v.pagado ? (
+                    <span className="marca-pago es-hecha" aria-hidden="true">
+                      <Icono nombre="check" tamano={16} grosor={2.6} />
                     </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`marca-pago${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}
+                      onClick={() => abrirPago(v)}
+                      aria-label={`Registrar ${v.tipo === 'ingreso' ? 'cobro' : 'pago'} de ${v.nombre}`}
+                    />
+                  )}
+                  <span className="renglon__texto">
+                    <span className="renglon__titulo">{v.nombre}</span>
+                    <span className="renglon__detalle">{v.pagado ? 'Registrado' : v.tipo === 'ingreso' ? 'A cobrar' : 'A pagar'}</span>
                   </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
+                  <span className={`importe${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(v.monto, v.moneda)}</span>
+                </li>
+              ))}
+              {delDia.eventos.map((e) => (
+                <li key={`e-${e.id}`}>
+                  <button type="button" className="renglon renglon--boton" onClick={() => setHoja({ id: e.id, evento: e })}>
+                    <span className="renglon__icono" aria-hidden="true">
+                      {iconoEvento(e.tipo)}
+                    </span>
+                    <span className="renglon__texto">
+                      <span className="renglon__titulo">{e.titulo}</span>
+                      <span className="renglon__detalle">
+                        {[e.hora, e.anual && 'todos los años'].filter(Boolean).join(' · ') || 'Evento'}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </Estado>
       <Hoja titulo={hoja?.evento ? 'Editar evento' : 'Nuevo evento'} abierta={Boolean(hoja)} onCerrar={() => setHoja(null)}>
         {hoja && <FormEvento key={hoja.id} evento={hoja.evento} fechaInicial={seleccionado} onListo={() => setHoja(null)} />}

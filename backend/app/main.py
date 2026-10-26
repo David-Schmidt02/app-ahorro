@@ -29,7 +29,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 def crear_app() -> FastAPI:
-    app = FastAPI(title="App Ahorro", version="2.0.0", lifespan=lifespan)
+    app = FastAPI(title="App Ahorro", version="2.1.0", lifespan=lifespan)
     registrar_handlers(app)
 
     api = APIRouter(prefix="/api")

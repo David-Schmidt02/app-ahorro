@@ -8,7 +8,7 @@ import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
 import { dinero, montoATexto, parsearMonto } from '../lib/formato';
 
-const COLORES = ['#2F9E6B', '#3D63DD', '#D89A2B', '#5B6B7F', '#D6455D', '#E0703A', '#8C5CD6', '#2C9AB7', '#C2508F', '#7A7F8A'];
+const COLORES = ['#1BAF7A', '#2A78D6', '#EDA100', '#6250D6', '#E34948', '#EB6834', '#E87BA4', '#008300', '#B0478A', '#7A7F8A'];
 
 function Objetivo({ preferencias }) {
   const { refrescar, avisar } = useApp();
@@ -96,7 +96,16 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
         <legend>Color</legend>
         <div className="colores" role="radiogroup">
           {COLORES.map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={color === c} aria-label={c} className="color" style={{ '--color': c }} onClick={() => setColor(c)} />
+            <button
+              key={c}
+              type="button"
+              role="radio"
+              aria-checked={color === c}
+              aria-label={c}
+              className="color"
+              style={{ '--color': c }}
+              onClick={() => setColor(c)}
+            />
           ))}
         </div>
       </fieldset>
@@ -114,7 +123,12 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
             type="button"
             className="boton"
             onClick={() =>
-              enviar('PATCH', `/categorias/${categoria.id}`, { activa: !categoria.activa }, categoria.activa ? 'Categoría archivada' : 'Categoría restaurada')
+              enviar(
+                'PATCH',
+                `/categorias/${categoria.id}`,
+                { activa: !categoria.activa },
+                categoria.activa ? 'Categoría archivada' : 'Categoría restaurada',
+              )
             }
           >
             {categoria.activa ? 'Archivar' : 'Restaurar'}
@@ -145,7 +159,11 @@ function Categorias() {
         <ul className="renglones">
           {lista.map((c) => (
             <li key={c.id}>
-              <button type="button" className={`renglon renglon--boton${c.activa ? '' : ' es-archivada'}`} onClick={() => setHoja({ id: c.id, categoria: c })}>
+              <button
+                type="button"
+                className={`renglon renglon--boton${c.activa ? '' : ' es-archivada'}`}
+                onClick={() => setHoja({ id: c.id, categoria: c })}
+              >
                 <span className="renglon__icono" style={{ '--color': c.color }} aria-hidden="true">
                   {c.icono}
                 </span>
@@ -185,7 +203,8 @@ function Dolar() {
       {error && <p className="tenue">{error.message}</p>}
       {datos && (
         <p>
-          Compra <strong className="importe">{dinero(datos.compra)}</strong> · Venta <strong className="importe">{dinero(datos.venta)}</strong>
+          Compra <strong className="importe">{dinero(datos.compra)}</strong> · Venta{' '}
+          <strong className="importe">{dinero(datos.venta)}</strong>
           <br />
           <span className="tenue">
             Se usa la venta para pasar a pesos lo que se carga en dólares. Actualizada{' '}
@@ -206,20 +225,24 @@ export default function Ajustes() {
       <header className="cabecera">
         <h1 className="cabecera__titulo">Ajustes</h1>
       </header>
-      <Estado datos={preferencias} error={error} reintentar={reintentar}>
-        {preferencias && <Objetivo preferencias={preferencias} />}
-      </Estado>
-      <Categorias />
-      <Dolar />
-      <section className="seccion">
-        <h2 className="seccion__titulo">Cuenta</h2>
-        <p>
-          {usuario.nombre} <span className="tenue">· {usuario.email}</span>
-        </p>
-        <button type="button" className="boton" onClick={salir}>
-          <Icono nombre="salir" tamano={18} /> Cerrar sesión
-        </button>
-      </section>
+      <div className="dos-columnas dos-columnas--parejas">
+        <div className="pila">
+          <Estado datos={preferencias} error={error} reintentar={reintentar}>
+            {preferencias && <Objetivo preferencias={preferencias} />}
+          </Estado>
+          <Dolar />
+          <section className="seccion">
+            <h2 className="seccion__titulo">Cuenta</h2>
+            <p>
+              {usuario.nombre} <span className="tenue">· {usuario.email}</span>
+            </p>
+            <button type="button" className="boton" onClick={salir}>
+              <Icono nombre="salir" tamano={18} /> Cerrar sesión
+            </button>
+          </section>
+        </div>
+        <Categorias />
+      </div>
     </>
   );
 }

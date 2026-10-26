@@ -14,6 +14,9 @@
   --verde-suave: #dcf1e6;
   --ambar: #c98418;
   --sombra: 0 1px 2px rgb(22 35 58 / 6%), 0 8px 24px -12px rgb(22 35 58 / 18%);
+  --serie-ingresos: #16865a;
+  --serie-gastos: #2443c4;
+  --serie-ahorro: #c98418;
 
   --f-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --f-texto: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
@@ -39,6 +42,9 @@
     --verde-suave: #173a2d;
     --ambar: #f0b04a;
     --sombra: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 30px -14px rgb(0 0 0 / 60%);
+    --serie-ingresos: #35a370;
+    --serie-gastos: #6f86ee;
+    --serie-ahorro: #c28724;
     color-scheme: dark;
   }
 }
@@ -959,6 +965,7 @@ input[type='checkbox'] {
   min-height: 32px;
   padding: 0 10px;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .segmentado--filtro {
@@ -1220,6 +1227,431 @@ input[type='checkbox'] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ---------- Gráficos ---------- */
+
+.seccion__titulo h2 {
+  font: inherit;
+}
+
+.leyenda-series {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--tinta-2);
+}
+
+.leyenda-series li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clave-linea {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.serie--ingresos {
+  color: var(--serie-ingresos);
+}
+
+.serie--gastos {
+  color: var(--serie-gastos);
+}
+
+.serie--ahorro {
+  color: var(--serie-ahorro);
+}
+
+.grafico-lineas {
+  position: relative;
+  min-height: 220px;
+}
+
+.grafico-lineas--cargando {
+  border-radius: 10px;
+  background: var(--papel);
+}
+
+.grafico-lineas svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.grafico-lineas svg:focus-visible {
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.eje-guia {
+  stroke: var(--renglon);
+  stroke-width: 1;
+}
+
+.eje-cero {
+  stroke: var(--tinta-3);
+  stroke-width: 1;
+}
+
+.eje-texto {
+  fill: var(--tinta-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.eje-texto.es-elegido {
+  fill: var(--tinta);
+  font-weight: 700;
+}
+
+.linea-objetivo {
+  stroke: var(--serie-ahorro);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.mira {
+  stroke: var(--tinta-3);
+  stroke-width: 1;
+}
+
+.serie polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.serie circle {
+  fill: currentColor;
+  stroke: var(--hoja);
+  stroke-width: 2;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  width: 180px;
+  padding: 10px 12px;
+  border: 1px solid var(--renglon);
+  border-radius: 10px;
+  background: var(--hoja);
+  box-shadow: var(--sombra);
+  pointer-events: none;
+}
+
+.tooltip__titulo {
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+
+.tooltip__titulo::first-letter {
+  text-transform: uppercase;
+}
+
+.tooltip__fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.tooltip__fila strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip__fila span:last-child {
+  color: var(--tinta-2);
+}
+
+.tabla-datos summary {
+  width: fit-content;
+  font-size: 14px;
+  color: var(--birome);
+  cursor: pointer;
+}
+
+.tabla-datos table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-datos th,
+.tabla-datos td {
+  padding: 6px 4px;
+  border-top: 1px solid var(--renglon);
+  text-align: right;
+}
+
+.tabla-datos th:first-child {
+  text-align: left;
+  font-weight: 400;
+}
+
+.tabla-datos thead th {
+  border-top: 0;
+  color: var(--tinta-3);
+  font-weight: 600;
+}
+
+.grafico-torta__cuerpo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px 24px;
+}
+
+.grafico-torta__svg path {
+  transition: opacity 0.15s;
+}
+
+.grafico-torta__svg path.es-tenue {
+  opacity: 0.3;
+}
+
+.grafico-torta__total {
+  fill: var(--tinta);
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.grafico-torta__rotulo {
+  fill: var(--tinta-2);
+  font-size: 12.5px;
+}
+
+.grafico-torta__leyenda {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grafico-torta__leyenda li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.grafico-torta__leyenda li.es-activa {
+  background: var(--papel);
+}
+
+.muestra {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.grafico-torta__nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grafico-torta__filtro {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.grafico-torta__filtro:hover,
+.grafico-torta__filtro[aria-pressed='true'] {
+  color: var(--birome);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.grafico-torta__parte {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.filtro-activo {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-weight: 600;
+}
+
+/* ---------- Distribución en pantallas anchas ---------- */
+
+.tablero,
+.pila,
+.dos-columnas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* En el celular las columnas del tablero se disuelven y manda el orden */
+.tablero__columna {
+  display: contents;
+}
+
+.orden-1 { order: 1; }
+.orden-2 { order: 2; }
+.orden-3 { order: 3; }
+.orden-4 { order: 4; }
+.orden-5 { order: 5; }
+.orden-6 { order: 6; }
+
+.lateral {
+  display: none;
+}
+
+.columnas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 1100px) {
+  .contenido {
+    max-width: 1200px;
+    padding-inline: 40px;
+  }
+
+  .tablero,
+  .dos-columnas {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    align-items: start;
+  }
+
+  .dos-columnas--parejas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tablero__columna {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tablero [class*='orden-'] {
+    order: 0;
+  }
+
+  .lateral {
+    display: flex;
+  }
+
+  .lateral,
+  .lateral-fijo {
+    position: sticky;
+    top: 24px;
+  }
+
+  .columnas {
+    display: block;
+    columns: 2;
+    column-gap: 16px;
+  }
+
+  .columnas > * {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .intro {
+    max-width: 70ch;
+  }
+
+  .grilla {
+    gap: 6px;
+    padding: 16px;
+  }
+
+  .grilla__dia {
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
+    aspect-ratio: auto;
+    min-height: 92px;
+    padding: 6px;
+    border: 1px solid var(--renglon);
+    text-align: left;
+  }
+
+  .grilla__dia > span:first-child {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+
+  .grilla__marcas {
+    display: none;
+  }
+
+  .grilla .grilla__etiquetas {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+}
+
+.grilla__etiquetas {
+  display: none;
+}
+
+.etiqueta {
+  overflow: hidden;
+  padding: 1px 6px;
+  border-left: 3px solid var(--color-etiqueta);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-etiqueta) 12%, var(--hoja));
+  font-size: 12px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tinta);
+}
+
+.etiqueta--pago { --color-etiqueta: var(--ambar); }
+.etiqueta--vencido { --color-etiqueta: var(--margen); }
+.etiqueta--cobro { --color-etiqueta: var(--verde); }
+.etiqueta--hecho { --color-etiqueta: var(--tinta-3); color: var(--tinta-2); text-decoration: line-through; text-decoration-color: var(--tinta-3); }
+.etiqueta--evento { --color-etiqueta: var(--birome); }
+
+.etiqueta-mas {
+  padding-left: 4px;
+  font-size: 11.5px;
+  color: var(--tinta-2);
+}
+
+.cifras--tarjeta {
+  padding: 16px 20px;
+  border-top: 0;
+  background: var(--hoja);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
 }
 
 /* ---------- Estados ---------- */

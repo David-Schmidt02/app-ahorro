@@ -1,22 +1,23 @@
 # Ahorro
 
-> **Versión** 2.0.0 · **Última actualización** 2026-10-25
+> **Versión** 2.1.0 · **Última actualización** 2026-10-25
 
 Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y únicos programados, calendario de vencimientos y eventos, y un objetivo de ahorro mensual.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 2.1.0 | 2026-10-25 | Gráfico de torta (reparto del gasto por categoría, filtra Movimientos en escritorio) y de líneas (ingresos, gastos y ahorro de 6 o 12 meses, endpoint `/api/evolucion`). Escritorio a dos columnas en todas las secciones; el calendario muestra los nombres en cada día. Nuevos colores por defecto de categorías. Se vuelve atrás con 2.0.0 (`2e30a41`). |
 | 2.0.0 | 2026-10-25 | Reescritura completa: hogar compartido, carga rápida, pagos programados (mensuales y únicos), resumen del mes con objetivo de ahorro, calendario, sueldos. Un solo servicio (FastAPI sirve el frontend). Base nueva, sin migrar datos. Se vuelve atrás con 1.1.0 (`c7d5f08`), que es otra base y otro esquema de servicios. |
 | 1.1.0 | 2026-10-25 | Solo SQLite (sin Alembic ni Postgres). Mascota desactivada por flag. |
 | 1.0.0 | — | Versión con Postgres + Alembic. |
 
 ## Qué hace
 
-- **Inicio**: cuánto les queda en el mes si se paga todo lo programado, contra el objetivo de ahorro. La barra muestra lo gastado, lo comprometido sin pagar (rayado) y la marca del objetivo. Debajo, los pagos y cobros pendientes (se marcan con un toque) y el gasto por categoría contra su presupuesto.
+- **Inicio**: cuánto les queda en el mes si se paga todo lo programado, contra el objetivo de ahorro. La barra muestra lo gastado, lo comprometido sin pagar (rayado) y la marca del objetivo. Debajo, los pagos y cobros pendientes (se marcan con un toque) el gasto por categoría contra su presupuesto, la torta con el reparto del gasto y las líneas de ingresos, gastos y ahorro de los últimos 6 o 12 meses.
 - **Cargar** (botón +): monto, categoría y listo. Recuerda la última categoría usada; admite pesos o dólares (se pasan a pesos con el blue del día o con la cotización que se cargue).
-- **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra.
+- **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra. En escritorio, al costado, los números del mes y la torta para filtrar por categoría.
 - **Fijos**: alquiler, expensas, servicios, sueldos (todos los meses, un día dado) y pagos únicos con fecha. Al registrarlos se carga el monto real.
-- **Calendario**: vencimientos del mes (a pagar, vencidos, a cobrar, registrados) y eventos propios (cumpleaños y aniversarios anuales, salidas, recordatorios).
+- **Calendario**: vencimientos del mes (en escritorio, con el nombre en cada día) (a pagar, vencidos, a cobrar, registrados) y eventos propios (cumpleaños y aniversarios anuales, salidas, recordatorios).
 - **Ajustes**: objetivo de ahorro mensual (en pesos o dólares), categorías con emoji, color y presupuesto, cotización del blue y cuenta.
 
 Las dos cuentas comparten todos los datos. El registro queda abierto hasta que existen 2 cuentas (`MAX_USUARIOS`) y después se cierra solo.

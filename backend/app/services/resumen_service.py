@@ -10,7 +10,7 @@ from app.core.exceptions import ServicioExternoNoDisponible
 from app.core.fechas import mes_anterior, parsear_mes, siguiente_mes
 from app.models import Categoria, Moneda, Movimiento, TipoMovimiento
 from app.schemas.categorias import CategoriaBreve
-from app.schemas.resumen import CategoriaDelMes, ResumenOut
+from app.schemas.resumen import CategoriaDelMes, EvolucionOut, MesEvolucion, ResumenOut
 from app.services.preferencias_service import PreferenciasService
 from app.services.programado_service import ProgramadoService
 
@@ -52,6 +52,34 @@ class ResumenService:
             gastos_mes_anterior=a_pesos(self._totales_por_tipo(mes_anterior(inicio))[TipoMovimiento.GASTO]),
             categorias=self._categorias(inicio, pendiente_por_categoria),
             vencimientos=vencimientos,
+        )
+
+    def evolucion(self, hasta: str, meses: int) -> EvolucionOut:
+        """Ingresos, gastos y ahorro de los `meses` meses que terminan en `hasta` (incluido)."""
+        fin = siguiente_mes(parsear_mes(hasta))
+        inicios = [mes_anterior(fin)]
+        while len(inicios) < meses:
+            inicios.append(mes_anterior(inicios[-1]))
+        inicios.reverse()
+        mes_de = func.strftime("%Y-%m", Movimiento.fecha)
+        filas = self.db.execute(
+            select(mes_de, Movimiento.tipo, func.sum(Movimiento.monto_ars_centavos))
+            .where(Movimiento.fecha >= inicios[0], Movimiento.fecha < fin)
+            .group_by(mes_de, Movimiento.tipo)
+        )
+        totales: dict[tuple[str, TipoMovimiento], int] = {(mes, tipo): total for mes, tipo, total in filas}
+        resultado = []
+        for inicio in inicios:
+            clave = inicio.strftime("%Y-%m")
+            ingresos = totales.get((clave, TipoMovimiento.INGRESO), 0)
+            gastos = totales.get((clave, TipoMovimiento.GASTO), 0)
+            resultado.append(
+                MesEvolucion(mes=clave, ingresos=a_pesos(ingresos), gastos=a_pesos(gastos), ahorro=a_pesos(ingresos - gastos))
+            )
+        preferencias = PreferenciasService(self.db).obtener()
+        return EvolucionOut(
+            meses=resultado,
+            objetivo_ars=self._objetivo_en_pesos(preferencias.objetivo_centavos, preferencias.objetivo_moneda),
         )
 
     def _rango(self, inicio: date) -> tuple:

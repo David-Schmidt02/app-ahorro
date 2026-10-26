@@ -7,18 +7,18 @@ from app.models import Categoria, Movimiento, Programado, TipoMovimiento
 from app.schemas.categorias import CategoriaIn, CategoriaUpdate
 
 CATEGORIAS_INICIALES: list[tuple[str, str, str, TipoMovimiento]] = [
-    ("Súper", "🛒", "#2F9E6B", TipoMovimiento.GASTO),
-    ("Casa", "🏠", "#3D63DD", TipoMovimiento.GASTO),
-    ("Servicios", "💡", "#D89A2B", TipoMovimiento.GASTO),
-    ("Transporte", "🚌", "#5B6B7F", TipoMovimiento.GASTO),
-    ("Salud", "🩺", "#D6455D", TipoMovimiento.GASTO),
-    ("Salidas", "🍕", "#E0703A", TipoMovimiento.GASTO),
-    ("Ropa", "👕", "#8C5CD6", TipoMovimiento.GASTO),
-    ("Suscripciones", "📺", "#2C9AB7", TipoMovimiento.GASTO),
-    ("Regalos", "🎁", "#C2508F", TipoMovimiento.GASTO),
+    ("Súper", "🛒", "#1BAF7A", TipoMovimiento.GASTO),
+    ("Casa", "🏠", "#2A78D6", TipoMovimiento.GASTO),
+    ("Servicios", "💡", "#EDA100", TipoMovimiento.GASTO),
+    ("Transporte", "🚌", "#6250D6", TipoMovimiento.GASTO),
+    ("Salud", "🩺", "#E34948", TipoMovimiento.GASTO),
+    ("Salidas", "🍕", "#EB6834", TipoMovimiento.GASTO),
+    ("Ropa", "👕", "#E87BA4", TipoMovimiento.GASTO),
+    ("Suscripciones", "📺", "#008300", TipoMovimiento.GASTO),
+    ("Regalos", "🎁", "#B0478A", TipoMovimiento.GASTO),
     ("Otros", "📦", "#7A7F8A", TipoMovimiento.GASTO),
-    ("Sueldo", "💼", "#1F8A5B", TipoMovimiento.INGRESO),
-    ("Extra", "✨", "#3D63DD", TipoMovimiento.INGRESO),
+    ("Sueldo", "💼", "#008300", TipoMovimiento.INGRESO),
+    ("Extra", "✨", "#2A78D6", TipoMovimiento.INGRESO),
 ]
 
 

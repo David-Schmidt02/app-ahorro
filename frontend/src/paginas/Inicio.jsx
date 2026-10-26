@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import BarraMes from '../componentes/BarraMes';
 import Estado from '../componentes/Estado';
+import Evolucion from '../componentes/Evolucion';
 import Icono from '../componentes/Icono';
 import SelectorMes from '../componentes/SelectorMes';
+import Torta from '../componentes/Torta';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { cuandoVence, diasHasta, mesActual, nombreMesSolo, sumarMeses } from '../lib/fechas';
@@ -21,8 +23,7 @@ function Titular({ resumen, esActual }) {
     );
   }
   const faltante = objetivo ? objetivo - proyeccion : null;
-  const textoObjetivo =
-    resumen.objetivo_moneda === 'USD' ? `${dinero(resumen.objetivo, 'USD')} (${dinero(objetivo)})` : dinero(objetivo);
+  const textoObjetivo = resumen.objetivo_moneda === 'USD' ? `${dinero(resumen.objetivo, 'USD')} (${dinero(objetivo)})` : dinero(objetivo);
   return (
     <div className="titular">
       <p className="titular__rotulo">{esActual ? 'Si se paga todo lo programado, les quedan' : 'Al cierre del mes quedan'}</p>
@@ -67,7 +68,9 @@ function Pendientes({ vencimientos }) {
               <div className="renglon__texto">
                 <span className="renglon__titulo">{v.nombre}</span>
                 <span className={`renglon__detalle${vencido ? ' es-alerta' : ''}`}>
-                  {v.tipo === 'ingreso' ? cuandoVence(v.fecha).replace('vence', 'se cobra').replace('venció', 'se cobraba') : cuandoVence(v.fecha)}
+                  {v.tipo === 'ingreso'
+                    ? cuandoVence(v.fecha).replace('vence', 'se cobra').replace('venció', 'se cobraba')
+                    : cuandoVence(v.fecha)}
                 </span>
               </div>
               <span className={`importe${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>
@@ -182,33 +185,47 @@ export default function Inicio() {
       </header>
       <Estado datos={resumen} error={error} reintentar={reintentar}>
         {resumen && (
-          <>
-            <section className="tarjeta-mes">
-              <Titular resumen={resumen} esActual={esActual} />
-              <BarraMes resumen={resumen} />
-              <dl className="cifras">
-                <div>
-                  <dt>Entró</dt>
-                  <dd className="es-ingreso">{dinero(resumen.ingresos)}</dd>
-                </div>
-                <div>
-                  <dt>Salió</dt>
-                  <dd>{dinero(resumen.gastos)}</dd>
-                </div>
-                <div>
-                  <dt>Ahorrado</dt>
-                  <dd className={resumen.ahorro < 0 ? 'es-alerta' : ''}>{dinero(resumen.ahorro)}</dd>
-                </div>
-              </dl>
-            </section>
-            <Pendientes vencimientos={resumen.vencimientos} />
-            <Categorias categorias={resumen.categorias} />
-            {resumen.gastos_mes_anterior > 0 && (
-              <p className="pie">
-                En {nombreMesSolo(sumarMeses(mes, -1))} gastaron {dinero(resumen.gastos_mes_anterior)}.
-              </p>
-            )}
-          </>
+          <div className="tablero">
+            <div className="tablero__columna">
+              <section className="tarjeta-mes orden-1">
+                <Titular resumen={resumen} esActual={esActual} />
+                <BarraMes resumen={resumen} />
+                <dl className="cifras">
+                  <div>
+                    <dt>Entró</dt>
+                    <dd className="es-ingreso">{dinero(resumen.ingresos)}</dd>
+                  </div>
+                  <div>
+                    <dt>Salió</dt>
+                    <dd>{dinero(resumen.gastos)}</dd>
+                  </div>
+                  <div>
+                    <dt>Ahorrado</dt>
+                    <dd className={resumen.ahorro < 0 ? 'es-alerta' : ''}>{dinero(resumen.ahorro)}</dd>
+                  </div>
+                </dl>
+              </section>
+              <div className="orden-5">
+                <Evolucion />
+              </div>
+              <div className="orden-4">
+                <Categorias categorias={resumen.categorias} />
+              </div>
+            </div>
+            <div className="tablero__columna tablero__columna--lateral">
+              <div className="orden-2">
+                <Pendientes vencimientos={resumen.vencimientos} />
+              </div>
+              <div className="orden-3">
+                <Torta categorias={resumen.categorias} />
+              </div>
+              {resumen.gastos_mes_anterior > 0 && (
+                <p className="pie orden-6">
+                  En {nombreMesSolo(sumarMeses(mes, -1))} gastaron {dinero(resumen.gastos_mes_anterior)}.
+                </p>
+              )}
+            </div>
+          </div>
         )}
       </Estado>
     </>

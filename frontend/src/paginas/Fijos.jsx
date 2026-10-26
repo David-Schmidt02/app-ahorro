@@ -67,7 +67,12 @@ function FormProgramado({ programado, onListo }) {
   };
 
   const terminar = () =>
-    enviar('PATCH', `/programados/${programado.id}`, { hasta: mesActual() }, `${programado.nombre} termina en ${nombreMesSolo(mesActual())}`);
+    enviar(
+      'PATCH',
+      `/programados/${programado.id}`,
+      { hasta: mesActual() },
+      `${programado.nombre} termina en ${nombreMesSolo(mesActual())}`,
+    );
   const reactivar = () => enviar('PATCH', `/programados/${programado.id}`, { hasta: null }, `${programado.nombre} vuelve a estar vigente`);
   const borrar = () => enviar('DELETE', `/programados/${programado.id}`, undefined, `${programado.nombre} borrado`);
 
@@ -95,9 +100,22 @@ function FormProgramado({ programado, onListo }) {
       )}
       <label className="campo">
         <span>Nombre</span>
-        <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} placeholder={tipo === 'gasto' ? 'Ej.: Alquiler, Expensas, Luz' : 'Ej.: Sueldo'} autoFocus={!editando} />
+        <input
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          maxLength={60}
+          placeholder={tipo === 'gasto' ? 'Ej.: Alquiler, Expensas, Luz' : 'Ej.: Sueldo'}
+          autoFocus={!editando}
+        />
       </label>
-      <CampoMonto id="monto-programado" etiqueta={mensual ? 'Monto estimado' : 'Monto'} valor={monto} onCambio={setMonto} moneda={moneda} onMoneda={setMoneda} />
+      <CampoMonto
+        id="monto-programado"
+        etiqueta={mensual ? 'Monto estimado' : 'Monto'}
+        valor={monto}
+        onCambio={setMonto}
+        moneda={moneda}
+        onMoneda={setMoneda}
+      />
       {mensual ? (
         <label className="campo">
           <span>{tipo === 'gasto' ? 'Vence el día' : 'Se cobra el día'}</span>
@@ -218,8 +236,8 @@ export default function Fijos() {
         </button>
       </header>
       <p className="intro">
-        Lo que se paga o se cobra todos los meses, y los pagos únicos que ya saben que vienen. Aparecen en Inicio y en el
-        Calendario para marcarlos cuando se pagan.
+        Lo que se paga o se cobra todos los meses, y los pagos únicos que ya saben que vienen. Aparecen en Inicio y en el Calendario para
+        marcarlos cuando se pagan.
       </p>
       <Estado datos={programados} error={error} reintentar={reintentar}>
         {programados?.length === 0 && (
@@ -230,22 +248,33 @@ export default function Fijos() {
             </button>
           </div>
         )}
-        <Lista titulo="Cobros mensuales" programados={mensuales.filter((p) => p.tipo === 'ingreso')} onElegir={(p) => setHoja({ id: p.id, programado: p })} detalle={diaDe} />
-        <Lista titulo="Pagos mensuales" programados={mensuales.filter((p) => p.tipo === 'gasto')} onElegir={(p) => setHoja({ id: p.id, programado: p })} detalle={diaDe} />
-        <Lista
-          titulo="Una sola vez"
-          programados={unicos}
-          onElegir={(p) => setHoja({ id: p.id, programado: p })}
-          detalle={(p) => `${diaCorto(p.fecha)} · ${p.categoria.nombre}`}
-        />
-        <Lista
-          titulo="Terminados"
-          programados={terminados}
-          onElegir={(p) => setHoja({ id: p.id, programado: p })}
-          detalle={diaDe}
-        />
+        <div className="columnas">
+          <Lista
+            titulo="Cobros mensuales"
+            programados={mensuales.filter((p) => p.tipo === 'ingreso')}
+            onElegir={(p) => setHoja({ id: p.id, programado: p })}
+            detalle={diaDe}
+          />
+          <Lista
+            titulo="Pagos mensuales"
+            programados={mensuales.filter((p) => p.tipo === 'gasto')}
+            onElegir={(p) => setHoja({ id: p.id, programado: p })}
+            detalle={diaDe}
+          />
+          <Lista
+            titulo="Una sola vez"
+            programados={unicos}
+            onElegir={(p) => setHoja({ id: p.id, programado: p })}
+            detalle={(p) => `${diaCorto(p.fecha)} · ${p.categoria.nombre}`}
+          />
+          <Lista titulo="Terminados" programados={terminados} onElegir={(p) => setHoja({ id: p.id, programado: p })} detalle={diaDe} />
+        </div>
       </Estado>
-      <Hoja titulo={hoja?.programado ? hoja.programado.nombre : 'Nuevo pago o cobro'} abierta={Boolean(hoja)} onCerrar={() => setHoja(null)}>
+      <Hoja
+        titulo={hoja?.programado ? hoja.programado.nombre : 'Nuevo pago o cobro'}
+        abierta={Boolean(hoja)}
+        onCerrar={() => setHoja(null)}
+      >
         {hoja && <FormProgramado key={hoja.id} programado={hoja.programado} onListo={() => setHoja(null)} />}
       </Hoja>
     </>

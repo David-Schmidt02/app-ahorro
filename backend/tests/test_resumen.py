@@ -51,3 +51,24 @@ def test_resumen_vacio(api):
 
 def test_mes_invalido(api):
     assert api.get("/api/resumen", params={"mes": "2026-13"}).status_code == 422
+
+
+def test_evolucion_rellena_los_meses_sin_movimientos(api):
+    _mov(api, "ingreso", "Sueldo", 1_000_000, "2026-08-01")
+    _mov(api, "gasto", "Súper", 400_000, "2026-08-10")
+    _mov(api, "gasto", "Súper", 100_000, "2026-10-10")
+    _mov(api, "gasto", "Súper", 999, "2026-11-01")
+    api.put("/api/preferencias", json={"objetivo": 300_000})
+
+    r = api.get("/api/evolucion", params={"hasta": "2026-10", "meses": 4}).json()
+
+    assert [m["mes"] for m in r["meses"]] == ["2026-07", "2026-08", "2026-09", "2026-10"]
+    assert r["meses"][1] == {"mes": "2026-08", "ingresos": 1_000_000, "gastos": 400_000, "ahorro": 600_000}
+    assert r["meses"][2]["gastos"] == 0
+    assert r["meses"][3]["ahorro"] == -100_000
+    assert r["objetivo_ars"] == 300_000
+
+
+def test_evolucion_cruza_el_anio(api):
+    r = api.get("/api/evolucion", params={"hasta": "2027-01", "meses": 3}).json()
+    assert [m["mes"] for m in r["meses"]] == ["2026-11", "2026-12", "2027-01"]

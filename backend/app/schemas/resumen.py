@@ -28,3 +28,15 @@ class ResumenOut(BaseModel):
     gastos_mes_anterior: float
     categorias: list[CategoriaDelMes]
     vencimientos: list[VencimientoOut]
+
+
+class MesEvolucion(BaseModel):
+    mes: str
+    ingresos: float
+    gastos: float
+    ahorro: float
+
+
+class EvolucionOut(BaseModel):
+    meses: list[MesEvolucion]
+    objetivo_ars: float | None
