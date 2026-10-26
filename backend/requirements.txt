@@ -5,8 +5,6 @@ python-multipart==0.0.6
 
 # Database
 sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
-alembic==1.13.1
 
 # Authentication
 passlib[bcrypt]==1.7.4
