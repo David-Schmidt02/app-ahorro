@@ -10,7 +10,7 @@ API REST construida con **FastAPI** siguiendo **Clean Architecture** estricta, c
 - ✅ **Global Exception Handler** - Manejo centralizado de errores
 - ✅ **Structured Logging** - Rotación de 7 días, timestamp + logger name
 - ✅ **JWT Authentication** - Opcional vía config
-- ✅ **PostgreSQL** - Con SQLAlchemy ORM
+- ✅ **SQLite** - Con SQLAlchemy ORM
 
 ---
 
@@ -82,9 +82,7 @@ app:
   api_prefix: "/api/v1"
 
 database:
-  url: "postgresql://user:password@localhost:5432/app_ahorro"
-  pool_size: 5
-  max_overflow: 10
+  url: "sqlite:///./app_ahorro.db"
   echo: false
 
 jwt:
@@ -145,26 +143,12 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configurar base de datos
+### 2. Base de datos
 
-Editar `config.yaml` con tus credenciales de PostgreSQL:
+SQLite, sin configuración: el archivo `app_ahorro.db` y sus tablas se crean al iniciar la API.
+Para dejar la base vacía con el usuario de test: `python reset_db.py`.
 
-```yaml
-database:
-  url: "postgresql://tu_usuario:tu_password@localhost:5432/app_ahorro"
-```
-
-Crear la base de datos:
-
-```bash
-createdb app_ahorro
-```
-
-O en psql:
-
-```sql
-CREATE DATABASE app_ahorro;
-```
+En Railway, `DATABASE_URL=sqlite:////data/app_ahorro.db` apunta al volumen montado en `/data`.
 
 ### 3. Ejecutar la API
 
@@ -202,7 +186,7 @@ Domain Entity (lógica de negocio)
     ↓
 Repository (persistencia)
     ↓
-Database (PostgreSQL)
+Database (SQLite)
 ```
 
 ### Responsabilidades por capa
@@ -407,9 +391,9 @@ curl -X POST http://localhost:8000/api/v1/objetivos/ \
 ## 🚢 Deploy en Railway
 
 1. Conectar repositorio de GitHub a Railway
-2. Agregar PostgreSQL addon
-3. Editar `config.yaml` con credenciales de producción (o usar variables de Railway)
-4. Railway ejecutará automáticamente `python -m src.main`
+2. Crear un volumen en el servicio del backend, montado en `/data`
+3. Variables: `DATABASE_URL=sqlite:////data/app_ahorro.db` y `SECRET_KEY`
+4. Railway ejecuta `start.sh` (uvicorn); las tablas se crean al iniciar
 
 ---
 

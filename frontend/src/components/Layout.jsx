@@ -5,6 +5,7 @@ import TabBar from './TabBar';
 import Mascota from './Mascota';
 import MobileLayout from './MobileLayout';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { MASCOTA_HABILITADA } from '../config/features';
 
 const TAB_PATHS = ['/', '/gastos', '/horarios', '/calendario', '/propiedades'];
 
@@ -55,7 +56,7 @@ const Layout = () => {
           <Navbar />
         </div>
         <MobileLayout badges={{ '/calendario': calBadge }} />
-        <Mascota />
+        {MASCOTA_HABILITADA && <Mascota />}
       </div>
     );
   }
@@ -72,7 +73,7 @@ const Layout = () => {
       {isMobile && <TabBar badges={{ '/calendario': calBadge }} mobile />}
 
       {/* Easter Egg */}
-      <Mascota />
+      {MASCOTA_HABILITADA && <Mascota />}
     </div>
   );
 };

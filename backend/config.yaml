@@ -1,18 +1,16 @@
 # App de Ahorro - Configuration
 # IMPORTANTE: En producción (Railway), las variables de entorno sobreescriben este archivo:
-#   DATABASE_URL  → database.url
+#   DATABASE_URL  → database.url (ej: sqlite:////data/app_ahorro.db en el volumen)
 #   SECRET_KEY    → jwt.secret_key
 
 app:
   name: "App de Ahorro"
-  version: "1.0.0"
+  version: "1.1.0"
   api_prefix: "/api/v1"
 
 database:
-  # Desarrollo local: SQLite. En producción Railway inyecta DATABASE_URL automáticamente.
+  # SQLite. En producción DATABASE_URL apunta al volumen de Railway.
   url: "sqlite:///./app_ahorro.db"
-  pool_size: 5
-  max_overflow: 10
   echo: false
 
 jwt:

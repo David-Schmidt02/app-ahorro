@@ -1,5 +1,12 @@
 # App de Ahorro - Savings Goal Tracker
 
+> **Versión** 1.1.0 · **Última actualización** 2026-10-25
+
+| Versión | Fecha | Cambios |
+|---|---|---|
+| 1.1.0 | 2026-10-25 | Solo SQLite (sin Alembic ni Postgres); en Railway requiere volumen en `/data` y `DATABASE_URL=sqlite:////data/app_ahorro.db`. Mascota desactivada por flag (`frontend/src/config/features.js`). Se vuelve atrás con 1.0.0 (commit `0e30a9f`). |
+| 1.0.0 | — | Versión con Postgres + Alembic. |
+
 Aplicación web para trackear ahorros y alcanzar objetivos financieros. Uso personal para 2 usuarios.
 
 ## Usuario de Test (local)
@@ -37,21 +44,21 @@ Aplicación web para trackear ahorros y alcanzar objetivos financieros. Uso pers
 
 **Alternativa descartada:** Angular (demasiado pesado para 2 usuarios, mayor complejidad)
 
-### Base de Datos: PostgreSQL
-**Por qué PostgreSQL:**
-- Persistencia garantizada: datos no se pierden en redeploys (vs SQLite en contenedores efímeros)
-- Railway integration: provisión gratuita con un click
-- Production-ready: mismo setup en desarrollo y producción
-- SQLAlchemy compatible: ORM Python estándar funciona perfectamente
-- Escalable: si eventualmente crece el proyecto
+### Base de Datos: SQLite
+**Por qué SQLite:**
+- Cero infraestructura: un único archivo, sin servidor de base de datos
+- Suficiente para 2 usuarios
+- Mismo motor en desarrollo y producción
+- Sin migraciones: las tablas se crean al iniciar el backend (`create_tables()`)
 
-**Alternativa descartada:** SQLite (archivos locales se pierden en plataformas como Railway)
+**Persistencia en Railway:** el archivo vive en un volumen montado en `/data`, con
+`DATABASE_URL=sqlite:////data/app_ahorro.db`. Sin volumen, la base se pierde en cada deploy.
 
 ### Deployment: Railway
 **Por qué Railway:**
 - Deploy automático desde Git
 - Tier gratuito razonable
-- PostgreSQL incluido gratis
+- Volúmenes persistentes para el archivo SQLite
 - Configuración mínima
 - CLI simple para management
 
@@ -193,7 +200,7 @@ backend/
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI app principal
 │   ├── config.py               # Configuración y variables de entorno
-│   ├── database.py             # Conexión a PostgreSQL
+│   ├── database.py             # Conexión a SQLite
 │   │
 │   ├── domain/                 # Entidades de dominio
 │   │   ├── __init__.py

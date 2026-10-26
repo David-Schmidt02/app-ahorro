@@ -5,6 +5,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import patitoIcon from '../assets/mascotas/icons/patito.svg';
+import { MASCOTA_HABILITADA } from '../config/features';
 
 const Navbar = () => {
   const { logout, user } = useAuth();
@@ -77,6 +78,7 @@ const Navbar = () => {
               ))}
             </div>
           )}
+          {MASCOTA_HABILITADA && (
           <button
             className="btn-icon"
             onClick={() => {
@@ -97,6 +99,7 @@ const Navbar = () => {
               style={{ objectFit: 'contain' }}
             />
           </button>
+          )}
         </div>
       )}
     </nav>

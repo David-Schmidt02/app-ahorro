@@ -27,8 +27,6 @@ class AppConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     """Database configuration."""
     url: str
-    pool_size: int = 5
-    max_overflow: int = 10
     echo: bool = False
 
 
@@ -136,12 +134,9 @@ def load_config() -> Settings:
     with open(config_path, 'r', encoding='utf-8') as f:
         config_dict = yaml.safe_load(f)
 
-    # DATABASE_URL override (Railway injects this automatically)
+    # DATABASE_URL override (en Railway apunta al archivo dentro del volumen)
     db_url = os.environ.get("DATABASE_URL")
     if db_url:
-        # psycopg2 requires postgresql:// — Railway sometimes uses postgres://
-        if db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql://", 1)
         config_dict["database"]["url"] = db_url
 
     # SECRET_KEY override
