@@ -96,18 +96,23 @@ class ResumenService:
         return totales
 
     def _categorias(self, inicio: date, pendiente_por_categoria: dict[int, float]) -> list[CategoriaDelMes]:
-        gastado = dict(
-            self.db.execute(
-                select(Movimiento.categoria_id, func.sum(Movimiento.monto_ars_centavos))
-                .where(*self._rango(inicio), Movimiento.tipo == TipoMovimiento.GASTO)
-                .group_by(Movimiento.categoria_id)
-            ).all()
+        gastado: dict[int, int] = defaultdict(int)
+        gastado_programado: dict[int, int] = defaultdict(int)
+        filas_gasto = self.db.execute(
+            select(Movimiento.categoria_id, Movimiento.programado_id.is_not(None), func.sum(Movimiento.monto_ars_centavos))
+            .where(*self._rango(inicio), Movimiento.tipo == TipoMovimiento.GASTO)
+            .group_by(Movimiento.categoria_id, Movimiento.programado_id.is_not(None))
         )
+        for categoria_id, es_programado, total in filas_gasto:
+            gastado[categoria_id] += total
+            if es_programado:
+                gastado_programado[categoria_id] += total
         categorias = self.db.scalars(select(Categoria).where(Categoria.tipo == TipoMovimiento.GASTO)).all()
         filas = [
             CategoriaDelMes(
                 categoria=CategoriaBreve.desde(c),
                 gastado=a_pesos(gastado.get(c.id, 0)),
+                gastado_programado=a_pesos(gastado_programado.get(c.id, 0)),
                 pendiente=round(pendiente_por_categoria.get(c.id, 0), 2),
                 presupuesto=a_pesos(c.presupuesto_centavos),
             )

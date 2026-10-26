@@ -22,6 +22,16 @@ def mes_anterior(inicio: date) -> date:
     return date(inicio.year - (inicio.month == 1), (inicio.month - 2) % 12 + 1, 1)
 
 
+def sumar_meses(inicio: date, meses: int) -> date:
+    total = inicio.year * 12 + inicio.month - 1 + meses
+    return date(total // 12, total % 12 + 1, 1)
+
+
+def meses_entre(desde: date, hasta: date) -> int:
+    """Meses de diferencia entre dos fechas (0 si son del mismo mes)."""
+    return (hasta.year - desde.year) * 12 + hasta.month - desde.month
+
+
 def dia_en_mes(inicio: date, dia: int) -> date:
     """El día pedido dentro del mes, o el último si el mes es más corto (ej. 31 en febrero)."""
     ultimo = calendar.monthrange(inicio.year, inicio.month)[1]

@@ -75,6 +75,7 @@ class Programado(Base):
     fecha: Mapped[date | None]
     desde: Mapped[date]
     hasta: Mapped[date | None]
+    cuotas: Mapped[int | None] = mapped_column(comment="Cantidad de cuotas si es una compra en cuotas")
     creado_en: Mapped[datetime] = mapped_column(server_default=func.now())
 
     categoria: Mapped[Categoria] = relationship(lazy="joined")
@@ -113,6 +114,17 @@ class Evento(Base):
     hora: Mapped[str | None] = mapped_column(String(5))
     anual: Mapped[bool] = mapped_column(default=False)
     creado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+
+
+class CalendarioExterno(Base):
+    """Calendario de afuera (ej. la dirección secreta iCal de Google Calendar) cuyos eventos se muestran en el de la app."""
+
+    __tablename__ = "calendarios_externos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(40))
+    url: Mapped[str] = mapped_column(String(500))
+    creado_en: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
 class Preferencias(Base):

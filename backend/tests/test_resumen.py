@@ -72,3 +72,17 @@ def test_evolucion_rellena_los_meses_sin_movimientos(api):
 def test_evolucion_cruza_el_anio(api):
     r = api.get("/api/evolucion", params={"hasta": "2027-01", "meses": 3}).json()
     assert [m["mes"] for m in r["meses"]] == ["2026-11", "2026-12", "2027-01"]
+
+
+def test_gasto_de_programados_separado_por_categoria(api):
+    _mov(api, "gasto", "Casa", 20_000)
+    expensas = api.post(
+        "/api/programados",
+        json={"nombre": "Expensas", "tipo": "gasto", "categoria_id": categoria_id(api, "Casa"),
+              "monto": 120_000, "frecuencia": "mensual", "dia": 10, "desde": "2026-10"},
+    ).json()
+    api.post(f"/api/programados/{expensas['id']}/pagar", json={"mes": "2026-10"})
+
+    casa = next(c for c in api.get("/api/resumen", params={"mes": "2026-10"}).json()["categorias"]
+                if c["categoria"]["nombre"] == "Casa")
+    assert (casa["gastado"], casa["gastado_programado"]) == (140_000, 120_000)

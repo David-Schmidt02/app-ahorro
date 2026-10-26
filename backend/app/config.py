@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     max_usuarios: int = 2
     dolar_api_url: str = "https://dolarapi.com/v1/dolares/blue"
     cotizacion_vigencia_horas: int = 6
+    zona_horaria: str = "America/Argentina/Buenos_Aires"
+    calendario_externo_minutos: int = 30
     frontend_dist: Path = BACKEND_DIR.parent / "frontend" / "dist"
 
 

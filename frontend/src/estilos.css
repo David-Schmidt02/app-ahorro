@@ -13,6 +13,7 @@
   --verde: #16865a;
   --verde-suave: #dcf1e6;
   --ambar: #c98418;
+  --ambar-texto: #8f5d0a;
   --sombra: 0 1px 2px rgb(22 35 58 / 6%), 0 8px 24px -12px rgb(22 35 58 / 18%);
   --serie-ingresos: #16865a;
   --serie-gastos: #2443c4;
@@ -50,6 +51,7 @@
     --verde: #4cc891;
     --verde-suave: #173a2d;
     --ambar: #f0b04a;
+    --ambar-texto: #f0b04a;
     --sombra: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 30px -14px rgb(0 0 0 / 60%);
     --serie-ingresos: #35a370;
     --serie-gastos: #6f86ee;
@@ -113,18 +115,6 @@ a {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.es-ingreso {
-  color: var(--verde);
-}
-
-.es-alerta {
-  color: var(--margen);
-}
-
-.es-bien {
-  color: var(--verde);
 }
 
 /* ---------- Marco y navegación ---------- */
@@ -340,6 +330,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  text-decoration: none;
   min-height: 46px;
   padding: 0 18px;
   border: 1.5px solid var(--renglon);
@@ -592,6 +583,38 @@ a {
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+}
+
+/* ---------- Cierre del mes ---------- */
+
+/* El margen rojo de la libreta marca la hoja que se cierra */
+.tarjeta--cierre {
+  border-left: 3px solid var(--margen);
+}
+
+.titular__monto--chico {
+  font-size: clamp(32px, 9vw, 40px);
+}
+
+.cierre__datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: var(--espacio-3) 0 0;
+  border-top: 1px solid var(--renglon);
+  list-style: none;
+  font-size: 15px;
+  color: var(--tinta-2);
+}
+
+.acciones.acciones--inicio {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.acciones--inicio .boton {
+  white-space: nowrap;
 }
 
 /* ---------- Renglones ---------- */
@@ -951,6 +974,10 @@ input[type='checkbox'] {
   min-width: 0;
 }
 
+.fila-fecha .campo-cuotas {
+  flex: 0 0 5.5em;
+}
+
 .colores {
   display: flex;
   flex-wrap: wrap;
@@ -1062,7 +1089,7 @@ input[type='checkbox'] {
 
 .grilla {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
   padding: 12px;
   background: var(--hoja);
@@ -1146,6 +1173,11 @@ input[type='checkbox'] {
 
 .punto--evento {
   background: var(--birome);
+}
+
+/* Hueco: está anotado en otro calendario, no en la app */
+.punto--externo {
+  box-shadow: inset 0 0 0 1.5px var(--birome);
 }
 
 .referencias {
@@ -1510,6 +1542,7 @@ input[type='checkbox'] {
 .etiqueta--cobro { --color-etiqueta: var(--verde); }
 .etiqueta--hecho { --color-etiqueta: var(--tinta-3); color: var(--tinta-2); text-decoration: line-through; text-decoration-color: var(--tinta-3); }
 .etiqueta--evento { --color-etiqueta: var(--birome); }
+.etiqueta--externo { --color-etiqueta: var(--tinta-3); }
 
 .etiqueta-mas {
   padding-left: 4px;
@@ -1867,4 +1900,23 @@ input[type='checkbox'] {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- Estados ---------- */
+/* Al final: le ganan al color propio de cada componente (ej. .renglon__detalle). */
+
+.es-ingreso {
+  color: var(--verde);
+}
+
+.es-alerta {
+  color: var(--margen);
+}
+
+.es-bien {
+  color: var(--verde);
+}
+
+.es-aviso {
+  color: var(--ambar-texto);
 }

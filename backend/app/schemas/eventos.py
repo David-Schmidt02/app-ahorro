@@ -3,6 +3,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import TipoEvento
+from app.schemas.calendarios import EventoExterno
 from app.schemas.programados import VencimientoOut
 
 
@@ -33,6 +34,8 @@ class CalendarioOut(BaseModel):
     mes: str
     vencimientos: list[VencimientoOut]
     eventos: list[EventoDelMes]
+    externos: list[EventoExterno]
+    externos_con_error: list[str]
 
 
 class ProximosOut(BaseModel):
@@ -40,3 +43,4 @@ class ProximosOut(BaseModel):
     hasta: date
     vencimientos: list[VencimientoOut]
     eventos: list[EventoDelMes]
+    externos: list[EventoExterno]

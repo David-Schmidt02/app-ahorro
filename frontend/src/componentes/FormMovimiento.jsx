@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
-import { ayer, hoy } from '../lib/fechas';
-import { montoATexto, parsearMonto } from '../lib/formato';
+import { ayer, hoy, mesActual, mesDe, nombreMesSolo, sumarMeses } from '../lib/fechas';
+import { dinero, montoATexto, parsearMonto } from '../lib/formato';
 import CampoMonto from './CampoMonto';
 import ChipsCategorias from './ChipsCategorias';
 import Icono from './Icono';
@@ -38,6 +38,9 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
   const [categoriaId, setCategoriaId] = useState(movimiento?.categoria.id ?? ultimaCategoria(tipoInicial));
   const [descripcion, setDescripcion] = useState(movimiento?.descripcion ?? '');
   const [fecha, setFecha] = useState(movimiento?.fecha ?? hoy());
+  // Compra en cuotas: null = un solo pago; si no, cantidad de cuotas y mes de la primera
+  const [cuotas, setCuotas] = useState(null);
+  const [primeraCuota, setPrimeraCuota] = useState(sumarMeses(mesActual(), 1));
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -46,6 +49,7 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
   if (categorias && editando && !delTipo.some((c) => c.id === movimiento.categoria.id)) delTipo.push(movimiento.categoria);
   const categoriaValida = delTipo.some((c) => c.id === categoriaId) ? categoriaId : null;
   const palabra = tipo === 'gasto' ? 'gasto' : 'ingreso';
+  const enCuotas = cuotas !== null && tipo === 'gasto' && !editando;
 
   const cambiarTipo = (nuevo) => {
     setTipo(nuevo);
@@ -57,8 +61,10 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
     const valor = parsearMonto(monto);
     if (!valor) return setError('Ingresá un monto mayor a cero');
     if (!categoriaValida) return setError('Elegí una categoría');
+    if (enCuotas && !(Number(cuotas) >= 2 && Number(cuotas) <= 72)) return setError('Las cuotas van de 2 a 72');
     setGuardando(true);
     setError(null);
+    if (enCuotas) return guardarEnCuotas(valor);
     const cuerpo = { monto: valor, moneda, categoria_id: categoriaValida, descripcion: descripcion.trim() || null, fecha };
     try {
       if (editando) {
@@ -69,6 +75,27 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
       }
       refrescar();
       avisar(editando ? 'Cambios guardados' : `${palabra[0].toUpperCase()}${palabra.slice(1)} guardado`);
+      onListo();
+    } catch (err) {
+      setError(err.message);
+      setGuardando(false);
+    }
+  };
+
+  /** Una compra en cuotas es un pago mensual que termina solo: aparece cada mes para marcarlo. */
+  const guardarEnCuotas = async (valor) => {
+    const nombre = descripcion.trim() || delTipo.find((c) => c.id === categoriaValida).nombre;
+    try {
+      await api('/programados', {
+        method: 'POST',
+        body: {
+          nombre, tipo, monto: valor, moneda, categoria_id: categoriaValida, frecuencia: 'mensual',
+          dia: Number(fecha.slice(8)), desde: primeraCuota, cuotas: Number(cuotas),
+        },
+      });
+      recordarCategoria(tipo, categoriaValida);
+      refrescar();
+      avisar(`${nombre}: ${cuotas} cuotas programadas`);
       onListo();
     } catch (err) {
       setError(err.message);
@@ -100,7 +127,41 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
         </div>
       )}
 
-      <CampoMonto id="monto" valor={monto} onCambio={setMonto} moneda={moneda} onMoneda={setMoneda} autoFocus={!editando} />
+      <CampoMonto
+        id="monto"
+        etiqueta={enCuotas ? 'Monto de cada cuota' : undefined}
+        valor={monto}
+        onCambio={setMonto}
+        moneda={moneda}
+        onMoneda={setMoneda}
+        autoFocus={!editando}
+      />
+
+      {tipo === 'gasto' && !editando && (
+        <fieldset className="campo">
+          <legend>Cómo se paga</legend>
+          <div className="fila-fecha">
+            <button type="button" className="chip" aria-pressed={!enCuotas} onClick={() => setCuotas(null)}>
+              En un pago
+            </button>
+            <button type="button" className="chip" aria-pressed={enCuotas} onClick={() => setCuotas(cuotas ?? 6)}>
+              En cuotas
+            </button>
+            {enCuotas && (
+              <input
+                type="number"
+                inputMode="numeric"
+                aria-label="Cantidad de cuotas"
+                className="campo-cuotas"
+                min={2}
+                max={72}
+                value={cuotas}
+                onChange={(e) => setCuotas(e.target.value)}
+              />
+            )}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset className="campo">
         <legend>Categoría</legend>
@@ -112,8 +173,21 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
         <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} maxLength={120} placeholder={tipo === 'gasto' ? 'Ej.: verdulería' : 'Ej.: sueldo de octubre'} />
       </label>
 
+      {enCuotas && (
+        <label className="campo">
+          <span>Primera cuota</span>
+          <select value={primeraCuota} onChange={(e) => setPrimeraCuota(e.target.value)}>
+            {[mesDe(fecha), sumarMeses(mesDe(fecha), 1)].map((m) => (
+              <option key={m} value={m}>
+                En {nombreMesSolo(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       <fieldset className="campo">
-        <legend>Fecha</legend>
+        <legend>{enCuotas ? 'Fecha de compra' : 'Fecha'}</legend>
         <div className="fila-fecha">
           <button type="button" className="chip" aria-pressed={fecha === hoy()} onClick={() => setFecha(hoy())}>
             Hoy
@@ -124,6 +198,13 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
           <input type="date" aria-label="Otra fecha" value={fecha} onChange={(e) => e.target.value && setFecha(e.target.value)} required />
         </div>
       </fieldset>
+
+      {enCuotas && parsearMonto(monto) > 0 && Number(cuotas) >= 2 && (
+        <p className="tenue">
+          {cuotas} cuotas de {dinero(parsearMonto(monto), moneda)}: {dinero(parsearMonto(monto) * Number(cuotas), moneda)} en total. Vencen el día de la compra de cada mes y aparecen en Pagos y
+          cobros para marcarla cuando se paga.
+        </p>
+      )}
 
       {error && (
         <p className="error" role="alert">
@@ -138,7 +219,7 @@ export default function FormMovimiento({ movimiento, tipoInicial = 'gasto', onLi
           </button>
         )}
         <button type="submit" className="boton boton--principal" disabled={guardando}>
-          {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : `Guardar ${palabra}`}
+          {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : enCuotas ? 'Programar cuotas' : `Guardar ${palabra}`}
         </button>
       </div>
     </form>

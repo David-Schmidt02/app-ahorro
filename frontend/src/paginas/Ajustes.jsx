@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Externos, Suscripcion } from '../componentes/Calendarios';
 import CampoMonto from '../componentes/CampoMonto';
 import Estado from '../componentes/Estado';
 import Icono from '../componentes/Icono';
 import { useApp, useSesion } from '../estado/contextos';
 import { TEMAS, useTema } from '../estado/tema';
 import { useApi } from '../estado/useApi';
-import { api } from '../lib/api';
+import { api, descargar } from '../lib/api';
 import { dinero, montoATexto, parsearMonto } from '../lib/formato';
 
 function Objetivo({ preferencias }) {
@@ -85,6 +86,42 @@ function Dolar() {
   );
 }
 
+function Respaldo() {
+  const { avisar } = useApp();
+  const [error, setError] = useState(null);
+  const bajar = (ruta) =>
+    descargar(ruta).then(
+      () => {
+        setError(null);
+        avisar('Copia descargada');
+      },
+      (err) => setError(err.message),
+    );
+
+  return (
+    <section className="tarjeta">
+      <h2 className="tarjeta__titulo">Copia de seguridad</h2>
+      <p className="tenue">
+        Todo vive en un solo archivo en el servidor. Bajen una copia cada tanto: la base completa sirve para restaurar la app; el CSV abre los
+        movimientos en una planilla.
+      </p>
+      <div className="acciones acciones--inicio">
+        <button type="button" className="boton boton--chico" onClick={() => bajar('/respaldo/base')}>
+          <Icono nombre="descargar" tamano={18} /> Base completa
+        </button>
+        <button type="button" className="boton boton--chico" onClick={() => bajar('/respaldo/movimientos.csv')}>
+          <Icono nombre="descargar" tamano={18} /> Movimientos (CSV)
+        </button>
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export default function Ajustes() {
   const { usuario, salir } = useSesion();
   const { datos: preferencias, error, reintentar } = useApi('/preferencias');
@@ -100,9 +137,12 @@ export default function Ajustes() {
             {preferencias && <Objetivo preferencias={preferencias} />}
           </Estado>
           <Apariencia />
+          <Suscripcion />
         </div>
         <div className="pila">
+          <Externos />
           <Dolar />
+          <Respaldo />
           <section className="tarjeta">
             <h2 className="tarjeta__titulo">Cuenta</h2>
             <p>

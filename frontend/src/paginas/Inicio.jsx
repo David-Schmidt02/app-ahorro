@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import BarraMes from '../componentes/BarraMes';
+import CierreMes from '../componentes/CierreMes';
 import Estado from '../componentes/Estado';
 import Evolucion from '../componentes/Evolucion';
 import Icono, { IconoCategoria } from '../componentes/Icono';
@@ -10,7 +11,7 @@ import Torta from '../componentes/Torta';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { cuandoVence, diaCorto, diasHasta, mesActual, nombreMesSolo, sumarMeses } from '../lib/fechas';
-import { dinero } from '../lib/formato';
+import { dinero, tituloVencimiento } from '../lib/formato';
 
 function Titular({ resumen, esActual }) {
   const { proyeccion, objetivo_ars: objetivo, ingresos, pendiente_ingresos: porCobrar } = resumen;
@@ -64,7 +65,7 @@ function Vencimiento({ v }) {
         />
       )}
       <span className="renglon__texto">
-        <span className="renglon__titulo">{v.nombre}</span>
+        <span className="renglon__titulo">{tituloVencimiento(v)}</span>
         <span className={`renglon__detalle${vencido ? ' es-alerta' : ''}`}>{v.pagado ? 'Registrado' : textoVencimiento(v)}</span>
       </span>
       <span className="renglon__columna">
@@ -149,6 +150,9 @@ export default function Inicio() {
         {resumen && (
           <div className="tablero">
             <div className="tablero__columna">
+              <div className="tablero__celda" style={{ '--orden': 0 }}>
+                <CierreMes />
+              </div>
               <section className="tarjeta tarjeta--mes" style={{ '--orden': 1 }}>
                 <Titular resumen={resumen} esActual={esActual} />
                 <BarraMes resumen={resumen} />

@@ -9,6 +9,7 @@ from app.core.exceptions import NoAutorizado
 from app.core.security import leer_token
 from app.database import get_db
 from app.models import Usuario
+from app.services.calendario_externo_service import CalendarioExternoService, descargar_ics
 from app.services.cotizacion_service import CotizacionService, obtener_cotizacion_blue
 from app.services.movimiento_service import MovimientoService
 from app.services.programado_service import ProgramadoService
@@ -59,3 +60,10 @@ def resumen_service(db: DbDep, programados: ProgramadosDep) -> ResumenService:
 
 
 ResumenDep = Annotated[ResumenService, Depends(resumen_service)]
+
+
+def calendario_externo_service(db: DbDep) -> CalendarioExternoService:
+    return CalendarioExternoService(db, descargar_ics)
+
+
+CalendariosExternosDep = Annotated[CalendarioExternoService, Depends(calendario_externo_service)]

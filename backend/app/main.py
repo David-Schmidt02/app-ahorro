@@ -11,7 +11,7 @@ from app.config import SECRET_KEY_DESARROLLO, get_settings
 from app.core.exception_handlers import registrar_handlers
 from app.database import Base, SessionLocal, engine
 from app.dependencies import usuario_actual
-from app.routers import auth, categorias, eventos, mes, movimientos, preferencias, programados
+from app.routers import auth, calendarios, categorias, eventos, mes, movimientos, preferencias, programados, respaldo
 from app.services.categoria_service import sembrar_categorias
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -29,13 +29,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 def crear_app() -> FastAPI:
-    app = FastAPI(title="App Ahorro", version="2.2.0", lifespan=lifespan)
+    app = FastAPI(title="App Ahorro", version="2.3.0", lifespan=lifespan)
     registrar_handlers(app)
 
     api = APIRouter(prefix="/api")
     api.include_router(auth.router)
+    api.include_router(calendarios.publico)
     privadas = APIRouter(dependencies=[Depends(usuario_actual)])
-    for modulo in (categorias, movimientos, programados, mes, eventos, preferencias):
+    for modulo in (categorias, movimientos, programados, mes, eventos, preferencias, calendarios, respaldo):
         privadas.include_router(modulo.router)
     api.include_router(privadas)
     app.include_router(api)

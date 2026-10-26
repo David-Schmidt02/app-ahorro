@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dinero import a_centavos, a_pesos, convertir_a_ars
 from app.core.exceptions import Conflicto, NoEncontrado, ReglaDeNegocio
-from app.core.fechas import dia_en_mes, parsear_mes, siguiente_mes
+from app.core.fechas import dia_en_mes, meses_entre, parsear_mes, siguiente_mes, sumar_meses
 from app.models import Frecuencia, Moneda, Movimiento, Programado, Usuario
 from app.schemas.categorias import CategoriaBreve
 from app.schemas.movimientos import MovimientoIn
@@ -39,6 +39,7 @@ class ProgramadoService:
             nombre=datos.nombre.strip(), tipo=datos.tipo, categoria_id=datos.categoria_id,
             monto_centavos=a_centavos(datos.monto), moneda=datos.moneda, frecuencia=datos.frecuencia,
             dia=datos.dia if es_mensual else None, fecha=None if es_mensual else datos.fecha, desde=desde,
+            cuotas=datos.cuotas, hasta=sumar_meses(desde, datos.cuotas - 1) if datos.cuotas else None,
         )
         self.db.add(programado)
         self.db.commit()
@@ -113,6 +114,7 @@ class ProgramadoService:
                     programado_id=p.id, nombre=p.nombre, tipo=p.tipo, categoria=CategoriaBreve.desde(p.categoria),
                     fecha=self._fecha_en(p, inicio), monto=a_pesos(monto), moneda=moneda,
                     monto_ars=a_pesos(monto_ars), pagado=pago is not None, movimiento_id=pago.id if pago else None,
+                    cuota=meses_entre(p.desde, inicio) + 1 if p.cuotas else None, cuotas=p.cuotas,
                 )
             )
         return sorted(resultado, key=lambda v: (v.fecha, v.nombre))

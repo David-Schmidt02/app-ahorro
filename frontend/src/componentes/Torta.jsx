@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useApp } from '../estado/contextos';
+import { avanceDelMes } from '../lib/fechas';
 import { dinero } from '../lib/formato';
 import Icono, { IconoCategoria } from './Icono';
 
@@ -6,12 +8,15 @@ const MAX_PORCIONES = 6;
 const LADO = 176;
 const RADIO = 80;
 const GROSOR = 24;
+// Antes de este día el ritmo del mes todavía no dice nada
+const DIA_MINIMO_RITMO = 5;
 const porcentaje = new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 0 });
 
 const fila = (c) => ({
   clave: c.categoria.id,
   categoria: c.categoria,
   valor: c.gastado,
+  programado: c.gastado_programado,
   pendiente: c.pendiente,
   presupuesto: c.presupuesto,
 });
@@ -34,6 +39,7 @@ function armarFilas(categorias, todas) {
     categoria: null,
     nombre: `Resto (${resto.length})`,
     valor: resto.reduce((suma, c) => suma + c.gastado, 0),
+    programado: 0,
     pendiente: 0,
     presupuesto: null,
   };
@@ -55,11 +61,20 @@ function arco(desde, hasta) {
 const colorDe = (f) => f.categoria?.color ?? 'var(--tinta-3)';
 const nombreDe = (f) => f.categoria?.nombre ?? f.nombre;
 
-function Presupuesto({ f }) {
+/** Cierre estimado: los pagos programados cuentan una vez; el resto sigue el ritmo de los días que pasaron. */
+function proyectar(f, avance) {
+  if (!avance || !f.presupuesto || avance.dia < DIA_MINIMO_RITMO) return null;
+  const variable = f.valor - f.programado;
+  return f.programado + f.pendiente + (variable / avance.dia) * avance.dias;
+}
+
+function Presupuesto({ f, avance }) {
   if (!f.presupuesto && !f.pendiente) return null;
   const usado = f.valor + f.pendiente;
   const tope = Math.max(f.presupuesto || 0, usado, 1);
   const pasado = f.presupuesto && usado > f.presupuesto;
+  const proyectado = proyectar(f, avance);
+  const seVaAPasar = !pasado && proyectado > f.presupuesto;
   return (
     <div className="torta-fila__presupuesto">
       {f.presupuesto ? (
@@ -77,6 +92,7 @@ function Presupuesto({ f }) {
           .filter(Boolean)
           .join(' · ')}
       </span>
+      {seVaAPasar && <span className="renglon__detalle es-aviso">A este ritmo llegan a {dinero(Math.round(proyectado / 100) * 100)}</span>}
     </div>
   );
 }
@@ -85,6 +101,7 @@ function Presupuesto({ f }) {
 export default function Torta({ categorias, titulo = 'En qué se va la plata', elegida = null, onElegir = null }) {
   const [activa, setActiva] = useState(null);
   const [todas, setTodas] = useState(false);
+  const avance = avanceDelMes(useApp().mes);
   const { porciones, filas, agrupadas } = armarFilas(categorias, todas);
   const total = porciones.reduce((suma, p) => suma + p.valor, 0);
   if (!filas.length) return null;
@@ -172,7 +189,7 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
               )}
               <span className="torta-fila__parte">{total ? porcentaje.format(f.valor / total) : '—'}</span>
               <span className="importe">{dinero(f.valor)}</span>
-              <Presupuesto f={f} />
+              <Presupuesto f={f} avance={avance} />
             </li>
           ))}
         </ul>

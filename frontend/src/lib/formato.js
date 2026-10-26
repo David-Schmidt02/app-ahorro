@@ -28,3 +28,6 @@ export function montoATexto(monto) {
   if (monto === null || monto === undefined) return '';
   return Number.isInteger(monto) ? enteros.format(monto) : conDecimales.format(monto);
 }
+
+/** Nombre de un vencimiento; en las compras en cuotas suma el número de cuota («Heladera · 3/12»). */
+export const tituloVencimiento = (v) => (v.cuotas ? `${v.nombre} · ${v.cuota}/${v.cuotas}` : v.nombre);

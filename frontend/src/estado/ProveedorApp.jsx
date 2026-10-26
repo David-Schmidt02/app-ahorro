@@ -3,6 +3,7 @@ import FormMovimiento from '../componentes/FormMovimiento';
 import FormPago from '../componentes/FormPago';
 import Hoja from '../componentes/Hoja';
 import { mesActual } from '../lib/fechas';
+import { tituloVencimiento } from '../lib/formato';
 import { AppContexto } from './contextos';
 
 /** Mes elegido, refresco de datos, las hojas de carga/pago y los avisos breves. */
@@ -40,7 +41,7 @@ export default function ProveedorApp({ children }) {
 
   const titulo =
     hoja?.clase === 'pago'
-      ? hoja.vencimiento.nombre
+      ? tituloVencimiento(hoja.vencimiento)
       : hoja?.movimiento
         ? 'Editar movimiento'
         : 'Cargar movimiento';

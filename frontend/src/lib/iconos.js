@@ -8,11 +8,15 @@ import {
   Bus,
   Cake,
   CalendarDays,
+  CalendarPlus,
+  CalendarSync,
   Car,
   Check,
   ChevronLeft,
   ChevronRight,
   Coffee,
+  Copy,
+  Download,
   Dumbbell,
   Ellipsis,
   Fuel,
@@ -81,6 +85,10 @@ export const ICONOS_UI = {
   oscuro: Moon,
   sistema: Monitor,
   resto: Ellipsis,
+  externo: CalendarSync,
+  suscribir: CalendarPlus,
+  copiar: Copy,
+  descargar: Download,
 };
 
 /** Íconos elegibles para una categoría: la clave es lo que se guarda en la base. */

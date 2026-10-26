@@ -7,7 +7,7 @@ import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
 import { DIAS_CORTOS, aISO, deISO, diaCorto, diaLargo, diasDelMes, hoy, mesDe, primerDiaSemana } from '../lib/fechas';
-import { dinero } from '../lib/formato';
+import { dinero, tituloVencimiento } from '../lib/formato';
 import { TIPOS_EVENTO } from '../lib/iconos';
 
 function FormEvento({ evento, fechaInicial, onListo }) {
@@ -126,13 +126,14 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
         <span key={`hueco-${i}`} />
       ))}
       {dias.map((iso) => {
-        const { vencimientos = [], eventos = [] } = porDia.get(iso) ?? {};
+        const { vencimientos = [], eventos = [], externos = [] } = porDia.get(iso) ?? {};
         const marcas = [
           ...vencimientos.map((v) => ({
             estado: v.pagado ? 'hecho' : v.tipo === 'ingreso' ? 'cobro' : iso < hoyIso ? 'vencido' : 'pago',
-            texto: v.nombre,
+            texto: tituloVencimiento(v),
           })),
           ...eventos.map((e) => ({ estado: 'evento', texto: e.titulo })),
+          ...externos.map((e) => ({ estado: 'externo', texto: e.titulo })),
         ];
         return (
           <button
@@ -166,7 +167,7 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
 }
 
 /** Vencimientos y eventos como renglones; con `conFecha` agrega la fecha (para rangos de varios días). */
-function Anotaciones({ vencimientos, eventos, conFecha = false, onEvento }) {
+function Anotaciones({ vencimientos, eventos, externos = [], conFecha = false, onEvento }) {
   const { abrirPago } = useApp();
   const fecha = (iso) => conFecha && <span className="renglon__columna renglon__columna--fecha">{diaCorto(iso)}</span>;
   return (
@@ -186,7 +187,7 @@ function Anotaciones({ vencimientos, eventos, conFecha = false, onEvento }) {
             />
           )}
           <span className="renglon__texto">
-            <span className="renglon__titulo">{v.nombre}</span>
+            <span className="renglon__titulo">{tituloVencimiento(v)}</span>
             <span className="renglon__detalle">
               {[conFecha && diaLargo(v.fecha), v.pagado ? 'Registrado' : v.tipo === 'ingreso' ? 'A cobrar' : 'A pagar'].filter(Boolean).join(' · ')}
             </span>
@@ -208,6 +209,18 @@ function Anotaciones({ vencimientos, eventos, conFecha = false, onEvento }) {
           </button>
         </li>
       ))}
+      {externos.map((e, i) => (
+        <li key={`x-${e.calendario}-${e.dia}-${i}`} className="renglon">
+          <span className="icono-categoria" aria-hidden="true">
+            <Icono nombre="externo" tamano={18} />
+          </span>
+          <span className="renglon__texto">
+            <span className="renglon__titulo">{e.titulo}</span>
+            <span className="renglon__detalle">{[conFecha && diaLargo(e.dia), e.hora, e.calendario].filter(Boolean).join(' · ')}</span>
+          </span>
+          {fecha(e.dia)}
+        </li>
+      ))}
     </ul>
   );
 }
@@ -222,14 +235,14 @@ const manana = () => {
 function Proximos({ onEvento }) {
   const { datos } = useApi(`/proximos?desde=${manana()}&dias=7`);
   if (!datos) return null;
-  const vacio = !datos.vencimientos.length && !datos.eventos.length;
+  const vacio = !datos.vencimientos.length && !datos.eventos.length && !datos.externos.length;
   return (
     <section className="tarjeta">
       <h2 className="tarjeta__titulo">Próximos 7 días</h2>
       {vacio ? (
         <p className="tenue">Nada para pagar ni eventos hasta el {diaCorto(datos.hasta)}.</p>
       ) : (
-        <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} conFecha onEvento={onEvento} />
+        <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} externos={datos.externos} conFecha onEvento={onEvento} />
       )}
     </section>
   );
@@ -243,16 +256,15 @@ export default function Calendario() {
   const seleccionado = mesDe(elegido) === mes ? elegido : `${mes}-01`;
 
   const porDia = new Map();
-  for (const v of datos?.vencimientos ?? []) {
-    if (!porDia.has(v.fecha)) porDia.set(v.fecha, { vencimientos: [], eventos: [] });
-    porDia.get(v.fecha).vencimientos.push(v);
-  }
-  for (const e of datos?.eventos ?? []) {
-    if (!porDia.has(e.dia)) porDia.set(e.dia, { vencimientos: [], eventos: [] });
-    porDia.get(e.dia).eventos.push(e);
-  }
-  const delDia = porDia.get(seleccionado) ?? { vencimientos: [], eventos: [] };
-  const vacio = !delDia.vencimientos.length && !delDia.eventos.length;
+  const anotar = (dia, grupo, item) => {
+    if (!porDia.has(dia)) porDia.set(dia, { vencimientos: [], eventos: [], externos: [] });
+    porDia.get(dia)[grupo].push(item);
+  };
+  for (const v of datos?.vencimientos ?? []) anotar(v.fecha, 'vencimientos', v);
+  for (const e of datos?.eventos ?? []) anotar(e.dia, 'eventos', e);
+  for (const e of datos?.externos ?? []) anotar(e.dia, 'externos', e);
+  const delDia = porDia.get(seleccionado) ?? { vencimientos: [], eventos: [], externos: [] };
+  const vacio = !delDia.vencimientos.length && !delDia.eventos.length && !delDia.externos.length;
   const editarEvento = (e) => setHoja({ id: e.id, evento: e });
 
   return (
@@ -280,7 +292,17 @@ export default function Calendario() {
               <li>
                 <i className="punto punto--evento" /> Evento
               </li>
+              {datos?.externos.length > 0 && (
+                <li>
+                  <i className="punto punto--externo" /> De otro calendario
+                </li>
+              )}
             </ul>
+            {datos?.externos_con_error.length > 0 && (
+              <p className="tenue" role="status">
+                No se pudo leer {datos.externos_con_error.map((n) => `«${n}»`).join(', ')}: sus eventos pueden faltar o estar desactualizados.
+              </p>
+            )}
           </div>
           <div className="pila lateral-fijo">
             <section className="tarjeta">
@@ -293,7 +315,7 @@ export default function Calendario() {
               {vacio ? (
                 <p className="tenue">Nada anotado para este día.</p>
               ) : (
-                <Anotaciones vencimientos={delDia.vencimientos} eventos={delDia.eventos} onEvento={editarEvento} />
+                <Anotaciones vencimientos={delDia.vencimientos} eventos={delDia.eventos} externos={delDia.externos} onEvento={editarEvento} />
               )}
             </section>
             <Proximos onEvento={editarEvento} />

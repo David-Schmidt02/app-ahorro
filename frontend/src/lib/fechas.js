@@ -69,3 +69,8 @@ export function cuandoVence(iso) {
   if (dias <= 7) return `vence en ${dias} días`;
   return `vence el ${diaCorto(iso)}`;
 }
+
+/** Día de hoy y días del mes si `mes` es el actual; null para meses pasados o futuros. */
+export function avanceDelMes(mes) {
+  return mes === mesActual() ? { dia: Number(hoy().slice(8)), dias: diasDelMes(mes) } : null;
+}

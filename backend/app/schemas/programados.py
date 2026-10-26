@@ -18,6 +18,7 @@ class ProgramadoIn(BaseModel):
     dia: int | None = Field(None, ge=1, le=31, description="Día del mes, solo para mensuales")
     fecha: date | None = Field(None, description="Fecha del pago, solo para únicos")
     desde: Mes | None = Field(None, description="Primer mes en que aplica; por defecto el actual")
+    cuotas: int | None = Field(None, ge=2, le=72, description="Compra en cuotas: termina sola después de la última")
 
     @model_validator(mode="after")
     def _segun_frecuencia(self) -> "ProgramadoIn":
@@ -25,6 +26,8 @@ class ProgramadoIn(BaseModel):
             raise ValueError("Un pago mensual necesita el día de vencimiento")
         if self.frecuencia is Frecuencia.UNICA and self.fecha is None:
             raise ValueError("Un pago único necesita la fecha")
+        if self.cuotas and (self.frecuencia is not Frecuencia.MENSUAL or self.tipo is not TipoMovimiento.GASTO):
+            raise ValueError("Solo un pago mensual puede ser en cuotas")
         return self
 
 
@@ -50,6 +53,7 @@ class ProgramadoOut(BaseModel):
     fecha: date | None
     desde: str
     hasta: str | None
+    cuotas: int | None
 
     @classmethod
     def desde_modelo(cls, p: Programado) -> "ProgramadoOut":
@@ -57,7 +61,7 @@ class ProgramadoOut(BaseModel):
             id=p.id, nombre=p.nombre, tipo=p.tipo, categoria=CategoriaBreve.desde(p.categoria),
             monto=a_pesos(p.monto_centavos), moneda=p.moneda, frecuencia=p.frecuencia,
             dia=p.dia, fecha=p.fecha, desde=p.desde.strftime("%Y-%m"),
-            hasta=p.hasta.strftime("%Y-%m") if p.hasta else None,
+            hasta=p.hasta.strftime("%Y-%m") if p.hasta else None, cuotas=p.cuotas,
         )
 
 
@@ -81,3 +85,5 @@ class VencimientoOut(BaseModel):
     monto_ars: float
     pagado: bool
     movimiento_id: int | None
+    cuota: int | None = Field(None, description="Número de cuota de ese mes, si es en cuotas")
+    cuotas: int | None

@@ -77,3 +77,24 @@ def test_borrar_programado_conserva_los_pagos(api):
     assert api.delete(f"/api/programados/{alquiler['id']}").status_code == 204
     movimientos = api.get("/api/movimientos", params={"mes": "2026-10"}).json()
     assert [(m["id"], m["programado_id"]) for m in movimientos] == [(pago["id"], None)]
+
+
+def test_compra_en_cuotas_termina_sola_y_numera_cada_cuota(api):
+    heladera = _alquiler(api, nombre="Heladera", dia=10, desde="2026-11", cuotas=3, monto=150000)
+    assert heladera["cuotas"] == 3
+    assert heladera["hasta"] == "2027-01"
+
+    diciembre = _vencimientos(api, "2026-12")[0]
+    assert (diciembre["cuota"], diciembre["cuotas"]) == (2, 3)
+    assert _vencimientos(api, "2027-01")[0]["cuota"] == 3
+    assert _vencimientos(api, "2027-02") == []
+    assert _vencimientos(api, "2026-10") == []
+
+
+def test_solo_los_pagos_mensuales_van_en_cuotas(api):
+    cobro = api.post(
+        "/api/programados",
+        json={"nombre": "Sueldo", "tipo": "ingreso", "categoria_id": categoria_id(api, "Sueldo"),
+              "monto": 1000, "frecuencia": "mensual", "dia": 5, "cuotas": 3},
+    )
+    assert cobro.status_code == 422

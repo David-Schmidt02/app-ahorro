@@ -7,7 +7,7 @@ import Icono, { IconoCategoria } from '../componentes/Icono';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
-import { diaCorto, diasHasta, hoy, mesActual, nombreMesSolo, sumarMeses } from '../lib/fechas';
+import { diaCorto, diasHasta, hoy, mesActual, nombreMes, nombreMesSolo, sumarMeses } from '../lib/fechas';
 import { dinero, montoATexto, parsearMonto } from '../lib/formato';
 
 function FormProgramado({ programado, onListo }) {
@@ -19,7 +19,9 @@ function FormProgramado({ programado, onListo }) {
   const [nombre, setNombre] = useState(programado?.nombre ?? '');
   const [monto, setMonto] = useState(montoATexto(programado?.monto));
   const [moneda, setMoneda] = useState(programado?.moneda ?? 'ARS');
-  const [frecuencia, setFrecuencia] = useState(programado?.frecuencia ?? 'mensual');
+  // 'mensual', 'cuotas' (un mensual que termina solo) o 'unica'
+  const [modo, setModo] = useState(programado?.cuotas ? 'cuotas' : (programado?.frecuencia ?? 'mensual'));
+  const [cuotas, setCuotas] = useState(programado?.cuotas ?? 6);
   const [dia, setDia] = useState(programado?.dia ?? 10);
   const [fecha, setFecha] = useState(programado?.fecha ?? '');
   const [categoriaId, setCategoriaId] = useState(programado?.categoria.id ?? null);
@@ -28,13 +30,16 @@ function FormProgramado({ programado, onListo }) {
   const [error, setError] = useState(null);
 
   const delTipo = (categorias ?? []).filter((c) => c.tipo === tipo);
-  const mensual = frecuencia === 'mensual';
+  const mensual = modo !== 'unica';
+  const enCuotas = modo === 'cuotas';
+  const frecuencia = mensual ? 'mensual' : 'unica';
   const actual = mesActual();
   const desde = desdeElegido ?? (Number(dia) >= Number(hoy().slice(8)) ? actual : sumarMeses(actual, 1));
 
   const cambiarTipo = (nuevo) => {
     setTipo(nuevo);
     setCategoriaId(null);
+    if (nuevo === 'ingreso' && enCuotas) setModo('mensual');
   };
 
   const enviar = async (metodo, ruta, cuerpo, mensaje) => {
@@ -55,6 +60,7 @@ function FormProgramado({ programado, onListo }) {
     if (!valor) return setError('Ingresá un monto mayor a cero');
     if (!categoriaId) return setError('Elegí una categoría');
     if (!mensual && !fecha) return setError('Elegí la fecha');
+    if (enCuotas && !(Number(cuotas) >= 2 && Number(cuotas) <= 72)) return setError('Las cuotas van de 2 a 72');
     const cuerpo = {
       nombre: nombre.trim(),
       monto: valor,
@@ -63,7 +69,8 @@ function FormProgramado({ programado, onListo }) {
       ...(mensual ? { dia: Number(dia) } : { fecha }),
     };
     if (editando) return enviar('PATCH', `/programados/${programado.id}`, cuerpo, 'Cambios guardados');
-    return enviar('POST', '/programados', { ...cuerpo, tipo, frecuencia, ...(mensual && { desde }) }, `${nombre.trim()} programado`);
+    const extra = { ...(mensual && { desde }), ...(enCuotas && { cuotas: Number(cuotas) }) };
+    return enviar('POST', '/programados', { ...cuerpo, tipo, frecuencia, ...extra }, `${nombre.trim()} programado`);
   };
 
   const terminar = () =>
@@ -89,10 +96,15 @@ function FormProgramado({ programado, onListo }) {
             </button>
           </div>
           <div className="segmentado" role="group" aria-label="Frecuencia">
-            <button type="button" aria-pressed={mensual} onClick={() => setFrecuencia('mensual')}>
+            <button type="button" aria-pressed={modo === 'mensual'} onClick={() => setModo('mensual')}>
               Todos los meses
             </button>
-            <button type="button" aria-pressed={!mensual} onClick={() => setFrecuencia('unica')}>
+            {tipo === 'gasto' && (
+              <button type="button" aria-pressed={enCuotas} onClick={() => setModo('cuotas')}>
+                En cuotas
+              </button>
+            )}
+            <button type="button" aria-pressed={!mensual} onClick={() => setModo('unica')}>
               Una sola vez
             </button>
           </div>
@@ -104,13 +116,13 @@ function FormProgramado({ programado, onListo }) {
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           maxLength={60}
-          placeholder={tipo === 'gasto' ? 'Ej.: Alquiler, Expensas, Luz' : 'Ej.: Sueldo'}
+          placeholder={enCuotas ? 'Ej.: Heladera' : tipo === 'gasto' ? 'Ej.: Alquiler, Expensas, Luz' : 'Ej.: Sueldo'}
           autoFocus={!editando}
         />
       </label>
       <CampoMonto
         id="monto-programado"
-        etiqueta={mensual ? 'Monto estimado' : 'Monto'}
+        etiqueta={enCuotas ? 'Monto de cada cuota' : mensual ? 'Monto estimado' : 'Monto'}
         valor={monto}
         onCambio={setMonto}
         moneda={moneda}
@@ -129,14 +141,25 @@ function FormProgramado({ programado, onListo }) {
           </select>
         </label>
       ) : null}
+      {enCuotas && !editando && (
+        <label className="campo">
+          <span>Cantidad de cuotas</span>
+          <input type="number" inputMode="numeric" min={2} max={72} value={cuotas} onChange={(e) => setCuotas(e.target.value)} />
+        </label>
+      )}
       {mensual && !editando && (
         <label className="campo">
-          <span>Primer vencimiento</span>
+          <span>{enCuotas ? 'Primera cuota' : 'Primer vencimiento'}</span>
           <select value={desde} onChange={(e) => setDesdeElegido(e.target.value)}>
             <option value={actual}>Desde {nombreMesSolo(actual)}</option>
             <option value={sumarMeses(actual, 1)}>Desde {nombreMesSolo(sumarMeses(actual, 1))}</option>
           </select>
         </label>
+      )}
+      {enCuotas && !editando && parsearMonto(monto) > 0 && Number(cuotas) >= 2 && (
+        <p className="tenue">
+          En total {dinero(parsearMonto(monto) * Number(cuotas), moneda)}; la última cuota vence en {nombreMes(sumarMeses(desde, Number(cuotas) - 1))}.
+        </p>
       )}
       {!mensual && (
         <label className="campo">
@@ -163,7 +186,12 @@ function FormProgramado({ programado, onListo }) {
           {editando ? 'Guardar cambios' : 'Programar'}
         </button>
       </div>
-      {editando && mensual && (
+      {editando && enCuotas && (
+        <p className="tenue">
+          {programado.cuotas} cuotas, de {nombreMes(programado.desde)} a {nombreMes(programado.hasta)}.
+        </p>
+      )}
+      {editando && mensual && !enCuotas && (
         <p className="tenue">
           {programado.hasta ? (
             <>
@@ -201,6 +229,8 @@ function estadoDelMes(programado, vencimientos) {
   return programado.tipo === 'gasto' && diasHasta(v.fecha) < 0 ? ESTADOS.vencido : { ...ESTADOS.pendiente, texto: `Pendiente · ${diaCorto(v.fecha)}` };
 }
 
+const etiquetaMes = (v) => (v.cuotas ? `Cuota ${v.cuota}/${v.cuotas}` : nombreMesSolo(mesActual()));
+
 function Lista({ titulo, programados, vencimientos, onElegir, cuando }) {
   if (!programados.length) return null;
   const total = programados.filter((p) => p.moneda === 'ARS').reduce((suma, p) => suma + p.monto, 0);
@@ -224,7 +254,7 @@ function Lista({ titulo, programados, vencimientos, onElegir, cuando }) {
                   </span>
                 </span>
                 <span className="renglon__columna">{p.hasta ? `Hasta ${nombreMesSolo(p.hasta)}` : cuando(p)}</span>
-                <span className={`renglon__columna ${estado?.clase ?? ''}`}>{estado ? `${nombreMesSolo(mesActual())}: ${estado.texto}` : '—'}</span>
+                <span className={`renglon__columna ${estado?.clase ?? ''}`}>{estado ? `${etiquetaMes(vencimientos.get(p.id))}: ${estado.texto}` : '—'}</span>
                 <span className={`importe${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(p.monto, p.moneda)}</span>
               </button>
             </li>
@@ -241,7 +271,8 @@ export default function Fijos() {
   const actual = mesActual();
 
   const vigente = (p) => !p.hasta || p.hasta >= actual;
-  const mensuales = (programados ?? []).filter((p) => p.frecuencia === 'mensual' && vigente(p));
+  const mensuales = (programados ?? []).filter((p) => p.frecuencia === 'mensual' && !p.cuotas && vigente(p));
+  const enCuotas = (programados ?? []).filter((p) => p.cuotas && vigente(p));
   const unicos = (programados ?? []).filter((p) => p.frecuencia === 'unica' && diasHasta(p.fecha) >= -31);
   const terminados = (programados ?? []).filter((p) => p.frecuencia === 'mensual' && !vigente(p));
   const { datos: delMes } = useApi(`/programados/vencimientos?mes=${actual}`);
@@ -259,7 +290,7 @@ export default function Fijos() {
         </button>
       </header>
       <p className="intro">
-        Lo que se paga o se cobra todos los meses, y los pagos únicos que ya saben que vienen. Aparecen en Inicio y en el Calendario para
+        Lo que se paga o se cobra todos los meses, las compras en cuotas y los pagos únicos que ya saben que vienen. Aparecen en Inicio y en el Calendario para
         marcarlos cuando se pagan.
       </p>
       <Estado datos={programados} error={error} reintentar={reintentar}>
@@ -273,6 +304,7 @@ export default function Fijos() {
         )}
         <Lista titulo="Cobros mensuales" programados={mensuales.filter((p) => p.tipo === 'ingreso')} cuando={mensual} {...comunes} />
         <Lista titulo="Pagos mensuales" programados={mensuales.filter((p) => p.tipo === 'gasto')} cuando={mensual} {...comunes} />
+        <Lista titulo="En cuotas" programados={enCuotas} cuando={(p) => `${p.cuotas} cuotas, hasta ${nombreMes(p.hasta)}`} {...comunes} />
         <Lista titulo="Una sola vez" programados={unicos} cuando={(p) => `El ${diaCorto(p.fecha)}`} {...comunes} />
         <Lista titulo="Terminados" programados={terminados} cuando={mensual} {...comunes} />
       </Estado>

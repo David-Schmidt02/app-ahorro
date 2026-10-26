@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models import Moneda
 from app.schemas.categorias import CategoriaBreve
@@ -8,6 +8,7 @@ from app.schemas.programados import VencimientoOut
 class CategoriaDelMes(BaseModel):
     categoria: CategoriaBreve
     gastado: float
+    gastado_programado: float = Field(description="Parte de lo gastado que salda pagos programados")
     pendiente: float
     presupuesto: float | None
 
