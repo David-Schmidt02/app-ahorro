@@ -98,7 +98,7 @@ function Presupuesto({ f, avance }) {
 }
 
 /** Reparto del gasto del mes por categoría, con presupuesto y pendientes de cada una. */
-export default function Torta({ categorias, titulo = 'En qué se va la plata', elegida = null, onElegir = null }) {
+export default function Torta({ categorias, titulo = 'En qué se va la plata', elegida = null, onElegir = null, llena = false }) {
   const [activa, setActiva] = useState(null);
   const [todas, setTodas] = useState(false);
   const avance = avanceDelMes(useApp().mes);
@@ -118,7 +118,7 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
   const puedeExpandir = todas || agrupadas > 0 || categorias.some((c) => c.gastado === 0 && (c.presupuesto || c.pendiente));
 
   return (
-    <section className="tarjeta grafico-torta">
+    <section className={`tarjeta grafico-torta${llena ? ' tarjeta--llena' : ''}`}>
       <header className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo">{titulo}</h2>
         {puedeExpandir && (

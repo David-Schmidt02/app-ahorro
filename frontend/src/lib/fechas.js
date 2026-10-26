@@ -74,3 +74,17 @@ export function cuandoVence(iso) {
 export function avanceDelMes(mes) {
   return mes === mesActual() ? { dia: Number(hoy().slice(8)), dias: diasDelMes(mes) } : null;
 }
+
+export function sumarDias(iso, n) {
+  const fecha = deISO(iso);
+  fecha.setDate(fecha.getDate() + n);
+  return aISO(fecha);
+}
+
+/** "Hoy", "Ayer", "Mañana" o "jueves 12 de noviembre" (con el año si no es el actual). */
+export function fechaLegible(iso) {
+  const relativa = { [hoy()]: 'Hoy', [ayer()]: 'Ayer', [sumarDias(hoy(), 1)]: 'Mañana' }[iso];
+  const fecha = deISO(iso);
+  const larga = `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${nombreMes(mesDe(iso))}`;
+  return relativa ? `${relativa}, ${larga}` : larga;
+}

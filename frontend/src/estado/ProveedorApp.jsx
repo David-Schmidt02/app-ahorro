@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import FormMovimiento from '../componentes/FormMovimiento';
 import FormPago from '../componentes/FormPago';
+import FormRegistro from '../componentes/FormRegistro';
 import Hoja from '../componentes/Hoja';
 import { mesActual } from '../lib/fechas';
 import { tituloVencimiento } from '../lib/formato';
@@ -32,8 +32,8 @@ export default function ProveedorApp({ children }) {
       version,
       refrescar,
       avisar,
-      /** Sin argumentos: carga rápida. Con { movimiento }: edición. Con { tipo }: tipo inicial. */
-      abrirCarga: (opciones = {}) => setHoja({ clase: 'movimiento', id: Date.now(), ...opciones }),
+      /** Sin argumentos: carga rápida. Con { movimiento } o { programado }: edición. Con { tipo, modo }: alta con esos valores. */
+      abrirCarga: (opciones = {}) => setHoja({ clase: 'registro', id: Date.now(), ...opciones }),
       abrirPago: (vencimiento) => setHoja({ clase: 'pago', id: Date.now(), vencimiento }),
     }),
     [mes, version, refrescar, avisar],
@@ -44,14 +44,25 @@ export default function ProveedorApp({ children }) {
       ? tituloVencimiento(hoja.vencimiento)
       : hoja?.movimiento
         ? 'Editar movimiento'
-        : 'Cargar movimiento';
+        : hoja?.programado
+          ? hoja.programado.nombre
+          : 'Cargar';
 
   return (
     <AppContexto.Provider value={valor}>
       {children}
       <Hoja titulo={titulo} abierta={Boolean(hoja)} onCerrar={cerrarHoja}>
         {hoja?.clase === 'pago' && <FormPago key={hoja.id} vencimiento={hoja.vencimiento} onListo={cerrarHoja} />}
-        {hoja?.clase === 'movimiento' && <FormMovimiento key={hoja.id} movimiento={hoja.movimiento} tipoInicial={hoja.tipo} onListo={cerrarHoja} />}
+        {hoja?.clase === 'registro' && (
+          <FormRegistro
+            key={hoja.id}
+            movimiento={hoja.movimiento}
+            programado={hoja.programado}
+            tipoInicial={hoja.tipo}
+            modoInicial={hoja.modo}
+            onListo={cerrarHoja}
+          />
+        )}
       </Hoja>
       <div className="aviso-zona" aria-live="polite">
         {aviso && (

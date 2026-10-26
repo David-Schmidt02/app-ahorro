@@ -14,6 +14,8 @@
   --verde-suave: #dcf1e6;
   --ambar: #c98418;
   --ambar-texto: #8f5d0a;
+  --scroll: color-mix(in srgb, var(--birome) 35%, transparent);
+  --scroll-activo: color-mix(in srgb, var(--birome) 65%, transparent);
   --sombra: 0 1px 2px rgb(22 35 58 / 6%), 0 8px 24px -12px rgb(22 35 58 / 18%);
   --serie-ingresos: #16865a;
   --serie-gastos: #2443c4;
@@ -67,6 +69,16 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+}
+
+/* Barras de desplazamiento finas en tinta birome; más marcadas al pasar por encima */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll) transparent;
+}
+
+*:hover {
+  scrollbar-color: var(--scroll-activo) transparent;
 }
 
 body {
@@ -143,7 +155,8 @@ a {
 }
 
 .nav__marca,
-.nav__enlace.solo-escritorio {
+.nav__enlace.solo-escritorio,
+.nav__pie {
   display: none;
 }
 
@@ -245,6 +258,38 @@ a {
 
   .nav__cargar span {
     display: inline;
+  }
+
+  .nav__pie {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-3);
+    margin-top: auto;
+    padding-top: var(--espacio-4);
+    border-top: 1px solid var(--renglon);
+  }
+
+  .nav__cuenta {
+    display: flex;
+    align-items: center;
+    gap: var(--espacio-2);
+    min-width: 0;
+  }
+
+  .nav__usuario {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  .nav__usuario > span {
+    overflow: hidden;
+    font-size: 12.5px;
+    color: var(--tinta-3);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .marco {
@@ -384,6 +429,7 @@ a {
 /* ---------- Tarjeta: el único contenedor con fondo de hoja ---------- */
 
 .tarjeta {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--espacio-3);
@@ -438,7 +484,7 @@ a {
 
 .titular__monto {
   font-family: var(--f-display);
-  font-size: clamp(40px, 12vw, 56px);
+  font-size: clamp(34px, 15cqi, 56px);
   font-weight: 650;
   letter-spacing: -0.035em;
   line-height: 1;
@@ -736,9 +782,13 @@ a {
 
 /* ---------- Libreta de movimientos ---------- */
 
+/* El margen rojo de la libreta es parte del fondo: sigue al contenido cuando la libreta se desplaza por dentro */
 .libreta {
-  position: relative;
-  background: var(--hoja);
+  container-type: inline-size;
+  background:
+    linear-gradient(to right, transparent 62px, color-mix(in srgb, var(--margen) 55%, transparent) 62px 63.5px, transparent 63.5px)
+      local,
+    var(--hoja);
   border-radius: var(--radio);
   box-shadow: var(--sombra);
   overflow: hidden;
@@ -746,17 +796,6 @@ a {
 
 .libreta:empty {
   display: none;
-}
-
-/* El margen rojo de la libreta: los íconos quedan del lado de afuera */
-.libreta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 62px;
-  width: 1.5px;
-  background: color-mix(in srgb, var(--margen) 55%, transparent);
 }
 
 .libreta__dia + .libreta__dia {
@@ -963,19 +1002,190 @@ input[type='checkbox'] {
   font-weight: 700;
 }
 
-.fila-fecha {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+.segmentado--modos button {
+  flex: 1;
+  padding-inline: 6px;
 }
 
-.fila-fecha input {
-  flex: 1;
+/* ---------- Selectores desplegables (categoría, fecha, día del mes) ---------- */
+
+.desplegable {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   min-width: 0;
 }
 
-.fila-fecha .campo-cuotas {
-  flex: 0 0 5.5em;
+.desplegable__etiqueta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-2);
+}
+
+.desplegable__disparador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px 0 8px;
+  border: 1.5px solid var(--renglon);
+  border-radius: 11px;
+  background: var(--hoja);
+  text-align: left;
+}
+
+.desplegable__disparador > svg:first-child {
+  margin-left: 4px;
+  color: var(--tinta-2);
+}
+
+.desplegable.es-abierto .desplegable__disparador {
+  border-color: var(--birome);
+}
+
+.desplegable__valor {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desplegable__valor::first-letter {
+  text-transform: uppercase;
+}
+
+.desplegable__flecha {
+  flex: none;
+  color: var(--tinta-3);
+  transition: transform 0.15s ease;
+}
+
+.desplegable.es-abierto .desplegable__flecha {
+  transform: rotate(180deg);
+}
+
+.desplegable__panel {
+  padding: var(--espacio-2);
+  border: 1.5px solid var(--renglon);
+  border-radius: 12px;
+  background: var(--hoja);
+  box-shadow: var(--sombra);
+  animation: desplegar 0.14s ease-out;
+}
+
+@keyframes desplegar {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.lista-opciones {
+  display: flex;
+  flex-direction: column;
+  max-height: 264px;
+  overflow-y: auto;
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+}
+
+.opcion:hover {
+  background: var(--papel);
+}
+
+.opcion[aria-selected='true'] {
+  background: var(--birome-suave);
+  font-weight: 700;
+}
+
+.opcion > span:not(.icono-categoria) {
+  flex: 1;
+}
+
+.opcion__marca {
+  color: var(--birome);
+}
+
+.almanaque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.almanaque__atajos {
+  display: flex;
+  gap: var(--espacio-2);
+}
+
+.almanaque__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.almanaque__mes {
+  font-family: var(--f-display);
+  font-weight: 650;
+}
+
+.almanaque__mes::first-letter {
+  text-transform: uppercase;
+}
+
+.almanaque__grilla {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.almanaque__semana {
+  padding-bottom: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--tinta-3);
+}
+
+.almanaque__dia {
+  aspect-ratio: 1;
+  max-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+}
+
+.almanaque__dia:hover {
+  background: var(--papel);
+}
+
+.almanaque__dia.es-hoy {
+  box-shadow: inset 0 0 0 1.5px var(--birome);
+  color: var(--birome);
+  font-weight: 700;
+}
+
+.almanaque__dia[aria-pressed='true'] {
+  background: var(--birome);
+  color: var(--hoja);
+  font-weight: 700;
+}
+
+.almanaque__nota {
+  padding: var(--espacio-1) var(--espacio-1) 0;
+  font-size: 13px;
 }
 
 .colores {
@@ -1591,7 +1801,8 @@ input[type='checkbox'] {
   color: var(--tinta-3);
 }
 
-@media (min-width: 1100px) {
+/* Según el ancho de la tarjeta, no de la pantalla: en Inicio hay tres columnas angostas */
+@container (min-width: 560px) {
   .renglon--tabla {
     display: grid;
     grid-template-columns: 38px minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.4fr) minmax(96px, auto);
@@ -1806,7 +2017,7 @@ input[type='checkbox'] {
   color: color-mix(in srgb, var(--color) 82%, var(--tinta));
 }
 
-/* ---------- Estados ---------- */
+/* ---------- Vacío y cargando ---------- */
 
 .vacio {
   align-items: center;
@@ -1899,6 +2110,145 @@ input[type='checkbox'] {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- Escritorio: cada sección entra en la ventana ---------- */
+/* La página no se desplaza: cada columna lo hace por su cuenta, y las tarjetas --llena reparten el alto y desplazan su lista. */
+
+@media (min-width: 1100px) {
+  .contenido {
+    max-width: 1480px;
+  }
+
+  /* Inicio con dos columnas: el mes a la izquierda; pagos arriba y torta abajo a la derecha */
+  .tablero--tres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tablero--tres > :first-child {
+    grid-row: span 2;
+  }
+}
+
+@media (min-width: 1400px) {
+  .tablero--tres {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .tablero--tres > :first-child {
+    grid-row: auto;
+  }
+}
+
+@media (min-width: 1100px) and (min-height: 600px) {
+  .marco,
+  .contenido {
+    height: 100dvh;
+  }
+
+  .contenido {
+    overflow: hidden;
+    padding-block: 28px;
+  }
+
+  .pantalla {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .tablero.pantalla,
+  .dos-columnas.pantalla {
+    align-items: stretch;
+  }
+
+  .tablero--tres.pantalla {
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Cada columna se desplaza sola; el margen evita que el desplazamiento corte las sombras */
+  .pantalla > :where(.pila, .tablero__columna) {
+    min-height: 0;
+    overflow-y: auto;
+    margin: -8px;
+    padding: 8px;
+  }
+
+  .pantalla .lateral,
+  .pantalla .lateral-fijo {
+    position: static;
+  }
+
+  .tarjeta--llena,
+  .tablero__celda--llena {
+    flex: 1 1 0;
+    min-height: 220px;
+  }
+
+  .desplazable {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Con dos columnas la torta comparte columna con los pagos: no llena, la columna se desplaza */
+  .grafico-torta.tarjeta--llena,
+  .tablero__celda--llena:has(> .grafico-torta) {
+    flex: none;
+  }
+
+  /* La libreta ocupa el alto que queda y desplaza los movimientos adentro */
+  .pantalla .libreta {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .pantalla > .pila:has(> .libreta) {
+    overflow: hidden;
+  }
+
+  /* El almanaque estira sus semanas hasta llenar la columna */
+  .pantalla .grilla {
+    flex: 1 1 0;
+    min-height: 420px;
+    grid-template-rows: auto;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  .pantalla .grilla__dia {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* Con tres columnas la torta tiene la suya: la llena y desplaza solo la lista */
+@media (min-width: 1400px) and (min-height: 600px) {
+  .tablero--tres.pantalla {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .grafico-torta.tarjeta--llena,
+  .tablero__celda--llena:has(> .grafico-torta) {
+    flex: 1 1 0;
+  }
+
+  .grafico-torta.tarjeta--llena .grafico-torta__cuerpo {
+    flex: 1 1 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 0;
+  }
+
+  .grafico-torta.tarjeta--llena .grafico-torta__svg {
+    flex: none;
+  }
+
+  .grafico-torta.tarjeta--llena .torta-filas {
+    flex: 1 1 0;
+    align-self: stretch;
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 

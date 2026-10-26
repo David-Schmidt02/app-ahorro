@@ -3,6 +3,7 @@ import { Externos, Suscripcion } from '../componentes/Calendarios';
 import CampoMonto from '../componentes/CampoMonto';
 import Estado from '../componentes/Estado';
 import Icono from '../componentes/Icono';
+import { CALENDARIOS_CONECTADOS_HABILITADOS } from '../config/features';
 import { useApp, useSesion } from '../estado/contextos';
 import { TEMAS, useTema } from '../estado/tema';
 import { useApi } from '../estado/useApi';
@@ -48,10 +49,11 @@ function Objetivo({ preferencias }) {
   );
 }
 
+/** En escritorio el tema y la cuenta están al pie de la barra lateral. */
 function Apariencia() {
   const [tema, setTema] = useTema();
   return (
-    <section className="tarjeta">
+    <section className="tarjeta solo-celular">
       <h2 className="tarjeta__titulo">Apariencia</h2>
       <div className="segmentado" role="group" aria-label="Tema">
         {TEMAS.map((t) => (
@@ -131,19 +133,19 @@ export default function Ajustes() {
       <header className="cabecera">
         <h1 className="cabecera__titulo">Ajustes</h1>
       </header>
-      <div className="dos-columnas dos-columnas--parejas">
+      <div className="dos-columnas dos-columnas--parejas pantalla">
         <div className="pila">
           <Estado datos={preferencias} error={error} reintentar={reintentar}>
             {preferencias && <Objetivo preferencias={preferencias} />}
           </Estado>
           <Apariencia />
-          <Suscripcion />
+          {CALENDARIOS_CONECTADOS_HABILITADOS && <Suscripcion />}
         </div>
         <div className="pila">
-          <Externos />
+          {CALENDARIOS_CONECTADOS_HABILITADOS && <Externos />}
           <Dolar />
           <Respaldo />
-          <section className="tarjeta">
+          <section className="tarjeta solo-celular">
             <h2 className="tarjeta__titulo">Cuenta</h2>
             <p>
               {usuario.nombre} <span className="tenue">· {usuario.email}</span>

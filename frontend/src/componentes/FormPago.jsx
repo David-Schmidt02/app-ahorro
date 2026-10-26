@@ -5,6 +5,7 @@ import { diaCorto, hoy, mesDe } from '../lib/fechas';
 import { dinero, montoATexto, parsearMonto } from '../lib/formato';
 import CampoMonto from './CampoMonto';
 import { IconoCategoria } from './Icono';
+import { SelectorFecha } from './Selectores';
 
 /** Marca un vencimiento como pagado (o cobrado), con el monto real. */
 export default function FormPago({ vencimiento, onListo }) {
@@ -42,10 +43,7 @@ export default function FormPago({ vencimiento, onListo }) {
         {dinero(vencimiento.monto, vencimiento.moneda)}
       </p>
       <CampoMonto id="monto-pago" etiqueta={esIngreso ? 'Monto cobrado' : 'Monto pagado'} valor={monto} onCambio={setMonto} moneda={vencimiento.moneda} autoFocus />
-      <label className="campo">
-        <span>{esIngreso ? 'Fecha de cobro' : 'Fecha de pago'}</span>
-        <input type="date" value={fecha} onChange={(e) => e.target.value && setFecha(e.target.value)} required />
-      </label>
+      <SelectorFecha etiqueta={esIngreso ? 'Fecha de cobro' : 'Fecha de pago'} valor={fecha} onCambio={setFecha} atajos />
       {error && (
         <p className="error" role="alert">
           {error}

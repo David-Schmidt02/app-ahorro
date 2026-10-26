@@ -64,7 +64,7 @@ function Libreta() {
   };
 
   return (
-    <div className="dos-columnas">
+    <div className="dos-columnas pantalla">
       <div className="pila">
         <div className="segmentado segmentado--filtro" role="group" aria-label="Filtrar">
           {FILTROS.map((f) => (

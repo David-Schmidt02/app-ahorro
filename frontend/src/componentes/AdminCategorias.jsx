@@ -133,14 +133,14 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
 
 function Grupo({ titulo, tipo, categorias, gastadoPorId, mes, onEditar, onNueva }) {
   return (
-    <section className="tarjeta">
+    <section className="tarjeta tarjeta--llena">
       <header className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo">{titulo}</h2>
         <button type="button" className="boton boton--chico" onClick={() => onNueva(tipo)}>
           <Icono nombre="mas" tamano={16} grosor={2.4} /> Nueva
         </button>
       </header>
-      <ul className="renglones">
+      <ul className="renglones desplazable">
         <li className="renglon renglon--categoria renglon--encabezado" aria-hidden="true">
           <span />
           <span>Categoría</span>
@@ -186,9 +186,13 @@ export default function AdminCategorias() {
   return (
     <Estado datos={categorias} error={error} reintentar={reintentar}>
       {categorias && (
-        <div className="dos-columnas dos-columnas--parejas">
-          <Grupo titulo="Categorías de gastos" tipo="gasto" categorias={categorias.filter((c) => c.tipo === 'gasto')} {...comunes} />
-          <Grupo titulo="Categorías de ingresos" tipo="ingreso" categorias={categorias.filter((c) => c.tipo === 'ingreso')} {...comunes} />
+        <div className="dos-columnas dos-columnas--parejas pantalla">
+          <div className="pila">
+            <Grupo titulo="Categorías de gastos" tipo="gasto" categorias={categorias.filter((c) => c.tipo === 'gasto')} {...comunes} />
+          </div>
+          <div className="pila">
+            <Grupo titulo="Categorías de ingresos" tipo="ingreso" categorias={categorias.filter((c) => c.tipo === 'ingreso')} {...comunes} />
+          </div>
         </div>
       )}
       <Hoja titulo={hoja?.categoria ? hoja.categoria.nombre : 'Nueva categoría'} abierta={Boolean(hoja)} onCerrar={() => setHoja(null)}>

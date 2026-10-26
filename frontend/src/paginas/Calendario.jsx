@@ -3,6 +3,8 @@ import Estado from '../componentes/Estado';
 import Hoja from '../componentes/Hoja';
 import Icono, { IconoEvento } from '../componentes/Icono';
 import SelectorMes from '../componentes/SelectorMes';
+import { CALENDARIOS_CONECTADOS_HABILITADOS } from '../config/features';
+import { SelectorFecha } from '../componentes/Selectores';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
@@ -73,16 +75,11 @@ function FormEvento({ evento, fechaInicial, onListo }) {
           ))}
         </div>
       </fieldset>
-      <div className="campos-en-fila">
-        <label className="campo">
-          <span>Fecha</span>
-          <input type="date" value={fecha} onChange={(e) => e.target.value && setFecha(e.target.value)} required />
-        </label>
-        <label className="campo">
-          <span>Hora (opcional)</span>
-          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-        </label>
-      </div>
+      <SelectorFecha valor={fecha} onCambio={setFecha} />
+      <label className="campo">
+        <span>Hora (opcional)</span>
+        <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+      </label>
       <label className="interruptor">
         <input type="checkbox" checked={anual} onChange={(e) => setAnual(e.target.checked)} />
         <span>Se repite todos los años</span>
@@ -225,6 +222,10 @@ function Anotaciones({ vencimientos, eventos, externos = [], conFecha = false, o
   );
 }
 
+// Con el flag apagado la API igual responde `externos`, pero no se muestran
+const externosDe = (datos) => (CALENDARIOS_CONECTADOS_HABILITADOS ? (datos?.externos ?? []) : []);
+const erroresExternosDe = (datos) => (CALENDARIOS_CONECTADOS_HABILITADOS ? (datos?.externos_con_error ?? []) : []);
+
 const manana = () => {
   const fecha = deISO(hoy());
   fecha.setDate(fecha.getDate() + 1);
@@ -235,14 +236,15 @@ const manana = () => {
 function Proximos({ onEvento }) {
   const { datos } = useApi(`/proximos?desde=${manana()}&dias=7`);
   if (!datos) return null;
-  const vacio = !datos.vencimientos.length && !datos.eventos.length && !datos.externos.length;
+  const externos = externosDe(datos);
+  const vacio = !datos.vencimientos.length && !datos.eventos.length && !externos.length;
   return (
     <section className="tarjeta">
       <h2 className="tarjeta__titulo">Próximos 7 días</h2>
       {vacio ? (
         <p className="tenue">Nada para pagar ni eventos hasta el {diaCorto(datos.hasta)}.</p>
       ) : (
-        <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} externos={datos.externos} conFecha onEvento={onEvento} />
+        <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} externos={externos} conFecha onEvento={onEvento} />
       )}
     </section>
   );
@@ -262,7 +264,7 @@ export default function Calendario() {
   };
   for (const v of datos?.vencimientos ?? []) anotar(v.fecha, 'vencimientos', v);
   for (const e of datos?.eventos ?? []) anotar(e.dia, 'eventos', e);
-  for (const e of datos?.externos ?? []) anotar(e.dia, 'externos', e);
+  for (const e of externosDe(datos)) anotar(e.dia, 'externos', e);
   const delDia = porDia.get(seleccionado) ?? { vencimientos: [], eventos: [], externos: [] };
   const vacio = !delDia.vencimientos.length && !delDia.eventos.length && !delDia.externos.length;
   const editarEvento = (e) => setHoja({ id: e.id, evento: e });
@@ -273,7 +275,7 @@ export default function Calendario() {
         <SelectorMes />
       </header>
       <Estado datos={datos} error={error} reintentar={reintentar}>
-        <div className="dos-columnas">
+        <div className="dos-columnas pantalla">
           <div className="pila">
             <Grilla mes={mes} porDia={porDia} seleccionado={seleccionado} onElegir={setElegido} />
             <ul className="referencias" aria-label="Referencias">
@@ -292,15 +294,15 @@ export default function Calendario() {
               <li>
                 <i className="punto punto--evento" /> Evento
               </li>
-              {datos?.externos.length > 0 && (
+              {externosDe(datos).length > 0 && (
                 <li>
                   <i className="punto punto--externo" /> De otro calendario
                 </li>
               )}
             </ul>
-            {datos?.externos_con_error.length > 0 && (
+            {erroresExternosDe(datos).length > 0 && (
               <p className="tenue" role="status">
-                No se pudo leer {datos.externos_con_error.map((n) => `«${n}»`).join(', ')}: sus eventos pueden faltar o estar desactualizados.
+                No se pudo leer {erroresExternosDe(datos).map((n) => `«${n}»`).join(', ')}: sus eventos pueden faltar o estar desactualizados.
               </p>
             )}
           </div>

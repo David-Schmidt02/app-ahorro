@@ -87,28 +87,31 @@ function Pendientes({ vencimientos }) {
   if (!vencimientos.length) return null;
 
   return (
-    <section className="tarjeta">
+    <section className="tarjeta tarjeta--llena">
       <h2 className="tarjeta__titulo">Pagos y cobros del mes</h2>
-      {pendientes.length === 0 && <p className="tenue">Todo lo programado para este mes ya está registrado.</p>}
-      <ul className="renglones">
-        {pendientes.map((v) => (
-          <Vencimiento key={v.programado_id} v={v} />
-        ))}
-      </ul>
-      {pagados.length > 0 && (
-        <>
-          <button type="button" className="enlace-boton" onClick={() => setVerPagados((x) => !x)} aria-expanded={verPagados}>
-            {verPagados ? 'Ocultar' : 'Ver'} {pagados.length} ya registrado{pagados.length > 1 ? 's' : ''}
-          </button>
-          {verPagados && (
-            <ul className="renglones es-hecho">
-              {pagados.map((v) => (
-                <Vencimiento key={v.programado_id} v={v} />
-              ))}
-            </ul>
-          )}
-        </>
-      )}
+      <div className="desplazable">
+        {pendientes.length === 0 && <p className="tenue">Todo lo programado para este mes ya está registrado.</p>}
+        <ul className="renglones">
+          {pendientes.map((v) => (
+            <Vencimiento key={v.programado_id} v={v} />
+          ))}
+        </ul>
+        {pagados.length > 0 && (
+          <>
+            <button type="button" className="enlace-boton" onClick={() => setVerPagados((x) => !x)} aria-expanded={verPagados}>
+              {verPagados ? 'Ocultar' : 'Ver'} {pagados.length} ya registrado
+              {pagados.length > 1 ? 's' : ''}
+            </button>
+            {verPagados && (
+              <ul className="renglones es-hecho">
+                {pagados.map((v) => (
+                  <Vencimiento key={v.programado_id} v={v} />
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
     </section>
   );
 }
@@ -148,11 +151,8 @@ export default function Inicio() {
       </header>
       <Estado datos={resumen} error={error} reintentar={reintentar}>
         {resumen && (
-          <div className="tablero">
+          <div className="tablero tablero--tres pantalla">
             <div className="tablero__columna">
-              <div className="tablero__celda" style={{ '--orden': 0 }}>
-                <CierreMes />
-              </div>
               <section className="tarjeta tarjeta--mes" style={{ '--orden': 1 }}>
                 <Titular resumen={resumen} esActual={esActual} />
                 <BarraMes resumen={resumen} />
@@ -171,16 +171,21 @@ export default function Inicio() {
                   </div>
                 </dl>
               </section>
-              <div className="tablero__celda" style={{ '--orden': 2 }}>
-                <Pendientes vencimientos={resumen.vencimientos} />
-              </div>
               <div className="tablero__celda" style={{ '--orden': 4 }}>
                 <Evolucion />
               </div>
             </div>
             <div className="tablero__columna">
-              <div className="tablero__celda" style={{ '--orden': 3 }}>
-                <Torta categorias={resumen.categorias} />
+              <div className="tablero__celda" style={{ '--orden': 0 }}>
+                <CierreMes />
+              </div>
+              <div className="tablero__celda tablero__celda--llena" style={{ '--orden': 2 }}>
+                <Pendientes vencimientos={resumen.vencimientos} />
+              </div>
+            </div>
+            <div className="tablero__columna">
+              <div className="tablero__celda tablero__celda--llena" style={{ '--orden': 3 }}>
+                <Torta categorias={resumen.categorias} llena />
               </div>
               {resumen.gastos_mes_anterior > 0 && (
                 <p className="pie" style={{ '--orden': 5 }}>

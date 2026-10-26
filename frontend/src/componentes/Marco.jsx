@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { MASCOTA_HABILITADA } from '../config/features';
-import { useApp } from '../estado/contextos';
+import { useApp, useSesion } from '../estado/contextos';
+import { TEMAS, useTema } from '../estado/tema';
 import Icono from './Icono';
 import Marca from './Marca';
 import Mascota from './Mascota';
@@ -19,6 +20,32 @@ function Enlace({ seccion, className = '' }) {
       <Icono nombre={seccion.icono} />
       <span>{seccion.nombre}</span>
     </NavLink>
+  );
+}
+
+/** Pie de la barra lateral (solo escritorio): tema y cuenta. En el celular están en Ajustes. */
+function PieNav() {
+  const { usuario, salir } = useSesion();
+  const [tema, setTema] = useTema();
+  return (
+    <div className="nav__pie">
+      <div className="segmentado segmentado--chico" role="group" aria-label="Tema">
+        {TEMAS.map((t) => (
+          <button key={t.valor} type="button" aria-pressed={tema === t.valor} onClick={() => setTema(t.valor)} aria-label={t.nombre} title={t.nombre}>
+            <Icono nombre={t.icono} tamano={16} />
+          </button>
+        ))}
+      </div>
+      <div className="nav__cuenta">
+        <span className="nav__usuario">
+          <strong>{usuario.nombre}</strong>
+          <span>{usuario.email}</span>
+        </span>
+        <button type="button" className="boton-icono" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
+          <Icono nombre="salir" tamano={18} />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -45,6 +72,7 @@ export default function Marco() {
         <Enlace seccion={SECCIONES[3]} />
         {/* En el celular Ajustes se abre desde el engranaje de Inicio */}
         <Enlace seccion={SECCIONES[4]} className="solo-escritorio" />
+        <PieNav />
       </nav>
       <main className="contenido">
         <Outlet />
