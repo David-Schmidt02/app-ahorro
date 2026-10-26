@@ -1,30 +1,19 @@
 {
-  "name": "frontend",
+  "name": "app-ahorro-frontend",
   "private": true,
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "vite preview --host 0.0.0.0 --port ${PORT:-4173}",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^7.3.8",
-    "@mui/material": "^7.3.8",
-    "axios": "^1.13.5",
     "canvas-confetti": "^1.9.4",
-    "jwt-decode": "^4.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.0",
-    "recharts": "^3.7.0",
-    "sweetalert2": "^11.26.20"
+    "react-router-dom": "^7.13.0"
   },
   "engines": {
     "node": ">=20.18.0"

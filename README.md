@@ -1,251 +1,87 @@
-# App de Ahorro - Savings Goal Tracker
+# Ahorro
 
-> **Versión** 1.1.0 · **Última actualización** 2026-10-25
+> **Versión** 2.0.0 · **Última actualización** 2026-10-25
+
+Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y únicos programados, calendario de vencimientos y eventos, y un objetivo de ahorro mensual.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
-| 1.1.0 | 2026-10-25 | Solo SQLite (sin Alembic ni Postgres); en Railway requiere volumen en `/data` y `DATABASE_URL=sqlite:////data/app_ahorro.db`. Mascota desactivada por flag (`frontend/src/config/features.js`). Se vuelve atrás con 1.0.0 (commit `0e30a9f`). |
+| 2.0.0 | 2026-10-25 | Reescritura completa: hogar compartido, carga rápida, pagos programados (mensuales y únicos), resumen del mes con objetivo de ahorro, calendario, sueldos. Un solo servicio (FastAPI sirve el frontend). Base nueva, sin migrar datos. Se vuelve atrás con 1.1.0 (`c7d5f08`), que es otra base y otro esquema de servicios. |
+| 1.1.0 | 2026-10-25 | Solo SQLite (sin Alembic ni Postgres). Mascota desactivada por flag. |
 | 1.0.0 | — | Versión con Postgres + Alembic. |
 
-Aplicación web para trackear ahorros y alcanzar objetivos financieros. Uso personal para 2 usuarios.
+## Qué hace
 
-## Usuario de Test (local)
+- **Inicio**: cuánto les queda en el mes si se paga todo lo programado, contra el objetivo de ahorro. La barra muestra lo gastado, lo comprometido sin pagar (rayado) y la marca del objetivo. Debajo, los pagos y cobros pendientes (se marcan con un toque) y el gasto por categoría contra su presupuesto.
+- **Cargar** (botón +): monto, categoría y listo. Recuerda la última categoría usada; admite pesos o dólares (se pasan a pesos con el blue del día o con la cotización que se cargue).
+- **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra.
+- **Fijos**: alquiler, expensas, servicios, sueldos (todos los meses, un día dado) y pagos únicos con fecha. Al registrarlos se carga el monto real.
+- **Calendario**: vencimientos del mes (a pagar, vencidos, a cobrar, registrados) y eventos propios (cumpleaños y aniversarios anuales, salidas, recordatorios).
+- **Ajustes**: objetivo de ahorro mensual (en pesos o dólares), categorías con emoji, color y presupuesto, cotización del blue y cuenta.
 
-| Campo | Valor |
+Las dos cuentas comparten todos los datos. El registro queda abierto hasta que existen 2 cuentas (`MAX_USUARIOS`) y después se cierra solo.
+
+## Stack
+
+| Parte | Tecnología |
 |---|---|
-| Email | `test@test.com` |
-| Contraseña | `test1234` |
-| Nombre | `David` |
+| Backend | FastAPI, SQLAlchemy 2, Pydantic 2, SQLite, `uv` |
+| Frontend | React 19 + Vite, CSS propio (sin librería de componentes), instalable como app (manifest) |
+| Cotización | [dolarapi.com](https://dolarapi.com) (blue), guardada en la base y renovada cada 6 h |
+| Deploy | Railway, un servicio con `Dockerfile` en la raíz y un volumen para la base |
 
-> Para recrearlo: `cd backend && venv\Scripts\python.exe reset_db.py`
+No hay migraciones: las tablas se crean al iniciar (`Base.metadata.create_all`). Si cambia el modelo hay que adaptar la base a mano o empezar una nueva.
 
----
+## Desarrollo local
 
-## Stack Técnico
+```bash
+# API en :8000 (crea backend/app_ahorro.db)
+cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
 
-### Backend: FastAPI (Python)
-**Por qué FastAPI:**
-- Moderno y rápido: alto rendimiento comparable a Node.js
-- Documentación automática: Swagger UI incluido out-of-the-box
-- Type hints nativos: validación automática de datos con Pydantic
-- Fácil de aprender: sintaxis simple y pythonic
-- Async support: manejo eficiente de requests concurrentes
-- Preferencia del equipo: conocimiento previo de Python
+# Frontend en :5173, con proxy de /api a :8000
+cd frontend && npm install && npm run dev
+```
 
-**Alternativa descartada:** Flask (más minimalista pero menos features incluidos)
+Abrir http://localhost:5173 y crear la cuenta. Para empezar de cero, borrar `backend/app_ahorro.db*`.
 
-### Frontend: React
-**Por qué React:**
-- Lightweight: más simple que Angular para proyectos pequeños
-- Ecosystem maduro: abundancia de librerías y recursos
-- Component-based: fácil de organizar y mantener
-- Curva de aprendizaje razonable: documentación excelente
-- Deploy sencillo: integración directa con plataformas modernas
+```bash
+cd backend && uv run pytest -q     # tests de la API
+cd frontend && npm run lint        # lint del frontend
+```
 
-**Alternativa descartada:** Angular (demasiado pesado para 2 usuarios, mayor complejidad)
+## Configuración
 
-### Base de Datos: SQLite
-**Por qué SQLite:**
-- Cero infraestructura: un único archivo, sin servidor de base de datos
-- Suficiente para 2 usuarios
-- Mismo motor en desarrollo y producción
-- Sin migraciones: las tablas se crean al iniciar el backend (`create_tables()`)
+Variables de entorno (o `backend/.env` en local):
 
-**Persistencia en Railway:** el archivo vive en un volumen montado en `/data`, con
-`DATABASE_URL=sqlite:////data/app_ahorro.db`. Sin volumen, la base se pierde en cada deploy.
+| Variable | Default | Uso |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///backend/app_ahorro.db` | En Railway: `sqlite:////data/app_ahorro.db` |
+| `SECRET_KEY` | clave de desarrollo | **Obligatoria en producción**; firma las sesiones |
+| `TOKEN_DIAS` | `30` | Duración de la sesión |
+| `MAX_USUARIOS` | `2` | Cuentas permitidas |
 
-### Deployment: Railway
-**Por qué Railway:**
-- Deploy automático desde Git
-- Tier gratuito razonable
-- Volúmenes persistentes para el archivo SQLite
-- Configuración mínima
-- CLI simple para management
+## Deploy en Railway
 
-### Autenticación
-Sistema básico de login con:
-- Contraseñas hasheadas (bcrypt)
-- 2 usuarios hardcoded
-- No requiere OAuth ni sistemas complejos
+1. Un solo servicio apuntando a la raíz del repo; usa `Dockerfile` y `railway.json`.
+2. Volumen montado en `/data`.
+3. Variables `DATABASE_URL=sqlite:////data/app_ahorro.db` y `SECRET_KEY` (una cadena larga al azar).
+4. Healthcheck en `/health`.
 
-## Modelo de Dominio
-
-### Entidades
-
-**Objetivo**
-- `nombre`: str - Nombre descriptivo del objetivo
-- `descripcion`: str (opcional) - Detalles adicionales
-- `monto_objetivo`: Decimal - Meta a alcanzar
-- `monto_actual`: Decimal - Acumulado hasta el momento
-- `moneda`: enum (USD/ARS) - Moneda del objetivo
-- `fecha_limite`: date - Deadline para alcanzar la meta
-- `fecha_creacion`: datetime - Timestamp de creación
-- `estado`: enum (activo/completado/pausado) - Estado actual
-- `es_prioritario`: bool - Marca si es objetivo prioritario
-- `completado`: bool - Si se alcanzó la meta
-
-**Métodos de negocio:**
-- `postergar_fecha_limite(nueva_fecha)` - Ajusta el deadline
-- `calcular_porcentaje_completado()` - Retorna % de avance
-- `calcular_pago_mensual_requerido()` - Calcula aporte mensual necesario para llegar a tiempo
-- `marcar_completado()` - Marca objetivo como alcanzado
-
-**Movimiento** (Aportes y Retiros)
-- `monto`: Decimal - Cantidad del movimiento
-- `moneda`: enum (USD/ARS) - Moneda del movimiento
-- `tipo`: enum (aporte/retiro) - Tipo de transacción
-- `usuario_id`: FK - Usuario que realizó el movimiento
-- `objetivo_id`: FK - Objetivo asociado
-- `fecha`: datetime - Timestamp del movimiento
-- `motivo`: str (opcional) - Explicación del movimiento
-- `nota`: str (opcional) - Notas adicionales
-
-**Usuario**
-- `nombre`: str - Nombre del usuario
-- `email`: str - Email único
-- `password_hash`: str - Contraseña hasheada con bcrypt
-
-**TasaCambio** (Conversión USD/ARS)
-- `moneda_origen`: str - Moneda origen (ARS)
-- `moneda_destino`: str - Moneda destino (USD)
-- `tasa`: Decimal - Tasa de conversión
-- `fecha`: datetime - Fecha de la cotización
-- `fuente`: str - API utilizada (dolarapi.com)
-- `tipo_cotizacion`: str - Tipo de dólar (blue/oficial/MEP)
-
-**Nota:** La tasa se actualiza cada 24hs mediante un job automático.
-
-## Funcionalidades Core
-
-### Dashboard Principal
-- Lista de objetivos activos con barras de progreso
-- Resumen global: total ahorrado en USD
-- Últimos movimientos realizados
-- Alertas y notificaciones pendientes
-- Destacado de objetivos prioritarios
-
-### Gestión de Objetivos
-- Crear/editar/eliminar objetivos
-- Marcar como prioritario
-- Postergar fecha límite
-- Marcar como completado (queda archivado en verde)
-- Filtrar por estado (activo/completado/pausado)
-
-### Vista de Objetivo Individual
-- Gráfico de barra de progreso (%)
-- Línea de tiempo con histórico de movimientos
-- Proyección: "Al ritmo actual, alcanzas la meta el [fecha]"
-- Cálculo de pago mensual requerido para llegar a deadline
-- Historial completo de aportes y retiros
-
-### Gestión de Movimientos
-- Agregar aportes y retiros por objetivo
-- Conversión automática USD/ARS según tasa del día
-- Registrar quién realizó el movimiento
-- Agregar motivo/nota opcional
-- Historial filtrable por objetivo/usuario/fecha
-
-### Sistema de Alertas
-- Meta alcanzada (100%)
-- Hitos de progreso (25%, 50%, 75%)
-- Advertencia: "Al ritmo actual no llegarán a la fecha límite"
-- Sugerencia: "Necesitan aportar X USD/mes para llegar a tiempo"
-
-### Conversión de Moneda
-- Integración con API externa (dolarapi.com)
-- Actualización automática cada 24hs
-- Conversión automática en movimientos (si aportan ARS a objetivo USD)
-- Selección de tipo de cotización (blue/oficial/MEP)
-
-## Arquitectura del Backend
-
-### Patrón de Capas
-
-**Controllers (Routers)**
-- Únicos con bloques try/except para manejo de errores
-- Validación de requests/responses con Pydantic schemas
-- Retornan respuestas HTTP apropiadas
-- No contienen lógica de negocio
-
-**Services**
-- Orquestan la lógica de negocio
-- Solicitan entidades al repository
-- Invocan métodos de dominio en las entidades
-- Solicitan al repository que persista cambios
-- Pueden lanzar excepciones de validación de negocio
-- NO modifican directamente atributos de entidades
-
-**Repositories**
-- Únicos que conocen la conexión a base de datos
-- Abstraen los detalles de SQLAlchemy
-- Operaciones CRUD sobre entidades
-- Lanzan excepciones relacionadas a persistencia
-- NO contienen lógica de negocio
-
-**Entities (Dominio)**
-- Clases de dominio con lógica de negocio
-- Métodos que modifican su propio estado
-- Independientes de la capa de persistencia
-
-**Middleware**
-- Autenticación JWT simple
-- CORS configuration
-- Request logging
-
-### Estructura de Carpetas
+## Estructura
 
 ```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                 # FastAPI app principal
-│   ├── config.py               # Configuración y variables de entorno
-│   ├── database.py             # Conexión a SQLite
-│   │
-│   ├── domain/                 # Entidades de dominio
-│   │   ├── __init__.py
-│   │   ├── objetivo.py
-│   │   ├── movimiento.py
-│   │   ├── usuario.py
-│   │   └── tasa_cambio.py
-│   │
-│   ├── schemas/                # Pydantic schemas
-│   │   ├── __init__.py
-│   │   ├── objetivo_schema.py
-│   │   ├── movimiento_schema.py
-│   │   ├── usuario_schema.py
-│   │   └── tasa_cambio_schema.py
-│   │
-│   ├── repositories/           # Capa de persistencia
-│   │   ├── __init__.py
-│   │   ├── objetivo_repository.py
-│   │   ├── movimiento_repository.py
-│   │   ├── usuario_repository.py
-│   │   └── tasa_cambio_repository.py
-│   │
-│   ├── services/               # Lógica de negocio
-│   │   ├── __init__.py
-│   │   ├── objetivo_service.py
-│   │   ├── movimiento_service.py
-│   │   ├── usuario_service.py
-│   │   ├── tasa_cambio_service.py
-│   │   └── alerta_service.py
-│   │
-│   ├── controllers/            # Routers de FastAPI
-│   │   ├── __init__.py
-│   │   ├── objetivo_controller.py
-│   │   ├── movimiento_controller.py
-│   │   ├── usuario_controller.py
-│   │   └── auth_controller.py
-│   │
-│   ├── middleware/             # Middleware custom
-│   │   ├── __init__.py
-│   │   └── auth_middleware.py
-│   │
-│   └── utils/                  # Utilidades
-│       ├── __init__.py
-│       ├── exceptions.py
-│       └── enums.py
-│
-├── requirements.txt
-└── .env.example
+backend/app/
+  main.py            app, routers bajo /api y servido del build del frontend
+  models.py          tablas (montos en centavos)
+  schemas/           entrada y salida de la API
+  services/          reglas: movimientos, programados, resumen, cotización…
+  routers/           endpoints delgados
+  core/              excepciones de dominio, seguridad, dinero y fechas
+frontend/src/
+  paginas/           Inicio, Movimientos, Fijos, Calendario, Ajustes, Ingreso
+  componentes/       barra del mes, hojas de carga y pago, selector de mes…
+  estado/            sesión, mes elegido, refresco de datos
+  lib/               cliente de la API, formato de montos y fechas
+```
+
+La mascota (easter egg) sigue en el código, desactivada con `MASCOTA_HABILITADA` en `frontend/src/config/features.js`.
