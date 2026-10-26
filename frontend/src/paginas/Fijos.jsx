@@ -19,7 +19,8 @@ function estadoDelMes(programado, vencimientos) {
   return programado.tipo === 'gasto' && diasHasta(v.fecha) < 0 ? ESTADOS.vencido : { ...ESTADOS.pendiente, texto: `Pendiente · ${diaCorto(v.fecha)}` };
 }
 
-const etiquetaMes = (v) => (v.cuotas ? `Cuota ${v.cuota}/${v.cuotas}` : nombreMesSolo(mesActual()));
+/** Estado de este mes; en las cuotas, con el número de cuota. */
+const textoEstado = (estado, v) => (v.cuotas ? `Cuota ${v.cuota}/${v.cuotas} · ${estado.texto}` : estado.texto);
 
 function Lista({ titulo, programados, vencimientos, onElegir, cuando, llena = false }) {
   if (!programados.length) return null;
@@ -40,11 +41,15 @@ function Lista({ titulo, programados, vencimientos, onElegir, cuando, llena = fa
                 <span className="renglon__texto">
                   <span className="renglon__titulo">{p.nombre}</span>
                   <span className="renglon__detalle">
-                    {cuando(p)} · {p.categoria.nombre}
+                    {cuando(p)}
+                    {/* Con columnas, la categoría tiene la suya */}
+                    <span className="renglon__detalle--compacto"> · {p.categoria.nombre}</span>
                   </span>
                 </span>
-                <span className="renglon__columna">{p.hasta ? `Hasta ${nombreMesSolo(p.hasta)}` : cuando(p)}</span>
-                <span className={`renglon__columna ${estado?.clase ?? ''}`}>{estado ? `${etiquetaMes(vencimientos.get(p.id))}: ${estado.texto}` : '—'}</span>
+                <span className="renglon__columna">{p.categoria.nombre}</span>
+                <span className={`renglon__columna ${estado?.clase ?? ''}`} title={estado ? `${nombreMesSolo(mesActual())}: ${estado.texto}` : undefined}>
+                  {estado ? textoEstado(estado, vencimientos.get(p.id)) : '—'}
+                </span>
                 <span className={`importe${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(p.monto, p.moneda)}</span>
               </button>
             </li>
@@ -101,7 +106,7 @@ export default function Fijos() {
               <Lista titulo="Cobros mensuales" programados={mensuales.filter((p) => p.tipo === 'ingreso')} cuando={mensual} {...comunes} />
               <Lista titulo="En cuotas" programados={enCuotas} cuando={(p) => `${p.cuotas} cuotas, hasta ${nombreMes(p.hasta)}`} {...comunes} />
               <Lista titulo="Una sola vez" programados={unicos} cuando={(p) => `El ${diaCorto(p.fecha)}`} {...comunes} />
-              <Lista titulo="Terminados" programados={terminados} cuando={mensual} {...comunes} />
+              <Lista titulo="Terminados" programados={terminados} cuando={(p) => `Terminó en ${nombreMes(p.hasta)}`} {...comunes} />
             </div>
           </div>
         )}

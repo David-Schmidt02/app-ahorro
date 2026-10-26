@@ -623,12 +623,13 @@ a {
   color: var(--tinta-3);
 }
 
+/* La letra se achica con la tarjeta en lugar de partir el monto */
 .cifras dd {
   margin: 0;
   font-family: var(--f-num);
-  font-size: 15px;
+  font-size: clamp(12px, 4.4cqi, 15px);
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 /* ---------- Cierre del mes ---------- */
@@ -2114,30 +2115,17 @@ input[type='checkbox'] {
 }
 
 /* ---------- Escritorio: cada sección entra en la ventana ---------- */
-/* La página no se desplaza: cada columna lo hace por su cuenta, y las tarjetas --llena reparten el alto y desplazan su lista. */
+/* La página no se desplaza: cada columna lo hace por su cuenta. Las tarjetas --llena miden lo que su contenido,
+   y si no entran en la columna se achican y desplazan su lista. */
 
 @media (min-width: 1100px) {
   .contenido {
     max-width: 1480px;
   }
 
-  /* Inicio con dos columnas: el mes a la izquierda; pagos arriba y torta abajo a la derecha */
-  .tablero--tres {
+  /* Inicio: el mes y la evolución a la izquierda; la torta y los pagos a la derecha */
+  .tablero--parejo {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .tablero--tres > :first-child {
-    grid-row: span 2;
-  }
-}
-
-@media (min-width: 1400px) {
-  .tablero--tres {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .tablero--tres > :first-child {
-    grid-row: auto;
   }
 }
 
@@ -2162,10 +2150,6 @@ input[type='checkbox'] {
     align-items: stretch;
   }
 
-  .tablero--tres.pantalla {
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-  }
-
   /* Cada columna se desplaza sola; el margen evita que el desplazamiento corte las sombras */
   .pantalla > :where(.pila, .tablero__columna) {
     min-height: 0;
@@ -2181,25 +2165,19 @@ input[type='checkbox'] {
 
   .tarjeta--llena,
   .tablero__celda--llena {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-height: 220px;
   }
 
   .desplazable {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
   }
 
-  /* Con dos columnas la torta comparte columna con los pagos: no llena, la columna se desplaza */
-  .grafico-torta.tarjeta--llena,
-  .tablero__celda--llena:has(> .grafico-torta) {
-    flex: none;
-  }
-
   /* La libreta ocupa el alto que queda y desplaza los movimientos adentro */
   .pantalla .libreta {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
   }
@@ -2219,36 +2197,6 @@ input[type='checkbox'] {
   .pantalla .grilla__dia {
     min-height: 0;
     overflow: hidden;
-  }
-}
-
-/* Con tres columnas la torta tiene la suya: la llena y desplaza solo la lista */
-@media (min-width: 1400px) and (min-height: 600px) {
-  .tablero--tres.pantalla {
-    grid-template-rows: minmax(0, 1fr);
-  }
-
-  .grafico-torta.tarjeta--llena,
-  .tablero__celda--llena:has(> .grafico-torta) {
-    flex: 1 1 0;
-  }
-
-  .grafico-torta.tarjeta--llena .grafico-torta__cuerpo {
-    flex: 1 1 0;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    min-height: 0;
-  }
-
-  .grafico-torta.tarjeta--llena .grafico-torta__svg {
-    flex: none;
-  }
-
-  .grafico-torta.tarjeta--llena .torta-filas {
-    flex: 1 1 0;
-    align-self: stretch;
-    min-height: 0;
-    overflow-y: auto;
   }
 }
 

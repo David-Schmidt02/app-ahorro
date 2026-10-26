@@ -1,11 +1,12 @@
 # Ahorro
 
-> **Versión** 2.4.0 · **Última actualización** 2026-10-26
+> **Versión** 2.4.1 · **Última actualización** 2026-10-26
 
 Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y únicos programados, calendario de vencimientos y eventos, y un objetivo de ahorro mensual.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 2.4.1 | 2026-10-26 | Inicio en escritorio en dos columnas parejas (el mes y la evolución; la torta con su lista al lado y los pagos y cobros debajo). Las tarjetas que llenan la columna miden lo que su contenido en lugar de estirarse. Fijos: columnas de categoría y estado sin repetir el detalle. Los montos de las cifras no se parten. Se vuelve atrás con 2.4.0 (`6d808c7`). |
 | 2.4.0 | 2026-10-26 | Solo interfaz: un único formulario para movimientos y fijos («Ahora», «Mensual», «En cuotas», «Más adelante»), categoría en un desplegable con ícono y color, almanaque para fechas y días del mes. En escritorio la página no se desplaza: Inicio en tres columnas (dos hasta 1400px) con Pagos y cobros a la vista, la libreta y las listas largas con su propia barra; las filas tipo tabla se adaptan al ancho de su tarjeta. Tema y cuenta al pie de la barra lateral. Barras de desplazamiento en color. Calendario .ics y calendarios externos desactivados por flag. Se vuelve atrás con 2.3.0 (`e6310a6`). |
 | 2.3.0 | 2026-10-26 | Compras en cuotas (carga rápida «En cuotas» y Fijos; cada vencimiento muestra «3/12» y el plan termina solo), ritmo del presupuesto en la torta («A este ritmo llegan a…»), tarjeta de cierre del mes anterior en la primera quincena, calendarios (el de la app como `.ics` para el teléfono y eventos de calendarios iCal externos), copia de seguridad (base completa y CSV) e ícono `savings` de Material Symbols. Columna nueva `programados.cuotas` (en una base existente: `ALTER TABLE programados ADD COLUMN cuotas INTEGER`) y tabla `calendarios_externos` (se crea sola). Dependencias nuevas: `icalendar`, `recurring-ical-events`, `tzdata`. Se vuelve atrás con 2.2.0 (`89eb2a2`). |
 | 2.2.0 | 2026-10-26 | Solo interfaz (un commit, se revierte entero): íconos (Lucide) en lugar de emojis, marca nueva, tema claro/oscuro/sistema, alta y edición de categorías dentro de Movimientos, filas con más columnas en escritorio, la torta reemplaza a «En qué se fue» (con presupuestos y «Ver todas»), próximos 7 días en el calendario y escala de espacios única. Las categorías guardan el nombre del ícono (`shopping-cart`) en lugar de un emoji. Se vuelve atrás con `783d2a0`. |

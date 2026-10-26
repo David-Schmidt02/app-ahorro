@@ -151,7 +151,7 @@ export default function Inicio() {
       </header>
       <Estado datos={resumen} error={error} reintentar={reintentar}>
         {resumen && (
-          <div className="tablero tablero--tres pantalla">
+          <div className="tablero tablero--parejo pantalla">
             <div className="tablero__columna">
               <section className="tarjeta tarjeta--mes" style={{ '--orden': 1 }}>
                 <Titular resumen={resumen} esActual={esActual} />
@@ -179,13 +179,11 @@ export default function Inicio() {
               <div className="tablero__celda" style={{ '--orden': 0 }}>
                 <CierreMes />
               </div>
+              <div className="tablero__celda" style={{ '--orden': 3 }}>
+                <Torta categorias={resumen.categorias} />
+              </div>
               <div className="tablero__celda tablero__celda--llena" style={{ '--orden': 2 }}>
                 <Pendientes vencimientos={resumen.vencimientos} />
-              </div>
-            </div>
-            <div className="tablero__columna">
-              <div className="tablero__celda tablero__celda--llena" style={{ '--orden': 3 }}>
-                <Torta categorias={resumen.categorias} llena />
               </div>
               {resumen.gastos_mes_anterior > 0 && (
                 <p className="pie" style={{ '--orden': 5 }}>
