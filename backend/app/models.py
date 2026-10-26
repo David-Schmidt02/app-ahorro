@@ -51,7 +51,7 @@ class Categoria(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(40))
-    icono: Mapped[str] = mapped_column(String(16))
+    icono: Mapped[str] = mapped_column(String(30), comment="Nombre del ícono (lo dibuja el frontend)")
     color: Mapped[str] = mapped_column(String(7))
     tipo: Mapped[TipoMovimiento] = mapped_column(_enum(TipoMovimiento))
     presupuesto_centavos: Mapped[int | None]

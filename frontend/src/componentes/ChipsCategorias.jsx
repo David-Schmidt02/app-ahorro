@@ -1,3 +1,5 @@
+import { IconoCategoria } from './Icono';
+
 export default function ChipsCategorias({ categorias, seleccionada, onElegir }) {
   return (
     <div className="chips" role="radiogroup" aria-label="Categoría">
@@ -11,7 +13,7 @@ export default function ChipsCategorias({ categorias, seleccionada, onElegir }) 
           style={{ '--chip': c.color }}
           onClick={() => onElegir(c.id)}
         >
-          <span aria-hidden="true">{c.icono}</span>
+          <IconoCategoria icono={c.icono} color={c.color} tamano="chico" />
           {c.nombre}
         </button>
       ))}

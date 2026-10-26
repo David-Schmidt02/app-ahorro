@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { MASCOTA_HABILITADA } from '../config/features';
 import { useApp } from '../estado/contextos';
 import Icono from './Icono';
+import Marca from './Marca';
 import Mascota from './Mascota';
 
 const SECCIONES = [
@@ -34,7 +35,9 @@ export default function Marco() {
   return (
     <div className="marco">
       <nav className="nav" aria-label="Secciones">
-        <p className="nav__marca">Ahorro</p>
+        <p className="nav__marca">
+          <Marca />
+        </p>
         <Enlace seccion={SECCIONES[0]} />
         <Enlace seccion={SECCIONES[1]} />
         {cargar}

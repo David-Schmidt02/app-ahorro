@@ -3,8 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#EEF2F5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0E1522" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eef2f5" />
+    <script>
+      // Tema antes del primer pintado (misma lógica que src/estado/tema.js)
+      (function () {
+        var preferencia = 'sistema';
+        try {
+          preferencia = localStorage.getItem('ahorro.tema') || 'sistema';
+        } catch (e) {}
+        var oscuro = preferencia === 'oscuro' || (preferencia === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = oscuro ? 'dark' : 'light';
+        if (oscuro) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0e1522');
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Ahorro" />

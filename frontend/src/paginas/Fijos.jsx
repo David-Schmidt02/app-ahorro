@@ -3,7 +3,7 @@ import CampoMonto from '../componentes/CampoMonto';
 import ChipsCategorias from '../componentes/ChipsCategorias';
 import Estado from '../componentes/Estado';
 import Hoja from '../componentes/Hoja';
-import Icono from '../componentes/Icono';
+import Icono, { IconoCategoria } from '../componentes/Icono';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
@@ -187,30 +187,49 @@ function FormProgramado({ programado, onListo }) {
   );
 }
 
-function Lista({ titulo, programados, onElegir, detalle }) {
+const ESTADOS = {
+  pagado: { texto: 'Registrado', clase: 'es-bien' },
+  pendiente: { texto: 'Pendiente', clase: '' },
+  vencido: { texto: 'Vencido', clase: 'es-alerta' },
+};
+
+/** Estado de este mes según los vencimientos: registrado, pendiente, vencido o sin vencimiento. */
+function estadoDelMes(programado, vencimientos) {
+  const v = vencimientos.get(programado.id);
+  if (!v) return null;
+  if (v.pagado) return ESTADOS.pagado;
+  return programado.tipo === 'gasto' && diasHasta(v.fecha) < 0 ? ESTADOS.vencido : { ...ESTADOS.pendiente, texto: `Pendiente · ${diaCorto(v.fecha)}` };
+}
+
+function Lista({ titulo, programados, vencimientos, onElegir, cuando }) {
   if (!programados.length) return null;
   const total = programados.filter((p) => p.moneda === 'ARS').reduce((suma, p) => suma + p.monto, 0);
   return (
-    <section className="seccion">
-      <h2 className="seccion__titulo">
-        {titulo}
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">{titulo}</h2>
         {total > 0 && <span className="importe tenue">{dinero(total)}</span>}
-      </h2>
+      </header>
       <ul className="renglones">
-        {programados.map((p) => (
-          <li key={p.id}>
-            <button type="button" className="renglon renglon--boton" onClick={() => onElegir(p)}>
-              <span className="renglon__icono" style={{ '--color': p.categoria.color }} aria-hidden="true">
-                {p.categoria.icono}
-              </span>
-              <span className="renglon__texto">
-                <span className="renglon__titulo">{p.nombre}</span>
-                <span className="renglon__detalle">{detalle(p)}</span>
-              </span>
-              <span className={`importe${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(p.monto, p.moneda)}</span>
-            </button>
-          </li>
-        ))}
+        {programados.map((p) => {
+          const estado = estadoDelMes(p, vencimientos);
+          return (
+            <li key={p.id}>
+              <button type="button" className="renglon renglon--boton renglon--tabla" onClick={() => onElegir(p)}>
+                <IconoCategoria icono={p.categoria.icono} color={p.categoria.color} />
+                <span className="renglon__texto">
+                  <span className="renglon__titulo">{p.nombre}</span>
+                  <span className="renglon__detalle">
+                    {cuando(p)} · {p.categoria.nombre}
+                  </span>
+                </span>
+                <span className="renglon__columna">{p.hasta ? `Hasta ${nombreMesSolo(p.hasta)}` : cuando(p)}</span>
+                <span className={`renglon__columna ${estado?.clase ?? ''}`}>{estado ? `${nombreMesSolo(mesActual())}: ${estado.texto}` : '—'}</span>
+                <span className={`importe${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(p.monto, p.moneda)}</span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -225,7 +244,11 @@ export default function Fijos() {
   const mensuales = (programados ?? []).filter((p) => p.frecuencia === 'mensual' && vigente(p));
   const unicos = (programados ?? []).filter((p) => p.frecuencia === 'unica' && diasHasta(p.fecha) >= -31);
   const terminados = (programados ?? []).filter((p) => p.frecuencia === 'mensual' && !vigente(p));
-  const diaDe = (p) => `día ${p.dia} · ${p.categoria.nombre}${p.hasta ? ` · hasta ${nombreMesSolo(p.hasta)}` : ''}`;
+  const { datos: delMes } = useApi(`/programados/vencimientos?mes=${actual}`);
+  const vencimientos = new Map((delMes ?? []).map((v) => [v.programado_id, v]));
+  const elegir = (p) => setHoja({ id: p.id, programado: p });
+  const comunes = { vencimientos, onElegir: elegir };
+  const mensual = (p) => `Todos los meses, día ${p.dia}`;
 
   return (
     <>
@@ -241,34 +264,17 @@ export default function Fijos() {
       </p>
       <Estado datos={programados} error={error} reintentar={reintentar}>
         {programados?.length === 0 && (
-          <div className="vacio">
+          <div className="tarjeta vacio">
             <p>Empiecen por el alquiler, las expensas, los servicios y el sueldo.</p>
             <button type="button" className="boton boton--principal" onClick={() => setHoja({ id: Date.now() })}>
               Programar el primero
             </button>
           </div>
         )}
-        <div className="columnas">
-          <Lista
-            titulo="Cobros mensuales"
-            programados={mensuales.filter((p) => p.tipo === 'ingreso')}
-            onElegir={(p) => setHoja({ id: p.id, programado: p })}
-            detalle={diaDe}
-          />
-          <Lista
-            titulo="Pagos mensuales"
-            programados={mensuales.filter((p) => p.tipo === 'gasto')}
-            onElegir={(p) => setHoja({ id: p.id, programado: p })}
-            detalle={diaDe}
-          />
-          <Lista
-            titulo="Una sola vez"
-            programados={unicos}
-            onElegir={(p) => setHoja({ id: p.id, programado: p })}
-            detalle={(p) => `${diaCorto(p.fecha)} · ${p.categoria.nombre}`}
-          />
-          <Lista titulo="Terminados" programados={terminados} onElegir={(p) => setHoja({ id: p.id, programado: p })} detalle={diaDe} />
-        </div>
+        <Lista titulo="Cobros mensuales" programados={mensuales.filter((p) => p.tipo === 'ingreso')} cuando={mensual} {...comunes} />
+        <Lista titulo="Pagos mensuales" programados={mensuales.filter((p) => p.tipo === 'gasto')} cuando={mensual} {...comunes} />
+        <Lista titulo="Una sola vez" programados={unicos} cuando={(p) => `El ${diaCorto(p.fecha)}`} {...comunes} />
+        <Lista titulo="Terminados" programados={terminados} cuando={mensual} {...comunes} />
       </Estado>
       <Hoja
         titulo={hoja?.programado ? hoja.programado.nombre : 'Nuevo pago o cobro'}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSesion } from '../estado/contextos';
+import Marca from '../componentes/Marca';
 import { api } from '../lib/api';
 
 export default function Ingreso() {
@@ -36,8 +37,9 @@ export default function Ingreso() {
   return (
     <main className="ingreso">
       <div className="ingreso__hoja">
-        <img src="/icono.svg" alt="" width="56" height="56" />
-        <h1>Ahorro</h1>
+        <h1>
+          <Marca grande />
+        </h1>
         <p className="tenue">Los gastos, los fijos y el ahorro de la casa, en una libreta compartida.</p>
         <form className="formulario" onSubmit={enviar}>
           {esRegistro && (

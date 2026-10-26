@@ -2,7 +2,7 @@
 export default function Estado({ datos, error, reintentar, children }) {
   if (error && !datos) {
     return (
-      <div className="estado-error" role="alert">
+      <div className="tarjeta vacio" role="alert">
         <p>{error.message}</p>
         <button type="button" className="boton" onClick={reintentar}>
           Reintentar

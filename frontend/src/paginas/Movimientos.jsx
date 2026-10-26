@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import AdminCategorias from '../componentes/AdminCategorias';
 import Estado from '../componentes/Estado';
+import Icono, { IconoCategoria } from '../componentes/Icono';
 import SelectorMes from '../componentes/SelectorMes';
 import Torta from '../componentes/Torta';
 import { useApp } from '../estado/contextos';
@@ -23,13 +25,38 @@ function agruparPorDia(movimientos) {
   return [...grupos.entries()];
 }
 
-export default function Movimientos() {
+const enDolares = (m) => (m.moneda === 'USD' ? `${dinero(m.monto_ars)} a ${dinero(m.cotizacion)}` : null);
+
+function Renglon({ m, onEditar }) {
+  const origen = m.programado_id ? 'Pago programado' : enDolares(m);
+  return (
+    <li>
+      <button type="button" className="renglon renglon--boton renglon--tabla" onClick={() => onEditar(m)}>
+        <IconoCategoria icono={m.categoria.icono} color={m.categoria.color} />
+        <span className="renglon__texto">
+          <span className="renglon__titulo">{m.descripcion || m.categoria.nombre}</span>
+          <span className="renglon__detalle renglon__detalle--compacto">
+            {[m.descripcion && m.categoria.nombre, enDolares(m)].filter(Boolean).join(' · ')}
+          </span>
+        </span>
+        <span className="renglon__columna">{m.categoria.nombre}</span>
+        <span className="renglon__columna">
+          {m.programado_id && <Icono nombre="repetir" tamano={14} />} {origen ?? ''}
+        </span>
+        <span className={`importe${m.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(m.monto, m.moneda, { signo: m.tipo === 'ingreso' })}</span>
+      </button>
+    </li>
+  );
+}
+
+function Libreta() {
   const { mes, abrirCarga } = useApp();
   const [tipo, setTipo] = useState('');
   const [categoriaId, setCategoriaId] = useState(null);
   const { datos: movimientos, error, reintentar } = useApi(conParams('/movimientos', { mes, tipo, categoria_id: categoriaId }));
   const { datos: resumen } = useApi(`/resumen?mes=${mes}`);
   const filtrada = resumen?.categorias.find((c) => c.categoria.id === categoriaId)?.categoria;
+  const nombreTipo = tipo === 'ingreso' ? 'ingresos' : tipo === 'gasto' ? 'gastos' : 'movimientos';
 
   const elegirTipo = (valor) => {
     setTipo(valor);
@@ -37,36 +64,33 @@ export default function Movimientos() {
   };
 
   return (
-    <>
-      <header className="cabecera">
-        <SelectorMes />
-      </header>
-      <div className="dos-columnas">
-        <div className="pila">
-          <div className="segmentado segmentado--filtro" role="group" aria-label="Filtrar">
-            {FILTROS.map((f) => (
-              <button key={f.valor} type="button" aria-pressed={tipo === f.valor} onClick={() => elegirTipo(f.valor)}>
-                {f.nombre}
+    <div className="dos-columnas">
+      <div className="pila">
+        <div className="segmentado segmentado--filtro" role="group" aria-label="Filtrar">
+          {FILTROS.map((f) => (
+            <button key={f.valor} type="button" aria-pressed={tipo === f.valor} onClick={() => elegirTipo(f.valor)}>
+              {f.nombre}
+            </button>
+          ))}
+        </div>
+        {filtrada && (
+          <p className="filtro-activo">
+            <IconoCategoria icono={filtrada.icono} color={filtrada.color} tamano="chico" />
+            Solo {filtrada.nombre}
+            <button type="button" className="enlace-boton" onClick={() => setCategoriaId(null)}>
+              Ver todo
+            </button>
+          </p>
+        )}
+        <Estado datos={movimientos} error={error} reintentar={reintentar}>
+          {movimientos?.length === 0 ? (
+            <div className="tarjeta vacio">
+              <p>No hay {nombreTipo} cargados en este mes.</p>
+              <button type="button" className="boton boton--principal" onClick={() => abrirCarga({ tipo: tipo || 'gasto' })}>
+                Cargar {tipo === 'ingreso' ? 'un ingreso' : 'un gasto'}
               </button>
-            ))}
-          </div>
-          {filtrada && (
-            <p className="filtro-activo">
-              Solo {filtrada.icono} {filtrada.nombre}
-              <button type="button" className="enlace-boton" onClick={() => setCategoriaId(null)}>
-                Ver todo
-              </button>
-            </p>
-          )}
-          <Estado datos={movimientos} error={error} reintentar={reintentar}>
-            {movimientos?.length === 0 && (
-              <div className="vacio">
-                <p>No hay {tipo === 'ingreso' ? 'ingresos' : tipo === 'gasto' ? 'gastos' : 'movimientos'} cargados en este mes.</p>
-                <button type="button" className="boton boton--principal" onClick={() => abrirCarga({ tipo: tipo || 'gasto' })}>
-                  Cargar {tipo === 'ingreso' ? 'un ingreso' : 'un gasto'}
-                </button>
-              </div>
-            )}
+            </div>
+          ) : (
             <div className="libreta">
               {agruparPorDia(movimientos ?? []).map(([fecha, delDia]) => {
                 const gastadoDia = delDia.filter((m) => m.tipo === 'gasto').reduce((total, m) => total + m.monto_ars, 0);
@@ -78,63 +102,64 @@ export default function Movimientos() {
                     </h2>
                     <ul className="renglones">
                       {delDia.map((m) => (
-                        <li key={m.id}>
-                          <button type="button" className="renglon renglon--boton" onClick={() => abrirCarga({ movimiento: m })}>
-                            <span className="renglon__icono" style={{ '--color': m.categoria.color }} aria-hidden="true">
-                              {m.categoria.icono}
-                            </span>
-                            <span className="renglon__texto">
-                              <span className="renglon__titulo">{m.descripcion || m.categoria.nombre}</span>
-                              <span className="renglon__detalle">
-                                {[
-                                  m.descripcion && m.categoria.nombre,
-                                  m.moneda === 'USD' && `${dinero(m.monto_ars)} a ${dinero(m.cotizacion)}`,
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · ')}
-                              </span>
-                            </span>
-                            <span className={`importe${m.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>
-                              {dinero(m.monto, m.moneda, { signo: m.tipo === 'ingreso' })}
-                            </span>
-                          </button>
-                        </li>
+                        <Renglon key={m.id} m={m} onEditar={(movimiento) => abrirCarga({ movimiento })} />
                       ))}
                     </ul>
                   </section>
                 );
               })}
             </div>
-          </Estado>
-        </div>
-        {resumen && (
-          <aside className="lateral pila">
-            <dl className="cifras cifras--tarjeta">
-              <div>
-                <dt>Entró</dt>
-                <dd className="es-ingreso">{dinero(resumen.ingresos)}</dd>
-              </div>
-              <div>
-                <dt>Salió</dt>
-                <dd>{dinero(resumen.gastos)}</dd>
-              </div>
-              <div>
-                <dt>Ahorrado</dt>
-                <dd className={resumen.ahorro < 0 ? 'es-alerta' : ''}>{dinero(resumen.ahorro)}</dd>
-              </div>
-            </dl>
-            <Torta
-              categorias={resumen.categorias}
-              titulo="Filtrar por categoría"
-              elegida={categoriaId}
-              onElegir={(id) => {
-                setCategoriaId(id);
-                if (id && tipo === 'ingreso') setTipo('');
-              }}
-            />
-          </aside>
-        )}
+          )}
+        </Estado>
       </div>
+      {resumen && (
+        <aside className="lateral pila">
+          <dl className="tarjeta cifras">
+            <div>
+              <dt>Entró</dt>
+              <dd className="es-ingreso">{dinero(resumen.ingresos)}</dd>
+            </div>
+            <div>
+              <dt>Salió</dt>
+              <dd>{dinero(resumen.gastos)}</dd>
+            </div>
+            <div>
+              <dt>Ahorrado</dt>
+              <dd className={resumen.ahorro < 0 ? 'es-alerta' : ''}>{dinero(resumen.ahorro)}</dd>
+            </div>
+          </dl>
+          <Torta
+            categorias={resumen.categorias}
+            titulo="Filtrar por categoría"
+            elegida={categoriaId}
+            onElegir={(id) => {
+              setCategoriaId(id);
+              if (id && tipo === 'ingreso') setTipo('');
+            }}
+          />
+        </aside>
+      )}
+    </div>
+  );
+}
+
+export default function Movimientos() {
+  const [vista, setVista] = useState('libreta');
+
+  return (
+    <>
+      <header className="cabecera">
+        <SelectorMes />
+        <div className="segmentado segmentado--pestanas" role="tablist" aria-label="Vista">
+          <button type="button" role="tab" aria-selected={vista === 'libreta'} onClick={() => setVista('libreta')}>
+            <Icono nombre="lista" tamano={18} /> Libreta
+          </button>
+          <button type="button" role="tab" aria-selected={vista === 'categorias'} onClick={() => setVista('categorias')}>
+            <Icono nombre="categorias" tamano={18} /> Categorías
+          </button>
+        </div>
+      </header>
+      {vista === 'libreta' ? <Libreta /> : <AdminCategorias />}
     </>
   );
 }

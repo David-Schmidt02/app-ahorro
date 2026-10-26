@@ -63,3 +63,10 @@ def test_proximos_cruza_el_mes_y_omite_lo_pagado(api):
     api.post(f"/api/programados/{alquiler['id']}/pagar", json={"mes": "2026-10"})
     r = api.get("/api/proximos", params={"desde": "2026-10-28"}).json()
     assert [v["nombre"] for v in r["vencimientos"]] == ["Expensas"]
+
+
+def test_icono_de_categoria_es_un_nombre(api):
+    ok = api.post("/api/categorias", json={"nombre": "Mascotas", "icono": "paw-print", "color": "#2A78D6", "tipo": "gasto"})
+    assert ok.status_code == 201
+    mal = api.post("/api/categorias", json={"nombre": "X", "icono": "🐶", "color": "#2A78D6", "tipo": "gasto"})
+    assert mal.status_code == 422

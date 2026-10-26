@@ -128,9 +128,9 @@ export default function Evolucion() {
   const conMovimientos = datos?.meses.filter((m) => m.ingresos || m.gastos).length ?? 0;
 
   return (
-    <section className="seccion">
-      <div className="seccion__titulo">
-        <h2>Cómo vienen los meses</h2>
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">Cómo vienen los meses</h2>
         <div className="segmentado segmentado--chico" role="group" aria-label="Período">
           {[6, 12].map((n) => (
             <button key={n} type="button" aria-pressed={cantidad === n} onClick={() => setCantidad(n)}>
@@ -138,7 +138,7 @@ export default function Evolucion() {
             </button>
           ))}
         </div>
-      </div>
+      </header>
       <ul className="leyenda-series" aria-hidden="true">
         {SERIES.map((s) => (
           <li key={s.clave}>

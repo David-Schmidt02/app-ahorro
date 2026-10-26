@@ -5,11 +5,12 @@ from app.models import Categoria, TipoMovimiento
 from app.schemas.comunes import MontoNoNegativo
 
 _COLOR = r"^#[0-9a-fA-F]{6}$"
+_ICONO = r"^[a-z0-9-]{1,30}$"
 
 
 class CategoriaIn(BaseModel):
     nombre: str = Field(min_length=1, max_length=40)
-    icono: str = Field(min_length=1, max_length=16)
+    icono: str = Field(pattern=_ICONO, examples=["shopping-cart"])
     color: str = Field(pattern=_COLOR)
     tipo: TipoMovimiento
     presupuesto: MontoNoNegativo | None = None
@@ -17,7 +18,7 @@ class CategoriaIn(BaseModel):
 
 class CategoriaUpdate(BaseModel):
     nombre: str | None = Field(None, min_length=1, max_length=40)
-    icono: str | None = Field(None, min_length=1, max_length=16)
+    icono: str | None = Field(None, pattern=_ICONO)
     color: str | None = Field(None, pattern=_COLOR)
     presupuesto: MontoNoNegativo | None = None
     orden: int | None = None
