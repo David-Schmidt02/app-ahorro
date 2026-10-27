@@ -1,40 +1,34 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import PrivateRoute from './components/PrivateRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import ObjectiveDetail from './pages/ObjectiveDetail';
-import Gastos from './pages/Gastos';
-import HorariosSemanales from './pages/HorariosSemanales';
-import Calendario from './pages/Calendario';
-import Propiedades from './pages/Propiedades';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Marco from './componentes/Marco';
+import { useSesion } from './estado/contextos';
+import ProveedorApp from './estado/ProveedorApp';
+import Ajustes from './paginas/Ajustes';
+import Calendario from './paginas/Calendario';
+import Fijos from './paginas/Fijos';
+import Ingreso from './paginas/Ingreso';
+import Inicio from './paginas/Inicio';
+import Movimientos from './paginas/Movimientos';
 
-function App() {
+export default function App() {
+  const { usuario } = useSesion();
+
+  if (usuario === undefined) return <div className="arranque" aria-busy="true" />;
+  if (usuario === null) return <Ingreso />;
+
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Rutas Públicas */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Rutas Privadas / Plataforma */}
-        <Route element={<PrivateRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/objetivo/:id" element={<ObjectiveDetail />} />
-            <Route path="/gastos" element={<Gastos />} />
-            <Route path="/horarios" element={<HorariosSemanales />} />
-            <Route path="/calendario" element={<Calendario />} />
-            <Route path="/propiedades" element={<Propiedades />} />
+      <ProveedorApp>
+        <Routes>
+          <Route element={<Marco />}>
+            <Route index element={<Inicio />} />
+            <Route path="movimientos" element={<Movimientos />} />
+            <Route path="fijos" element={<Fijos />} />
+            <Route path="calendario" element={<Calendario />} />
+            <Route path="ajustes" element={<Ajustes />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
-        </Route>
-
-        {/* Redirección Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </ProveedorApp>
     </BrowserRouter>
   );
 }
-
-export default App;
