@@ -1,6 +1,6 @@
 [project]
 name = "app-ahorro"
-version = "2.5.1"
+version = "2.5.2"
 description = "Gastos, ingresos y pagos programados de la casa"
 requires-python = ">=3.12"
 dependencies = [

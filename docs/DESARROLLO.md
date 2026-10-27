@@ -1,6 +1,6 @@
 # Ahorro · desarrollo
 
-> **Versión** 2.5.1 · **Última actualización** 2026-10-27
+> **Versión** 2.5.2 · **Última actualización** 2026-10-27
 
 La presentación y las capturas están en el [README](../README.md).
 
@@ -79,6 +79,7 @@ La mascota (easter egg) sigue en el código, desactivada con `MASCOTA_HABILITADA
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 2.5.2 | 2026-10-27 | Sin cambios en la app: nueva versión en `main` para que GitHub vuelva a indexar la rama principal después del renombre (la página del repo daba error 500). |
 | 2.5.1 | 2026-10-27 | Sin cambios en la app. README de presentación con capturas (celular y escritorio, claro y oscuro, con datos inventados en `docs/capturas/`) y decisiones técnicas; lo técnico pasa a `docs/DESARROLLO.md`. Se quita `docs/propuestas.html`. CI en GitHub Actions (tests del backend, lint y build del frontend, build de la imagen) y borrado automático de ramas mergeadas. Licencia MIT. Rama principal: `main` (antes `master`). |
 | 2.5.0 | 2026-10-26 | Solo interfaz: buscador y chips de categoría en Movimientos (el filtro de categoría queda en la URL `?categoria=`), la torta de Inicio lleva a Movimientos filtrado, pastilla para los montos en dólares, «Pagos y cobros» con contador de pendientes y los registrados desde el encabezado, nombres en dos renglones en lugar de cortarse, calendario con semanas completas y fin de semana marcado, Inicio en grilla 2×2 pareja y atajos de teclado (C carga, H vuelve a hoy, Alt + ←/→ cambia de mes). Propuestas de diseño en `docs/propuestas.html`. Se vuelve atrás con 2.4.1 (`2811af3`). |
 | 2.4.1 | 2026-10-26 | Inicio en escritorio en dos columnas parejas (el mes y la evolución; la torta con su lista al lado y los pagos y cobros debajo). Las tarjetas que llenan la columna miden lo que su contenido en lugar de estirarse. Fijos: columnas de categoría y estado sin repetir el detalle. Los montos de las cifras no se parten. Se vuelve atrás con 2.4.0 (`6d808c7`). |

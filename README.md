@@ -1,6 +1,6 @@
 # Ahorro
 
-> **Versión** 2.5.1 · **Última actualización** 2026-10-27 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
+> **Versión** 2.5.2 · **Última actualización** 2026-10-27 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
 
 Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y en cuotas, calendario de vencimientos y un objetivo de ahorro mensual. La hice para usarla en pareja: la cargamos desde el celular en el momento y la miramos con calma en la compu.
 
