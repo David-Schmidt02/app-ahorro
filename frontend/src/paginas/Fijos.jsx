@@ -50,7 +50,9 @@ function Lista({ titulo, programados, vencimientos, onElegir, cuando, llena = fa
                 <span className={`renglon__columna ${estado?.clase ?? ''}`} title={estado ? `${nombreMesSolo(mesActual())}: ${estado.texto}` : undefined}>
                   {estado ? textoEstado(estado, vencimientos.get(p.id)) : '—'}
                 </span>
-                <span className={`importe${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(p.monto, p.moneda)}</span>
+                <span className={`importe${p.moneda === 'USD' ? ' es-usd' : ''}${p.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>
+                  {dinero(p.monto, p.moneda)}
+                </span>
               </button>
             </li>
           );

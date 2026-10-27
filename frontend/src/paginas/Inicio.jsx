@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import BarraMes from '../componentes/BarraMes';
 import CierreMes from '../componentes/CierreMes';
@@ -65,7 +65,9 @@ function Vencimiento({ v }) {
         />
       )}
       <span className="renglon__texto">
-        <span className="renglon__titulo">{tituloVencimiento(v)}</span>
+        <span className="renglon__titulo" title={tituloVencimiento(v)}>
+          {tituloVencimiento(v)}
+        </span>
         <span className={`renglon__detalle${vencido ? ' es-alerta' : ''}`}>{v.pagado ? 'Registrado' : textoVencimiento(v)}</span>
       </span>
       <span className="renglon__columna">
@@ -73,7 +75,7 @@ function Vencimiento({ v }) {
         {v.categoria.nombre}
       </span>
       <span className="renglon__columna">{diaCorto(v.fecha)}</span>
-      <span className={`importe${v.tipo === 'ingreso' && !v.pagado ? ' es-ingreso' : ''}`}>
+      <span className={`importe${v.moneda === 'USD' ? ' es-usd' : ''}${v.tipo === 'ingreso' && !v.pagado ? ' es-ingreso' : ''}`}>
         {dinero(v.monto, v.moneda, { signo: v.tipo === 'ingreso' })}
       </span>
     </li>
@@ -87,31 +89,36 @@ function Pendientes({ vencimientos }) {
   if (!vencimientos.length) return null;
 
   return (
-    <section className="tarjeta tarjeta--llena">
-      <h2 className="tarjeta__titulo">Pagos y cobros del mes</h2>
-      <div className="desplazable">
-        {pendientes.length === 0 && <p className="tenue">Todo lo programado para este mes ya está registrado.</p>}
-        <ul className="renglones">
-          {pendientes.map((v) => (
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">
+          Pagos y cobros del mes{' '}
+          {pendientes.length > 0 && (
+            <span className="tenue">
+              · {pendientes.length} pendiente{pendientes.length > 1 ? 's' : ''}
+            </span>
+          )}
+        </h2>
+        {pagados.length > 0 && (
+          <button type="button" className="enlace-boton" onClick={() => setVerPagados((x) => !x)} aria-expanded={verPagados}>
+            {verPagados ? 'Ocultar' : 'Ver'} {pagados.length} ya registrado
+            {pagados.length > 1 ? 's' : ''}
+          </button>
+        )}
+      </header>
+      {pendientes.length === 0 && <p className="tenue">Todo lo programado para este mes ya está registrado.</p>}
+      <ul className="renglones">
+        {pendientes.map((v) => (
+          <Vencimiento key={v.programado_id} v={v} />
+        ))}
+      </ul>
+      {verPagados && (
+        <ul className="renglones es-hecho">
+          {pagados.map((v) => (
             <Vencimiento key={v.programado_id} v={v} />
           ))}
         </ul>
-        {pagados.length > 0 && (
-          <>
-            <button type="button" className="enlace-boton" onClick={() => setVerPagados((x) => !x)} aria-expanded={verPagados}>
-              {verPagados ? 'Ocultar' : 'Ver'} {pagados.length} ya registrado
-              {pagados.length > 1 ? 's' : ''}
-            </button>
-            {verPagados && (
-              <ul className="renglones es-hecho">
-                {pagados.map((v) => (
-                  <Vencimiento key={v.programado_id} v={v} />
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-      </div>
+      )}
     </section>
   );
 }
@@ -137,6 +144,7 @@ function useFestejo(resumen) {
 
 export default function Inicio() {
   const { mes } = useApp();
+  const navegar = useNavigate();
   const { datos: resumen, error, reintentar } = useApi(`/resumen?mes=${mes}`);
   const esActual = mes === mesActual();
   useFestejo(resumen);
@@ -153,7 +161,7 @@ export default function Inicio() {
         {resumen && (
           <div className="tablero tablero--parejo pantalla">
             <div className="tablero__columna">
-              <section className="tarjeta tarjeta--mes" style={{ '--orden': 1 }}>
+              <section className="tarjeta tarjeta--mes" style={{ '--orden': 1, '--orden-escritorio': 1 }}>
                 <Titular resumen={resumen} esActual={esActual} />
                 <BarraMes resumen={resumen} />
                 <dl className="cifras">
@@ -171,22 +179,22 @@ export default function Inicio() {
                   </div>
                 </dl>
               </section>
-              <div className="tablero__celda" style={{ '--orden': 4 }}>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 4, '--orden-escritorio': 3 }}>
                 <Evolucion />
               </div>
             </div>
             <div className="tablero__columna">
-              <div className="tablero__celda" style={{ '--orden': 0 }}>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 0, '--orden-escritorio': 0 }}>
                 <CierreMes />
               </div>
-              <div className="tablero__celda" style={{ '--orden': 3 }}>
-                <Torta categorias={resumen.categorias} />
+              <div className="tablero__celda" style={{ '--orden': 3, '--orden-escritorio': 2 }}>
+                <Torta categorias={resumen.categorias} onElegir={(id) => id && navegar(`/movimientos?categoria=${id}`)} />
               </div>
-              <div className="tablero__celda tablero__celda--llena" style={{ '--orden': 2 }}>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 2, '--orden-escritorio': 4 }}>
                 <Pendientes vencimientos={resumen.vencimientos} />
               </div>
               {resumen.gastos_mes_anterior > 0 && (
-                <p className="pie" style={{ '--orden': 5 }}>
+                <p className="pie tablero__celda--ancho" style={{ '--orden': 5, '--orden-escritorio': 5 }}>
                   En {nombreMesSolo(sumarMeses(mes, -1))} gastaron {dinero(resumen.gastos_mes_anterior)}.
                 </p>
               )}

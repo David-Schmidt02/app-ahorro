@@ -129,6 +129,16 @@ a {
   white-space: nowrap;
 }
 
+/* La pastilla marca la moneda; el color del texto sigue diciendo si entra o sale plata */
+.importe.es-usd {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 7px;
+  background: var(--birome-suave);
+  font-weight: 700;
+}
+
 /* ---------- Marco y navegación ---------- */
 
 .contenido {
@@ -459,6 +469,10 @@ a {
   text-transform: uppercase;
 }
 
+.tarjeta__cabecera .tenue {
+  font-size: 14px;
+}
+
 .tarjeta__cabecera .importe {
   font-size: 14px;
   font-weight: 400;
@@ -613,7 +627,12 @@ a {
   margin: 0;
 }
 
+.tarjeta--mes .barra-mes {
+  margin-block: auto;
+}
+
 .tarjeta--mes .cifras {
+  margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid var(--renglon);
 }
@@ -1003,6 +1022,83 @@ input[type='checkbox'] {
   font-weight: 700;
 }
 
+.chips--libreta {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips--libreta::-webkit-scrollbar {
+  display: none;
+}
+
+.chip--chico {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px 0 8px;
+  font-size: 13.5px;
+}
+
+.chip--chico:first-child {
+  padding-inline: 12px;
+}
+
+.libreta-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.libreta-controles > .segmentado--filtro {
+  flex: 1 1 240px;
+}
+
+.libreta-controles > .buscador {
+  flex: 1.2 1 220px;
+}
+
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: 46px;
+  padding: 0 6px 0 12px;
+  border: 1.5px solid var(--renglon);
+  border-radius: 12px;
+  background: var(--hoja);
+  box-shadow: var(--sombra);
+}
+
+.buscador:focus-within {
+  border-color: var(--birome);
+}
+
+.buscador__icono {
+  flex: none;
+  color: var(--tinta-3);
+}
+
+.buscador input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+}
+
+.buscador input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.buscador__limpiar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
 .segmentado--modos button {
   flex: 1;
   padding-inline: 6px;
@@ -1314,6 +1410,15 @@ input[type='checkbox'] {
   font-size: 12px;
   font-weight: 700;
   color: var(--tinta-3);
+}
+
+.grilla__semana.es-finde {
+  color: color-mix(in srgb, var(--margen) 75%, var(--tinta-3));
+}
+
+.grilla__hueco {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--papel) 45%, transparent);
 }
 
 .grilla__dia {
@@ -1699,18 +1804,24 @@ input[type='checkbox'] {
 
   .grilla {
     gap: 6px;
-    padding: 16px;
+    padding: 14px;
   }
 
   .grilla__dia {
     align-items: stretch;
     justify-content: flex-start;
-    gap: 4px;
+    gap: 3px;
     aspect-ratio: auto;
-    min-height: 92px;
+    min-height: 74px;
     padding: 6px;
     border: 1px solid var(--renglon);
     text-align: left;
+  }
+
+  .grilla__hueco {
+    min-height: 74px;
+    border: 1px dashed var(--renglon);
+    background: color-mix(in srgb, var(--papel) 65%, transparent);
   }
 
   .grilla__dia > span:first-child {
@@ -1802,12 +1913,12 @@ input[type='checkbox'] {
   color: var(--tinta-3);
 }
 
-/* Según el ancho de la tarjeta, no de la pantalla: en Inicio hay tres columnas angostas */
-@container (min-width: 560px) {
+/* Según el ancho de la tarjeta, no de la pantalla: en Inicio y Fijos hay dos columnas */
+@container (min-width: 540px) {
   .renglon--tabla {
     display: grid;
-    grid-template-columns: 38px minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.4fr) minmax(96px, auto);
-    column-gap: var(--espacio-4);
+    grid-template-columns: 36px minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(92px, auto);
+    column-gap: var(--espacio-3);
   }
 
   .renglon--tabla > :first-child {
@@ -1834,9 +1945,18 @@ input[type='checkbox'] {
     color: var(--verde);
   }
 
+  /* Con columnas el nombre tiene menos ancho: pasa a dos renglones en vez de cortarse */
+  .renglon--tabla .renglon__titulo {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .renglon--tabla .importe,
   .renglon--tabla .renglon__accion {
-    display: block;
+    display: inline-flex;
     justify-self: end;
   }
 
@@ -2123,9 +2243,36 @@ input[type='checkbox'] {
     max-width: 1480px;
   }
 
-  /* Inicio: el mes y la evolución a la izquierda; la torta y los pagos a la derecha */
+  /* Inicio: grilla 2x2 pareja donde cada fila comparte el alto para que las tarjetas terminen alineadas */
   .tablero--parejo {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .tablero--parejo > .tablero__columna {
+    display: contents;
+  }
+
+  .tablero--parejo > .tablero__columna > * {
+    order: var(--orden-escritorio, var(--orden, 0));
+  }
+
+  .tablero__celda > .tarjeta {
+    flex: 1;
+  }
+
+  .tablero__celda--ancho,
+  .dos-columnas__ancho {
+    grid-column: 1 / -1;
+  }
+
+  /* En Fijos, Ajustes y Categorías, la última tarjeta visible de cada columna acompaña el alto de su vecina */
+  .dos-columnas--parejas > .pila > .tarjeta:not(.solo-celular):not(:has(~ .tarjeta:not(.solo-celular))) {
+    flex: 1 1 auto;
+  }
+
+  .dos-columnas--parejas > .pila > .tarjeta > .acciones {
+    margin-top: auto;
   }
 }
 
@@ -2141,7 +2288,7 @@ input[type='checkbox'] {
   }
 
   .pantalla {
-    flex: 1;
+    flex: 0 1 auto;
     min-height: 0;
   }
 
@@ -2150,8 +2297,14 @@ input[type='checkbox'] {
     align-items: stretch;
   }
 
+  .tablero--parejo.pantalla {
+    overflow-y: auto;
+    margin: -8px;
+    padding: 8px;
+  }
+
   /* Cada columna se desplaza sola; el margen evita que el desplazamiento corte las sombras */
-  .pantalla > :where(.pila, .tablero__columna) {
+  .pantalla > .pila {
     min-height: 0;
     overflow-y: auto;
     margin: -8px;
@@ -2163,22 +2316,32 @@ input[type='checkbox'] {
     position: static;
   }
 
-  .tarjeta--llena,
-  .tablero__celda--llena {
-    flex: 0 1 auto;
+  .tarjeta--llena {
+    flex: 1 1 auto;
+    min-height: 220px;
+  }
+
+  /* En Calendario, la tarjeta con lista acompaña el alto de su vecina y desplaza por dentro si crece */
+  .lateral-fijo > .tarjeta--llena {
+    height: 0;
     min-height: 220px;
   }
 
   .desplazable {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
   }
 
-  /* La libreta ocupa el alto que queda y desplaza los movimientos adentro */
+  /* Movimientos ocupa todo el alto de la ventana: la libreta llena su columna y desplaza los movimientos adentro */
+  .dos-columnas.pantalla:has(.libreta) {
+    flex: 1 1 auto;
+  }
+
   .pantalla .libreta {
-    flex: 0 1 auto;
-    min-height: 0;
+    flex: 1 1 0;
+    height: 0;
+    min-height: 320px;
     overflow-y: auto;
   }
 
@@ -2186,16 +2349,15 @@ input[type='checkbox'] {
     overflow: hidden;
   }
 
-  /* El almanaque estira sus semanas hasta llenar la columna */
+  /* El almanaque mantiene celdas compactas sin estirarse al alto de la ventana */
   .pantalla .grilla {
-    flex: 1 1 0;
-    min-height: 420px;
+    flex: 0 1 auto;
     grid-template-rows: auto;
-    grid-auto-rows: minmax(0, 1fr);
+    grid-auto-rows: minmax(74px, auto);
   }
 
   .pantalla .grilla__dia {
-    min-height: 0;
+    min-height: 74px;
     overflow: hidden;
   }
 }

@@ -45,6 +45,7 @@ import {
   Receipt,
   Repeat,
   Scissors,
+  Search,
   Settings,
   Shapes,
   Shirt,
@@ -91,6 +92,7 @@ export const ICONOS_UI = {
   suscribir: CalendarPlus,
   copiar: Copy,
   descargar: Download,
+  buscar: Search,
 };
 
 /** Íconos elegibles para una categoría: la clave es lo que se guarda en la base. */

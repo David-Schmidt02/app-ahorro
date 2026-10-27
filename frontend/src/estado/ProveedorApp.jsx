@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FormPago from '../componentes/FormPago';
 import FormRegistro from '../componentes/FormRegistro';
 import Hoja from '../componentes/Hoja';
-import { mesActual } from '../lib/fechas';
+import { mesActual, sumarMeses } from '../lib/fechas';
+import { esAtajo } from '../lib/teclado';
 import { tituloVencimiento } from '../lib/formato';
 import { AppContexto } from './contextos';
 
@@ -24,6 +25,25 @@ export default function ProveedorApp({ children }) {
   }, []);
 
   useEffect(() => () => clearTimeout(temporizador.current), []);
+
+  // Atajos de escritorio: C carga, H vuelve al mes de hoy, Alt + flechas cambia de mes
+  useEffect(() => {
+    const alTeclear = (e) => {
+      if (!esAtajo(e)) return;
+      const tecla = e.key.toLowerCase();
+      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        setMes((m) => sumarMeses(m, e.key === 'ArrowLeft' ? -1 : 1));
+      } else if (!e.altKey && tecla === 'c') {
+        e.preventDefault();
+        setHoja({ clase: 'registro', id: Date.now() });
+      } else if (!e.altKey && tecla === 'h') {
+        setMes(mesActual());
+      }
+    };
+    window.addEventListener('keydown', alTeclear);
+    return () => window.removeEventListener('keydown', alTeclear);
+  }, []);
 
   const valor = useMemo(
     () => ({

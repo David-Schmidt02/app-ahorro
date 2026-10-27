@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminCategorias from '../componentes/AdminCategorias';
 import Estado from '../componentes/Estado';
 import Icono, { IconoCategoria } from '../componentes/Icono';
@@ -43,7 +44,9 @@ function Renglon({ m, onEditar }) {
         <span className="renglon__columna">
           {m.programado_id && <Icono nombre="repetir" tamano={14} />} {origen ?? ''}
         </span>
-        <span className={`importe${m.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(m.monto, m.moneda, { signo: m.tipo === 'ingreso' })}</span>
+        <span className={`importe${m.moneda === 'USD' ? ' es-usd' : ''}${m.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>
+          {dinero(m.monto, m.moneda, { signo: m.tipo === 'ingreso' })}
+        </span>
       </button>
     </li>
   );
@@ -51,12 +54,32 @@ function Renglon({ m, onEditar }) {
 
 function Libreta() {
   const { mes, abrirCarga } = useApp();
+  const [parametros, setParametros] = useSearchParams();
   const [tipo, setTipo] = useState('');
-  const [categoriaId, setCategoriaId] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const categoriaId = Number(parametros.get('categoria')) || null;
+
+  const setCategoriaId = (id) => {
+    setParametros(
+      (prev) => {
+        const siguiente = new URLSearchParams(prev);
+        if (id) siguiente.set('categoria', String(id));
+        else siguiente.delete('categoria');
+        return siguiente;
+      },
+      { replace: true },
+    );
+  };
+
   const { datos: movimientos, error, reintentar } = useApi(conParams('/movimientos', { mes, tipo, categoria_id: categoriaId }));
   const { datos: resumen } = useApi(`/resumen?mes=${mes}`);
   const filtrada = resumen?.categorias.find((c) => c.categoria.id === categoriaId)?.categoria;
+  const categoriasChip = (resumen?.categorias ?? []).filter((c) => c.gastado > 0 || c.categoria.id === categoriaId);
   const nombreTipo = tipo === 'ingreso' ? 'ingresos' : tipo === 'gasto' ? 'gastos' : 'movimientos';
+  const termino = busqueda.trim().toLowerCase();
+  const visibles = (movimientos ?? []).filter(
+    (m) => !termino || (m.descripcion ?? '').toLowerCase().includes(termino) || m.categoria.nombre.toLowerCase().includes(termino),
+  );
 
   const elegirTipo = (valor) => {
     setTipo(valor);
@@ -66,13 +89,50 @@ function Libreta() {
   return (
     <div className="dos-columnas pantalla">
       <div className="pila">
-        <div className="segmentado segmentado--filtro" role="group" aria-label="Filtrar">
-          {FILTROS.map((f) => (
-            <button key={f.valor} type="button" aria-pressed={tipo === f.valor} onClick={() => elegirTipo(f.valor)}>
-              {f.nombre}
-            </button>
-          ))}
+        <div className="libreta-controles">
+          <div className="segmentado segmentado--filtro" role="group" aria-label="Filtrar">
+            {FILTROS.map((f) => (
+              <button key={f.valor} type="button" aria-pressed={tipo === f.valor} onClick={() => elegirTipo(f.valor)}>
+                {f.nombre}
+              </button>
+            ))}
+          </div>
+          <div className="buscador">
+            <Icono nombre="buscar" tamano={18} className="buscador__icono" />
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar movimiento…"
+              aria-label="Buscar movimientos"
+            />
+            {busqueda && (
+              <button type="button" className="boton-icono buscador__limpiar" onClick={() => setBusqueda('')} aria-label="Limpiar búsqueda">
+                <Icono nombre="cerrar" tamano={16} />
+              </button>
+            )}
+          </div>
         </div>
+        {tipo !== 'ingreso' && categoriasChip.length > 0 && (
+          <div className="chips chips--libreta solo-celular" role="group" aria-label="Filtrar por categoría">
+            <button type="button" className="chip chip--chico" aria-pressed={categoriaId === null} onClick={() => setCategoriaId(null)}>
+              Todas
+            </button>
+            {categoriasChip.map(({ categoria: c }) => (
+              <button
+                key={c.id}
+                type="button"
+                className="chip chip--chico"
+                style={{ '--chip': c.color }}
+                aria-pressed={categoriaId === c.id}
+                onClick={() => setCategoriaId(categoriaId === c.id ? null : c.id)}
+              >
+                <IconoCategoria icono={c.icono} color={c.color} tamano="chico" />
+                {c.nombre}
+              </button>
+            ))}
+          </div>
+        )}
         {filtrada && (
           <p className="filtro-activo">
             <IconoCategoria icono={filtrada.icono} color={filtrada.color} tamano="chico" />
@@ -90,9 +150,16 @@ function Libreta() {
                 Cargar {tipo === 'ingreso' ? 'un ingreso' : 'un gasto'}
               </button>
             </div>
+          ) : visibles.length === 0 ? (
+            <div className="tarjeta vacio">
+              <p>No hay movimientos que coincidan con «{busqueda.trim()}».</p>
+              <button type="button" className="boton boton--chico" onClick={() => setBusqueda('')}>
+                Limpiar búsqueda
+              </button>
+            </div>
           ) : (
             <div className="libreta">
-              {agruparPorDia(movimientos ?? []).map(([fecha, delDia]) => {
+              {agruparPorDia(visibles).map(([fecha, delDia]) => {
                 const gastadoDia = delDia.filter((m) => m.tipo === 'gasto').reduce((total, m) => total + m.monto_ars, 0);
                 return (
                   <section key={fecha} className="libreta__dia">

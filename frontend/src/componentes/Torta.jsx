@@ -146,6 +146,8 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
                   d={arco(s.desde, s.hasta)}
                   fill={colorDe(s)}
                   className={activa && activa !== s.clave ? 'es-tenue' : ''}
+                  style={onElegir && s.categoria ? { cursor: 'pointer' } : undefined}
+                  onClick={() => onElegir && s.categoria && onElegir(elegida === s.clave ? null : s.clave)}
                   onPointerEnter={() => setActiva(s.clave)}
                   onPointerLeave={() => setActiva(null)}
                 />

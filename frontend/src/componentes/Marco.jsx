@@ -53,7 +53,7 @@ function PieNav() {
 export default function Marco() {
   const { abrirCarga } = useApp();
   const cargar = (
-    <button type="button" className="nav__cargar" onClick={() => abrirCarga()} aria-label="Cargar gasto o ingreso">
+    <button type="button" className="nav__cargar" onClick={() => abrirCarga()} aria-label="Cargar gasto o ingreso" title="Cargar (C)">
       <Icono nombre="mas" tamano={26} grosor={2.4} />
       <span>Cargar</span>
     </button>

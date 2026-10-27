@@ -111,16 +111,17 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
   const hoyIso = hoy();
   const huecos = primerDiaSemana(mes);
   const dias = Array.from({ length: diasDelMes(mes) }, (_, i) => `${mes}-${String(i + 1).padStart(2, '0')}`);
+  const huecosFin = (7 - ((huecos + dias.length) % 7)) % 7;
 
   return (
     <div className="grilla" role="grid" aria-label="Días del mes">
       {DIAS_CORTOS.map((d, i) => (
-        <span key={i} className="grilla__semana" aria-hidden="true">
+        <span key={i} className={`grilla__semana${i >= 5 ? ' es-finde' : ''}`} aria-hidden="true">
           {d}
         </span>
       ))}
       {Array.from({ length: huecos }, (_, i) => (
-        <span key={`hueco-${i}`} />
+        <span key={`hueco-${i}`} className="grilla__hueco" aria-hidden="true" />
       ))}
       {dias.map((iso) => {
         const { vencimientos = [], eventos = [], externos = [] } = porDia.get(iso) ?? {};
@@ -159,6 +160,9 @@ function Grilla({ mes, porDia, seleccionado, onElegir }) {
           </button>
         );
       })}
+      {Array.from({ length: huecosFin }, (_, i) => (
+        <span key={`hueco-fin-${i}`} className="grilla__hueco" aria-hidden="true" />
+      ))}
     </div>
   );
 }
@@ -189,7 +193,9 @@ function Anotaciones({ vencimientos, eventos, externos = [], conFecha = false, o
               {[conFecha && diaLargo(v.fecha), v.pagado ? 'Registrado' : v.tipo === 'ingreso' ? 'A cobrar' : 'A pagar'].filter(Boolean).join(' · ')}
             </span>
           </span>
-          <span className={`importe${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>{dinero(v.monto, v.moneda)}</span>
+          <span className={`importe${v.moneda === 'USD' ? ' es-usd' : ''}${v.tipo === 'ingreso' ? ' es-ingreso' : ''}`}>
+            {dinero(v.monto, v.moneda)}
+          </span>
         </li>
       ))}
       {eventos.map((e) => (
@@ -239,13 +245,15 @@ function Proximos({ onEvento }) {
   const externos = externosDe(datos);
   const vacio = !datos.vencimientos.length && !datos.eventos.length && !externos.length;
   return (
-    <section className="tarjeta">
+    <section className="tarjeta tarjeta--llena">
       <h2 className="tarjeta__titulo">Próximos 7 días</h2>
-      {vacio ? (
-        <p className="tenue">Nada para pagar ni eventos hasta el {diaCorto(datos.hasta)}.</p>
-      ) : (
-        <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} externos={externos} conFecha onEvento={onEvento} />
-      )}
+      <div className="desplazable">
+        {vacio ? (
+          <p className="tenue">Nada para pagar ni eventos hasta el {diaCorto(datos.hasta)}.</p>
+        ) : (
+          <Anotaciones vencimientos={datos.vencimientos} eventos={datos.eventos} externos={externos} conFecha onEvento={onEvento} />
+        )}
+      </div>
     </section>
   );
 }
@@ -278,33 +286,6 @@ export default function Calendario() {
         <div className="dos-columnas pantalla">
           <div className="pila">
             <Grilla mes={mes} porDia={porDia} seleccionado={seleccionado} onElegir={setElegido} />
-            <ul className="referencias" aria-label="Referencias">
-              <li>
-                <i className="punto punto--pago" /> A pagar
-              </li>
-              <li>
-                <i className="punto punto--vencido" /> Vencido
-              </li>
-              <li>
-                <i className="punto punto--cobro" /> A cobrar
-              </li>
-              <li>
-                <i className="punto punto--hecho" /> Registrado
-              </li>
-              <li>
-                <i className="punto punto--evento" /> Evento
-              </li>
-              {externosDe(datos).length > 0 && (
-                <li>
-                  <i className="punto punto--externo" /> De otro calendario
-                </li>
-              )}
-            </ul>
-            {erroresExternosDe(datos).length > 0 && (
-              <p className="tenue" role="status">
-                No se pudo leer {erroresExternosDe(datos).map((n) => `«${n}»`).join(', ')}: sus eventos pueden faltar o estar desactualizados.
-              </p>
-            )}
           </div>
           <div className="pila lateral-fijo">
             <section className="tarjeta">
@@ -322,6 +303,33 @@ export default function Calendario() {
             </section>
             <Proximos onEvento={editarEvento} />
           </div>
+          <ul className="referencias dos-columnas__ancho" aria-label="Referencias">
+            <li>
+              <i className="punto punto--pago" /> A pagar
+            </li>
+            <li>
+              <i className="punto punto--vencido" /> Vencido
+            </li>
+            <li>
+              <i className="punto punto--cobro" /> A cobrar
+            </li>
+            <li>
+              <i className="punto punto--hecho" /> Registrado
+            </li>
+            <li>
+              <i className="punto punto--evento" /> Evento
+            </li>
+            {externosDe(datos).length > 0 && (
+              <li>
+                <i className="punto punto--externo" /> De otro calendario
+              </li>
+            )}
+          </ul>
+          {erroresExternosDe(datos).length > 0 && (
+            <p className="tenue dos-columnas__ancho" role="status">
+              No se pudo leer {erroresExternosDe(datos).map((n) => `«${n}»`).join(', ')}: sus eventos pueden faltar o estar desactualizados.
+            </p>
+          )}
         </div>
       </Estado>
       <Hoja titulo={hoja?.evento ? 'Editar evento' : 'Nuevo evento'} abierta={Boolean(hoja)} onCerrar={() => setHoja(null)}>
