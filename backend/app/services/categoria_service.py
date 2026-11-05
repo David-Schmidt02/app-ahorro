@@ -1,10 +1,14 @@
+from decimal import Decimal
+
 from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session
 
 from app.core.dinero import a_centavos
 from app.core.exceptions import Conflicto, NoEncontrado, ReglaDeNegocio
-from app.models import Categoria, Movimiento, Programado, TipoMovimiento
+from app.models import Categoria, CupoSemanal, Movimiento, Programado, TipoMovimiento
 from app.schemas.categorias import CategoriaIn, CategoriaUpdate
+
+_PRESUPUESTO_O_CUPO = "Elegí presupuesto mensual o cupo semanal, no los dos"
 
 CATEGORIAS_INICIALES: list[tuple[str, str, str, TipoMovimiento]] = [
     ("Súper", "shopping-cart", "#1BAF7A", TipoMovimiento.GASTO),
@@ -65,6 +69,7 @@ class CategoriaService:
             presupuesto_centavos=a_centavos(datos.presupuesto) if datos.presupuesto is not None else None,
             orden=ultimo_orden + 1,
         )
+        self._fijar_cupo(categoria, datos.cupo_semanal)
         self.db.add(categoria)
         self.db.commit()
         return categoria
@@ -75,11 +80,30 @@ class CategoriaService:
         if "presupuesto" in cambios:
             presupuesto = cambios.pop("presupuesto")
             categoria.presupuesto_centavos = a_centavos(presupuesto) if presupuesto is not None else None
+        if "cupo_semanal" in cambios:
+            self._fijar_cupo(categoria, cambios.pop("cupo_semanal"))
+        if categoria.presupuesto_centavos is not None and categoria.cupo is not None:
+            raise ReglaDeNegocio(_PRESUPUESTO_O_CUPO)
         for campo, valor in cambios.items():
             if valor is not None:
                 setattr(categoria, campo, valor)
         self.db.commit()
         return categoria
+
+    @staticmethod
+    def _fijar_cupo(categoria: Categoria, monto: Decimal | None) -> None:
+        """Pone, cambia o saca el cupo semanal. Una categoría tiene presupuesto mensual o cupo semanal, no los dos."""
+        if monto is None:
+            categoria.cupo = None
+            return
+        if categoria.tipo != TipoMovimiento.GASTO:
+            raise ReglaDeNegocio("El cupo semanal es solo para categorías de gastos")
+        if categoria.presupuesto_centavos is not None:
+            raise ReglaDeNegocio(_PRESUPUESTO_O_CUPO)
+        if categoria.cupo is None:
+            categoria.cupo = CupoSemanal(monto_centavos=a_centavos(monto))
+        else:
+            categoria.cupo.monto_centavos = a_centavos(monto)
 
     def eliminar(self, categoria_id: int) -> None:
         categoria = self.obtener(categoria_id)

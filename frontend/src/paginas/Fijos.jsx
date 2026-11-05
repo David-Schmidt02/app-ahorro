@@ -1,5 +1,6 @@
 import Estado from '../componentes/Estado';
 import Icono, { IconoCategoria } from '../componentes/Icono';
+import PestanasPlan from '../componentes/PestanasPlan';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { diaCorto, diasHasta, mesActual, nombreMes, nombreMesSolo } from '../lib/fechas';
@@ -82,7 +83,8 @@ export default function Fijos() {
   return (
     <>
       <header className="cabecera">
-        <h1 className="cabecera__titulo">Fijos</h1>
+        <h1 className="sr-solo">Fijos</h1>
+        <PestanasPlan />
         <button type="button" className="boton boton--principal boton--chico" onClick={nuevo}>
           <Icono nombre="mas" tamano={18} grosor={2.4} /> Nuevo
         </button>

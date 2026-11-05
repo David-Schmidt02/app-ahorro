@@ -74,7 +74,6 @@ function Libreta() {
   const { datos: movimientos, error, reintentar } = useApi(conParams('/movimientos', { mes, tipo, categoria_id: categoriaId }));
   const { datos: resumen } = useApi(`/resumen?mes=${mes}`);
   const filtrada = resumen?.categorias.find((c) => c.categoria.id === categoriaId)?.categoria;
-  const categoriasChip = (resumen?.categorias ?? []).filter((c) => c.gastado > 0 || c.categoria.id === categoriaId);
   const nombreTipo = tipo === 'ingreso' ? 'ingresos' : tipo === 'gasto' ? 'gastos' : 'movimientos';
   const termino = busqueda.trim().toLowerCase();
   const visibles = (movimientos ?? []).filter(
@@ -84,6 +83,11 @@ function Libreta() {
   const elegirTipo = (valor) => {
     setTipo(valor);
     if (valor === 'ingreso') setCategoriaId(null);
+  };
+
+  const elegirCategoria = (id) => {
+    setCategoriaId(id);
+    if (id && tipo === 'ingreso') setTipo('');
   };
 
   return (
@@ -113,24 +117,9 @@ function Libreta() {
             )}
           </div>
         </div>
-        {tipo !== 'ingreso' && categoriasChip.length > 0 && (
-          <div className="chips chips--libreta solo-celular" role="group" aria-label="Filtrar por categoría">
-            <button type="button" className="chip chip--chico" aria-pressed={categoriaId === null} onClick={() => setCategoriaId(null)}>
-              Todas
-            </button>
-            {categoriasChip.map(({ categoria: c }) => (
-              <button
-                key={c.id}
-                type="button"
-                className="chip chip--chico"
-                style={{ '--chip': c.color }}
-                aria-pressed={categoriaId === c.id}
-                onClick={() => setCategoriaId(categoriaId === c.id ? null : c.id)}
-              >
-                <IconoCategoria icono={c.icono} color={c.color} tamano="chico" />
-                {c.nombre}
-              </button>
-            ))}
+        {resumen && tipo !== 'ingreso' && (
+          <div className="torta-libreta">
+            <Torta categorias={resumen.categorias} titulo="Filtrar por categoría" elegida={categoriaId} onElegir={elegirCategoria} compacta />
           </div>
         )}
         {filtrada && (
@@ -195,15 +184,7 @@ function Libreta() {
               <dd className={resumen.ahorro < 0 ? 'es-alerta' : ''}>{dinero(resumen.ahorro)}</dd>
             </div>
           </dl>
-          <Torta
-            categorias={resumen.categorias}
-            titulo="Filtrar por categoría"
-            elegida={categoriaId}
-            onElegir={(id) => {
-              setCategoriaId(id);
-              if (id && tipo === 'ingreso') setTipo('');
-            }}
-          />
+          <Torta categorias={resumen.categorias} titulo="Filtrar por categoría" elegida={categoriaId} onElegir={elegirCategoria} />
         </aside>
       )}
     </div>

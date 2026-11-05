@@ -1,4 +1,5 @@
 """Dependencias inyectables de los routers."""
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
@@ -6,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NoAutorizado
+from app.core.fechas import hoy_local
 from app.core.security import leer_token
 from app.database import get_db
 from app.models import Usuario
@@ -55,8 +57,15 @@ def programado_service(db: DbDep, movimientos: MovimientosDep) -> ProgramadoServ
 ProgramadosDep = Annotated[ProgramadoService, Depends(programado_service)]
 
 
-def resumen_service(db: DbDep, programados: ProgramadosDep) -> ResumenService:
-    return ResumenService(db, programados)
+def hoy() -> date:
+    return hoy_local()
+
+
+HoyDep = Annotated[date, Depends(hoy)]
+
+
+def resumen_service(db: DbDep, programados: ProgramadosDep, fecha_hoy: HoyDep) -> ResumenService:
+    return ResumenService(db, programados, fecha_hoy)
 
 
 ResumenDep = Annotated[ResumenService, Depends(resumen_service)]

@@ -19,6 +19,7 @@ const fila = (c) => ({
   programado: c.gastado_programado,
   pendiente: c.pendiente,
   presupuesto: c.presupuesto,
+  cupo: c.cupo_semanal,
 });
 
 /**
@@ -85,7 +86,7 @@ function Presupuesto({ f, avance }) {
       ) : null}
       <span className={`renglon__detalle${pasado ? ' es-alerta' : ''}`}>
         {[
-          f.presupuesto && `de ${dinero(f.presupuesto)}`,
+          f.presupuesto && `de ${dinero(f.presupuesto)}${f.cupo ? ` (${dinero(f.cupo)} por semana)` : ''}`,
           f.pendiente > 0 && `${dinero(f.pendiente)} por pagar`,
           pasado && `se pasa por ${dinero(usado - f.presupuesto)}`,
         ]
@@ -97,8 +98,11 @@ function Presupuesto({ f, avance }) {
   );
 }
 
-/** Reparto del gasto del mes por categoría, con presupuesto y pendientes de cada una. */
-export default function Torta({ categorias, titulo = 'En qué se va la plata', elegida = null, onElegir = null }) {
+/**
+ * Reparto del gasto del mes por categoría, con presupuesto y pendientes de cada una.
+ * `compacta`: torta chica al lado de la lista y sin presupuestos (para el celular, arriba de la libreta).
+ */
+export default function Torta({ categorias, titulo = 'En qué se va la plata', elegida = null, onElegir = null, compacta = false }) {
   const [activa, setActiva] = useState(null);
   const [todas, setTodas] = useState(false);
   const avance = avanceDelMes(useApp().mes);
@@ -127,7 +131,7 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
           </button>
         )}
       </header>
-      <div className="grafico-torta__cuerpo">
+      <div className={`grafico-torta__cuerpo${compacta ? ' grafico-torta__cuerpo--compacto' : ''}`}>
         {total > 0 && (
           <svg
             viewBox={`0 0 ${LADO} ${LADO}`}
@@ -165,11 +169,11 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
           {filas.map((f) => (
             <li
               key={f.clave}
-              className={`torta-fila${activa === f.clave || elegida === f.clave ? ' es-activa' : ''}`}
+              className={`torta-fila${compacta ? ' torta-fila--compacta' : ''}${activa === f.clave || elegida === f.clave ? ' es-activa' : ''}`}
               onPointerEnter={() => setActiva(f.clave)}
               onPointerLeave={() => setActiva(null)}
             >
-              <span className="muestra" style={{ background: colorDe(f) }} aria-hidden="true" />
+              {!compacta && <span className="muestra" style={{ background: colorDe(f) }} aria-hidden="true" />}
               {f.categoria ? (
                 <IconoCategoria icono={f.categoria.icono} color={f.categoria.color} tamano="chico" />
               ) : (
@@ -189,9 +193,9 @@ export default function Torta({ categorias, titulo = 'En qué se va la plata', e
               ) : (
                 <span className="torta-fila__nombre">{nombreDe(f)}</span>
               )}
-              <span className="torta-fila__parte">{total ? porcentaje.format(f.valor / total) : '—'}</span>
+              {!compacta && <span className="torta-fila__parte">{total ? porcentaje.format(f.valor / total) : '—'}</span>}
               <span className="importe">{dinero(f.valor)}</span>
-              <Presupuesto f={f} avance={avance} />
+              {!compacta && <Presupuesto f={f} avance={avance} />}
             </li>
           ))}
         </ul>

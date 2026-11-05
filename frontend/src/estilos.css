@@ -118,6 +118,15 @@ a {
   outline-offset: 2px;
 }
 
+.sr-solo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .tenue {
   color: var(--tinta-2);
 }
@@ -554,6 +563,12 @@ a {
   box-shadow: inset 0 0 0 1.5px var(--birome);
 }
 
+/* Lo que queda de los cupos semanales: el mismo rayado, más suave, porque es un plan y no una deuda */
+.barra-mes__cupos {
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--birome) 45%, transparent) 0 2px, transparent 2px 7px);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--birome) 45%, transparent);
+}
+
 .barra-mes__objetivo {
   top: -16px !important;
   bottom: -6px !important;
@@ -614,6 +629,11 @@ a {
 .leyenda--por-pagar::before {
   background: repeating-linear-gradient(-45deg, var(--birome) 0 1.5px, transparent 1.5px 4px);
   box-shadow: inset 0 0 0 1.5px var(--birome);
+}
+
+.leyenda--cupos::before {
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--birome) 45%, transparent) 0 1.5px, transparent 1.5px 4px);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--birome) 45%, transparent);
 }
 
 .leyenda--libre::before {
@@ -951,7 +971,8 @@ input[type='checkbox'] {
   background: var(--papel);
 }
 
-.segmentado button {
+.segmentado button,
+.segmentado .pestana {
   flex: 1;
   display: inline-flex;
   align-items: center;
@@ -966,8 +987,13 @@ input[type='checkbox'] {
   font-weight: 600;
 }
 
+.segmentado .pestana {
+  text-decoration: none;
+}
+
 .segmentado button[aria-pressed='true'],
-.segmentado button[aria-selected='true'] {
+.segmentado button[aria-selected='true'],
+.segmentado .pestana.active {
   background: var(--hoja);
   color: var(--tinta);
   box-shadow: 0 1px 3px rgb(22 35 58 / 14%);
@@ -984,6 +1010,10 @@ input[type='checkbox'] {
   white-space: nowrap;
 }
 
+.segmentado--ancho button {
+  flex: 1;
+}
+
 .segmentado--filtro,
 .segmentado--pestanas {
   background: var(--hoja);
@@ -991,6 +1021,7 @@ input[type='checkbox'] {
 }
 
 .segmentado--pestanas button[aria-selected='true'],
+.segmentado--pestanas .pestana.active,
 .segmentado--filtro button[aria-pressed='true'] {
   background: var(--birome-suave);
   color: var(--birome);
@@ -1541,6 +1572,11 @@ input[type='checkbox'] {
   background: currentColor;
 }
 
+.clave-linea--referencia {
+  color: var(--serie-ahorro);
+  opacity: 0.6;
+}
+
 .serie--ingresos {
   color: var(--serie-ingresos);
 }
@@ -1551,6 +1587,36 @@ input[type='checkbox'] {
 
 .serie--ahorro {
   color: var(--serie-ahorro);
+}
+
+.serie--variable {
+  color: var(--serie-gastos);
+}
+
+.serie--fijos {
+  color: color-mix(in srgb, var(--tinta-3) 60%, transparent);
+}
+
+.grafico-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.grafico-pie-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.barra {
+  fill: currentColor;
+}
+
+.banda-elegida {
+  fill: var(--papel);
 }
 
 .grafico-lineas {
@@ -2061,6 +2127,178 @@ input[type='checkbox'] {
   gap: var(--espacio-1);
 }
 
+/* Compacta: torta chica al lado de la lista, sin presupuestos, para que no tape la libreta en el celular */
+.grafico-torta__cuerpo--compacto {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: var(--espacio-4);
+}
+
+.grafico-torta__cuerpo--compacto .grafico-torta__svg {
+  flex: none;
+  width: 116px;
+  height: 116px;
+}
+
+.torta-fila--compacta {
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  padding: 4px 6px;
+}
+
+/* En la libreta, la torta va arriba de los movimientos hasta que hay lugar para la columna del costado */
+@media (min-width: 1100px) {
+  .torta-libreta {
+    display: none;
+  }
+}
+
+/* ---------- Cupos semanales ---------- */
+
+.cupos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--espacio-3) var(--espacio-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cupo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--espacio-3);
+  row-gap: 6px;
+}
+
+.cupo__nombre {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cupo__resto {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  line-height: 1.2;
+}
+
+.cupo__resto strong {
+  font-family: var(--f-display);
+  font-size: 19px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.cupo__resto span {
+  font-size: 12.5px;
+  color: var(--tinta-2);
+}
+
+.cupo__resto.es-alerta span {
+  color: inherit;
+}
+
+.cupos__pie {
+  font-size: 13.5px;
+}
+
+.cupo__barra,
+.cupo__nota {
+  grid-column: 2 / -1;
+}
+
+/* ---------- Plan › Cupos ---------- */
+
+.cupos-cifras {
+  margin-top: var(--espacio-3);
+  padding-top: var(--espacio-3);
+  border-top: 1px solid var(--renglon);
+}
+
+.semanas-cupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.semana-cupo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 6px var(--espacio-3);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.semana-cupo.es-actual {
+  background: var(--papel);
+}
+
+.semana-cupo__fecha {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.semana-cupo.es-futura .semana-cupo__fecha {
+  font-weight: 400;
+  color: var(--tinta-2);
+}
+
+.semana-cupo__marca {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--birome);
+}
+
+.semana-cupo__resultado {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La pista es el cupo de la semana; encima, lo gastado (en rojo si lo pasa) */
+.semana-cupo__pista {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 10px;
+}
+
+.semana-cupo__pista > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  max-width: 100%;
+  border-radius: 5px;
+}
+
+.semana-cupo__cupo {
+  background: var(--renglon);
+}
+
+.semana-cupo.es-futura .semana-cupo__cupo {
+  background: none;
+  border: 1.5px dashed var(--renglon);
+}
+
+.semana-cupo__gastado {
+  background: var(--verde);
+}
+
+.semana-cupo__gastado.es-pasada {
+  background: var(--margen);
+}
+
+.semana-cupo__detalle {
+  grid-column: 1 / -1;
+}
+
 /* ---------- Marca ---------- */
 
 .marca {
@@ -2114,6 +2352,22 @@ input[type='checkbox'] {
 .vista-previa-categoria .icono-categoria {
   width: 46px;
   height: 46px;
+}
+
+.selector-iconos-grupos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 2px 4px 2px 2px;
+}
+
+.selector-iconos__grupo {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-3);
 }
 
 .selector-iconos {

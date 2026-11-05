@@ -58,6 +58,18 @@ class Categoria(Base):
     orden: Mapped[int] = mapped_column(default=0)
     activa: Mapped[bool] = mapped_column(default=True)
 
+    cupo: Mapped["CupoSemanal | None"] = relationship(lazy="joined", cascade="all, delete-orphan")
+
+
+class CupoSemanal(Base):
+    """Plata por semana para una categoría de gasto (ej. el súper). Va en su propia tabla porque
+    `create_all` crea tablas nuevas pero no agrega columnas: así una base ya desplegada no necesita ALTER."""
+
+    __tablename__ = "cupos_semanales"
+
+    categoria_id: Mapped[int] = mapped_column(ForeignKey("categorias.id", ondelete="CASCADE"), primary_key=True)
+    monto_centavos: Mapped[int]
+
 
 class Programado(Base):
     """Pago o cobro que se espera: todos los meses un día dado, o una única vez en una fecha."""

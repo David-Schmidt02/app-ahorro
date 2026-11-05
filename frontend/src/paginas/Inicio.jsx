@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import BarraMes from '../componentes/BarraMes';
 import CierreMes from '../componentes/CierreMes';
+import Cupos from '../componentes/Cupos';
 import Estado from '../componentes/Estado';
 import Evolucion from '../componentes/Evolucion';
 import Icono, { IconoCategoria } from '../componentes/Icono';
@@ -12,6 +13,11 @@ import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { cuandoVence, diaCorto, diasHasta, mesActual, nombreMesSolo, sumarMeses } from '../lib/fechas';
 import { dinero, tituloVencimiento } from '../lib/formato';
+
+function rotuloTitular(resumen, esActual) {
+  if (!esActual && !resumen.reservado_cupos) return 'Al cierre del mes quedan';
+  return resumen.reservado_cupos > 0 ? 'Si pagan lo programado y gastan lo que queda de los cupos, les quedan' : 'Si se paga todo lo programado, les quedan';
+}
 
 function Titular({ resumen, esActual }) {
   const { proyeccion, objetivo_ars: objetivo, ingresos, pendiente_ingresos: porCobrar } = resumen;
@@ -27,7 +33,7 @@ function Titular({ resumen, esActual }) {
   const textoObjetivo = resumen.objetivo_moneda === 'USD' ? `${dinero(resumen.objetivo, 'USD')} (${dinero(objetivo)})` : dinero(objetivo);
   return (
     <div className="titular">
-      <p className="titular__rotulo">{esActual ? 'Si se paga todo lo programado, les quedan' : 'Al cierre del mes quedan'}</p>
+      <p className="titular__rotulo">{rotuloTitular(resumen, esActual)}</p>
       <p className={`titular__monto${proyeccion < 0 ? ' es-negativo' : ''}`}>{dinero(proyeccion)}</p>
       {objetivo ? (
         <p className={`titular__nota ${faltante > 0 ? 'es-alerta' : 'es-bien'}`}>
@@ -179,7 +185,10 @@ export default function Inicio() {
                   </div>
                 </dl>
               </section>
-              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 4, '--orden-escritorio': 3 }}>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 3, '--orden-escritorio': 3 }}>
+                <Cupos cupos={resumen.cupos} conEnlace />
+              </div>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 6, '--orden-escritorio': 4 }}>
                 <Evolucion />
               </div>
             </div>
@@ -187,14 +196,14 @@ export default function Inicio() {
               <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 0, '--orden-escritorio': 0 }}>
                 <CierreMes />
               </div>
-              <div className="tablero__celda" style={{ '--orden': 3, '--orden-escritorio': 2 }}>
+              <div className="tablero__celda" style={{ '--orden': 5, '--orden-escritorio': 2 }}>
                 <Torta categorias={resumen.categorias} onElegir={(id) => id && navegar(`/movimientos?categoria=${id}`)} />
               </div>
-              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 2, '--orden-escritorio': 4 }}>
+              <div className="tablero__celda tablero__celda--ancho" style={{ '--orden': 4, '--orden-escritorio': 5 }}>
                 <Pendientes vencimientos={resumen.vencimientos} />
               </div>
               {resumen.gastos_mes_anterior > 0 && (
-                <p className="pie tablero__celda--ancho" style={{ '--orden': 5, '--orden-escritorio': 5 }}>
+                <p className="pie tablero__celda--ancho" style={{ '--orden': 7, '--orden-escritorio': 6 }}>
                   En {nombreMesSolo(sumarMeses(mes, -1))} gastaron {dinero(resumen.gastos_mes_anterior)}.
                 </p>
               )}

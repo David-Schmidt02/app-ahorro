@@ -8,6 +8,7 @@ import Fijos from './paginas/Fijos';
 import Ingreso from './paginas/Ingreso';
 import Inicio from './paginas/Inicio';
 import Movimientos from './paginas/Movimientos';
+import PlanCupos from './paginas/PlanCupos';
 
 export default function App() {
   const { usuario } = useSesion();
@@ -22,7 +23,12 @@ export default function App() {
           <Route element={<Marco />}>
             <Route index element={<Inicio />} />
             <Route path="movimientos" element={<Movimientos />} />
-            <Route path="fijos" element={<Fijos />} />
+            <Route path="plan">
+              <Route index element={<Navigate to="fijos" replace />} />
+              <Route path="fijos" element={<Fijos />} />
+              <Route path="cupos" element={<PlanCupos />} />
+            </Route>
+            <Route path="fijos" element={<Navigate to="/plan/fijos" replace />} />
             <Route path="calendario" element={<Calendario />} />
             <Route path="ajustes" element={<Ajustes />} />
             <Route path="*" element={<Navigate to="/" replace />} />

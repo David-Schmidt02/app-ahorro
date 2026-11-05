@@ -1,14 +1,52 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../estado/contextos';
 import { useApi } from '../estado/useApi';
 import { api } from '../lib/api';
 import { nombreMesSolo } from '../lib/fechas';
 import { dinero, montoATexto, parsearMonto } from '../lib/formato';
-import { ICONO_CATEGORIA_POR_DEFECTO, ICONOS_CATEGORIA } from '../lib/iconos';
+import { GRUPOS_ICONOS, ICONO_CATEGORIA_POR_DEFECTO, ICONOS_CATEGORIA } from '../lib/iconos';
 import CampoMonto from './CampoMonto';
 import Estado from './Estado';
 import Hoja from './Hoja';
 import Icono, { IconoCategoria } from './Icono';
+
+const tope = (c) => (c.cupo_semanal != null ? `${dinero(c.cupo_semanal)} por semana` : c.presupuesto ? dinero(c.presupuesto) : null);
+
+/** Íconos por tema; al editar, arranca mostrando el elegido. */
+function SelectorIconos({ icono, color, onElegir }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.querySelector('[aria-checked="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, []);
+
+  return (
+    <div className="selector-iconos-grupos" ref={ref}>
+      {GRUPOS_ICONOS.map((grupo) => (
+        <div key={grupo.nombre} role="radiogroup" aria-label={grupo.nombre}>
+          <p className="selector-iconos__grupo" aria-hidden="true">
+            {grupo.nombre}
+          </p>
+          <div className="selector-iconos">
+            {Object.entries(grupo.iconos).map(([clave, Componente]) => (
+              <button
+                key={clave}
+                type="button"
+                role="radio"
+                aria-checked={icono === clave}
+                aria-label={clave}
+                className="selector-iconos__opcion"
+                style={{ '--color': color }}
+                onClick={() => onElegir(clave)}
+              >
+                <Componente size={20} strokeWidth={2} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const COLORES = ['#1BAF7A', '#2A78D6', '#EDA100', '#6250D6', '#E34948', '#EB6834', '#E87BA4', '#008300', '#B0478A', '#7A7F8A'];
 
@@ -17,7 +55,8 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
   const [nombre, setNombre] = useState(categoria?.nombre ?? '');
   const [icono, setIcono] = useState(categoria?.icono in ICONOS_CATEGORIA ? categoria.icono : ICONO_CATEGORIA_POR_DEFECTO);
   const [color, setColor] = useState(categoria?.color ?? COLORES[0]);
-  const [presupuesto, setPresupuesto] = useState(montoATexto(categoria?.presupuesto));
+  const [periodo, setPeriodo] = useState(categoria?.cupo_semanal != null ? 'semana' : 'mes');
+  const [presupuesto, setPresupuesto] = useState(montoATexto(categoria?.cupo_semanal ?? categoria?.presupuesto));
   const [error, setError] = useState(null);
   const tipo = categoria?.tipo ?? tipoInicial;
 
@@ -36,8 +75,15 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
     e.preventDefault();
     if (!nombre.trim()) return setError('Poné un nombre');
     const valor = presupuesto.trim() ? parsearMonto(presupuesto) : null;
-    if (presupuesto.trim() && !valor) return setError('El presupuesto tiene que ser un monto válido');
-    const cuerpo = { nombre: nombre.trim(), icono, color, presupuesto: tipo === 'gasto' ? valor : null };
+    if (presupuesto.trim() && !valor) return setError(`El ${periodo === 'semana' ? 'cupo' : 'presupuesto'} tiene que ser un monto válido`);
+    const esGasto = tipo === 'gasto';
+    const cuerpo = {
+      nombre: nombre.trim(),
+      icono,
+      color,
+      presupuesto: esGasto && periodo === 'mes' ? valor : null,
+      cupo_semanal: esGasto && periodo === 'semana' ? valor : null,
+    };
     if (categoria) return enviar('PATCH', `/categorias/${categoria.id}`, cuerpo, 'Categoría guardada');
     return enviar('POST', '/categorias', { ...cuerpo, tipo }, 'Categoría creada');
   };
@@ -53,22 +99,7 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
       </div>
       <fieldset className="campo">
         <legend>Ícono</legend>
-        <div className="selector-iconos" role="radiogroup">
-          {Object.entries(ICONOS_CATEGORIA).map(([clave, Componente]) => (
-            <button
-              key={clave}
-              type="button"
-              role="radio"
-              aria-checked={icono === clave}
-              aria-label={clave}
-              className="selector-iconos__opcion"
-              style={{ '--color': color }}
-              onClick={() => setIcono(clave)}
-            >
-              <Componente size={20} strokeWidth={2} aria-hidden="true" />
-            </button>
-          ))}
-        </div>
+        <SelectorIconos icono={icono} color={color} onElegir={setIcono} />
       </fieldset>
       <fieldset className="campo">
         <legend>Color</legend>
@@ -88,7 +119,27 @@ function FormCategoria({ categoria, tipoInicial, onListo }) {
         </div>
       </fieldset>
       {tipo === 'gasto' && (
-        <CampoMonto id="presupuesto" etiqueta="Presupuesto mensual (opcional)" valor={presupuesto} onCambio={setPresupuesto} moneda="ARS" />
+        <fieldset className="campo">
+          <legend>Tope de gasto (opcional)</legend>
+          <div className="segmentado segmentado--chico segmentado--ancho" role="group" aria-label="Período del tope">
+            <button type="button" aria-pressed={periodo === 'mes'} onClick={() => setPeriodo('mes')}>
+              Presupuesto por mes
+            </button>
+            <button type="button" aria-pressed={periodo === 'semana'} onClick={() => setPeriodo('semana')}>
+              Cupo por semana
+            </button>
+          </div>
+          <CampoMonto
+            id="presupuesto"
+            etiqueta={periodo === 'semana' ? 'Cupo semanal' : 'Presupuesto mensual'}
+            valor={presupuesto}
+            onCambio={setPresupuesto}
+            moneda="ARS"
+          />
+          {periodo === 'semana' && (
+            <p className="tenue">Si se pasan, se descuenta de la semana siguiente. Lo que sobra va al ahorro.</p>
+          )}
+        </fieldset>
       )}
       {error && (
         <p className="error" role="alert">
@@ -145,7 +196,7 @@ function Grupo({ titulo, tipo, categorias, gastadoPorId, mes, onEditar, onNueva 
           <span />
           <span>Categoría</span>
           <span>{tipo === 'gasto' ? `En ${nombreMesSolo(mes)}` : ''}</span>
-          <span>{tipo === 'gasto' ? 'Presupuesto' : ''}</span>
+          <span>{tipo === 'gasto' ? 'Tope' : ''}</span>
           <span />
         </li>
         {categorias.map((c) => (
@@ -159,12 +210,14 @@ function Grupo({ titulo, tipo, categorias, gastadoPorId, mes, onEditar, onNueva 
               <span className="renglon__texto">
                 <span className="renglon__titulo">{c.nombre}</span>
                 {!c.activa && <span className="renglon__detalle">Archivada</span>}
-                {c.activa && c.presupuesto ? (
-                  <span className="renglon__detalle renglon__detalle--compacto">Presupuesto {dinero(c.presupuesto)}</span>
+                {c.activa && tope(c) ? (
+                  <span className="renglon__detalle renglon__detalle--compacto">
+                    {c.cupo_semanal != null ? 'Cupo' : 'Presupuesto'} {tope(c)}
+                  </span>
                 ) : null}
               </span>
               <span className="renglon__columna renglon__columna--numero">{tipo === 'gasto' ? dinero(gastadoPorId.get(c.id) ?? 0) : ''}</span>
-              <span className="renglon__columna renglon__columna--numero">{c.presupuesto ? dinero(c.presupuesto) : '—'}</span>
+              <span className="renglon__columna renglon__columna--numero">{tope(c) ?? '—'}</span>
               <Icono nombre="editar" tamano={18} className="renglon__accion" />
             </button>
           </li>
