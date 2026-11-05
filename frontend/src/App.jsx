@@ -9,6 +9,7 @@ import Ingreso from './paginas/Ingreso';
 import Inicio from './paginas/Inicio';
 import Movimientos from './paginas/Movimientos';
 import PlanCupos from './paginas/PlanCupos';
+import PlanResumen from './paginas/PlanResumen';
 
 export default function App() {
   const { usuario } = useSesion();
@@ -24,7 +25,8 @@ export default function App() {
             <Route index element={<Inicio />} />
             <Route path="movimientos" element={<Movimientos />} />
             <Route path="plan">
-              <Route index element={<Navigate to="fijos" replace />} />
+              <Route index element={<Navigate to="resumen" replace />} />
+              <Route path="resumen" element={<PlanResumen />} />
               <Route path="fijos" element={<Fijos />} />
               <Route path="cupos" element={<PlanCupos />} />
             </Route>

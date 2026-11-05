@@ -1597,6 +1597,36 @@ input[type='checkbox'] {
   color: color-mix(in srgb, var(--tinta-3) 60%, transparent);
 }
 
+.serie--gastado {
+  color: var(--serie-gastos);
+}
+
+.serie--plan {
+  color: var(--verde);
+}
+
+.serie--exceso {
+  color: var(--margen);
+}
+
+/* La proyección: barras más claras y línea punteada */
+.barra.es-estimada {
+  opacity: 0.4;
+}
+
+.serie polyline.es-estimada {
+  stroke-dasharray: 5 4;
+}
+
+.clave-linea--punteada {
+  background: repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 7px);
+}
+
+.area-exceso {
+  fill: var(--margen);
+  opacity: 0.22;
+}
+
 .grafico-controles {
   display: flex;
   flex-wrap: wrap;
@@ -2208,6 +2238,41 @@ input[type='checkbox'] {
 .cupo__barra,
 .cupo__nota {
   grid-column: 2 / -1;
+}
+
+/* ---------- Plan › Resumen ---------- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--separacion-tarjetas);
+}
+
+.kpi__titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-2);
+}
+
+.kpi__monto {
+  margin: 6px 0 4px;
+  font-family: var(--f-display);
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi__monto.es-negativo {
+  color: var(--margen);
+}
+
+.kpi__nota {
+  font-size: 14px;
+}
+
+.pie-grafico {
+  font-size: 13px;
 }
 
 /* ---------- Plan › Cupos ---------- */

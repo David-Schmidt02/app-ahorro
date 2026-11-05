@@ -70,6 +70,24 @@ class EvolucionOut(BaseModel):
     objetivo_ars: float | None
 
 
+class DiaDelPlan(BaseModel):
+    fecha: date
+    plan: float = Field(description="Lo planeado acumulado hasta este día")
+    gastado: float | None = Field(description="Lo gastado acumulado; después de hoy, lo proyectado. None en meses futuros")
+    estimado: bool = Field(description="True si `gastado` es proyección")
+
+
+class PlanOut(BaseModel):
+    mes: str
+    dias: list[DiaDelPlan]
+    ingresos: float = Field(description="Lo cobrado más lo que falta cobrar del mes")
+    gasto_plan: float
+    gasto_proyectado: float | None = Field(description="Lo gastado más lo que se espera gastar a este ritmo; None en meses futuros")
+    ahorro_plan: float
+    ahorro_proyectado: float | None
+    objetivo_ars: float | None
+
+
 class DiaGasto(BaseModel):
     fecha: date
     gastos: float

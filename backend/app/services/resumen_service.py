@@ -10,8 +10,19 @@ from app.core.exceptions import ServicioExternoNoDisponible
 from app.core.fechas import mes_anterior, parsear_mes, siguiente_mes
 from app.models import Categoria, Moneda, Movimiento, TipoMovimiento
 from app.schemas.categorias import CategoriaBreve
-from app.schemas.resumen import CategoriaDelMes, CuposDelMesOut, DiaGasto, DiarioOut, EvolucionOut, MesEvolucion, ResumenOut
+from app.schemas.resumen import (
+    CategoriaDelMes,
+    CuposDelMesOut,
+    DiaDelPlan,
+    DiaGasto,
+    DiarioOut,
+    EvolucionOut,
+    MesEvolucion,
+    PlanOut,
+    ResumenOut,
+)
 from app.services.cupo_service import CupoService, cupo_por_dias
+from app.services.plan_service import PlanDelMes
 from app.services.preferencias_service import PreferenciasService
 from app.services.programado_service import ProgramadoService
 
@@ -94,6 +105,40 @@ class ResumenService:
         preferencias = PreferenciasService(self.db).obtener()
         return CuposDelMesOut(
             mes=mes, semanas=semanas, cupos=cupos, aporte=a_pesos(aporte),
+            objetivo_ars=self._objetivo_en_pesos(preferencias.objetivo_centavos, preferencias.objetivo_moneda),
+        )
+
+    def plan(self, mes: str) -> PlanOut:
+        """El plan del mes acumulado día a día contra lo gastado (y lo proyectado desde hoy), con el ahorro de cada uno."""
+        inicio = parsear_mes(mes)
+        datos = PlanDelMes(self.db, inicio, self.hoy, self.programados.vencimientos(mes))
+        plan = datos.plan_por_dia()
+        gastado, variable = datos.gastado_por_dia()
+        futuro = self.hoy < inicio
+        proyeccion = datos.proyeccion_por_dia(plan, variable) if not futuro and self.hoy < datos.fin else {}
+        dias = []
+        plan_acumulado = gastado_acumulado = 0
+        for dia in datos.dias:
+            plan_acumulado += plan.get(dia, 0)
+            estimado = dia > self.hoy
+            gastado_acumulado += proyeccion.get(dia, 0) if estimado else gastado.get(dia, 0)
+            dias.append(
+                DiaDelPlan(
+                    fecha=dia, plan=a_pesos(plan_acumulado), gastado=None if futuro else a_pesos(gastado_acumulado),
+                    estimado=estimado,
+                )
+            )
+        ingresos = datos.ingresos_cobrados() + datos.ingresos_por_cobrar
+        gasto_proyectado = None if futuro else gastado_acumulado
+        preferencias = PreferenciasService(self.db).obtener()
+        return PlanOut(
+            mes=mes,
+            dias=dias,
+            ingresos=a_pesos(ingresos),
+            gasto_plan=a_pesos(plan_acumulado),
+            gasto_proyectado=a_pesos(gasto_proyectado),
+            ahorro_plan=a_pesos(ingresos - plan_acumulado),
+            ahorro_proyectado=None if gasto_proyectado is None else a_pesos(ingresos - gasto_proyectado),
             objetivo_ars=self._objetivo_en_pesos(preferencias.objetivo_centavos, preferencias.objetivo_moneda),
         )
 

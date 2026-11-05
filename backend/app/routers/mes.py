@@ -9,7 +9,7 @@ from app.dependencies import CalendariosExternosDep, DbDep, ProgramadosDep, Resu
 from app.schemas.comunes import Mes
 from app.schemas.eventos import CalendarioOut, ProximosOut
 from app.core.exceptions import ReglaDeNegocio
-from app.schemas.resumen import CuposDelMesOut, DiarioOut, EvolucionOut, ResumenOut
+from app.schemas.resumen import CuposDelMesOut, DiarioOut, EvolucionOut, PlanOut, ResumenOut
 from app.services.evento_service import EventoService
 
 router = APIRouter(tags=["Mes"])
@@ -29,6 +29,12 @@ def evolucion(hasta: Mes, servicio: ResumenDep, meses: Annotated[int, Query(ge=2
 def cupos(mes: Mes, servicio: ResumenDep) -> CuposDelMesOut:
     """Cada cupo semana por semana y lo que aportaron al ahorro las semanas ya terminadas."""
     return servicio.cupos_del_mes(mes)
+
+
+@router.get("/plan", response_model=PlanOut)
+def plan(mes: Mes, servicio: ResumenDep) -> PlanOut:
+    """El plan del mes (fijos, cupos y presupuestos) contra lo gastado y lo proyectado, día a día."""
+    return servicio.plan(mes)
 
 
 @router.get("/diario", response_model=DiarioOut)

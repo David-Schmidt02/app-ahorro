@@ -1,6 +1,6 @@
 # Ahorro
 
-> **Versión** 2.6.1 · **Última actualización** 2026-11-05 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
+> **Versión** 2.7.0 · **Última actualización** 2026-11-05 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
 
 Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y en cuotas, calendario de vencimientos y un objetivo de ahorro mensual. La hice para usarla en pareja: la cargamos desde el celular en el momento y la miramos con calma en la compu.
 
@@ -30,6 +30,7 @@ Libreta compartida de la casa para dos personas: gastos del día a día, ingreso
 - **Cargar** (botón +): un solo formulario para todo. «Ahora» registra un movimiento; «Mensual», «En cuotas» y «Más adelante» lo programan (un pago en cuotas es un mensual que termina solo). La categoría se elige de un desplegable con su ícono y color, y la fecha o el día del mes de un almanaque. Recuerda la última categoría usada; admite pesos o dólares (se pasan a pesos con el blue del día o con la cotización que se cargue).
 - **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra, y la torta filtra por categoría (en escritorio al costado, con los números del mes). La pestaña Categorías da de alta, edita (ícono entre más de 200, color, tope), archiva o borra categorías.
 - **Plan › Cupos**: plata por semana para el súper, las salidas o lo que elijan. Lo que se pasan una semana se descuenta de la siguiente; lo que sobra no se suma para gastar, va al ahorro. Vuelve a cero cada mes y lo que queda se resta de lo que les queda. Muestra cada semana del mes y cuánto aportan al objetivo de ahorro.
+- **Plan › Resumen**: cuánto ahorrarían si cumplen el plan del mes (fijos, cupos y presupuestos) y cuánto van a ahorrar a este ritmo, con el plan contra lo gastado día a día y en rojo donde se pasan.
 - **Plan › Fijos**: alquiler, expensas, servicios, sueldos (todos los meses, un día dado), compras en cuotas y pagos únicos con fecha, con el mismo formulario que la carga. Al registrarlos se carga el monto real.
 - **Calendario**: vencimientos del mes (a pagar, vencidos, a cobrar, registrados), eventos propios (cumpleaños y aniversarios anuales, salidas, recordatorios) y los de otros calendarios conectados. En escritorio cada día muestra sus nombres; debajo del día elegido, lo que viene en los próximos 7 días.
 - **Ajustes**: objetivo de ahorro mensual (en pesos o dólares), cotización del blue y copia de seguridad. El tema (claro, oscuro o el del sistema) y la cuenta están al pie de la barra lateral en escritorio y en Ajustes en el celular.
