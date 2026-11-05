@@ -1,6 +1,6 @@
 # Ahorro · desarrollo
 
-> **Versión** 2.6.0 · **Última actualización** 2026-11-04
+> **Versión** 2.6.1 · **Última actualización** 2026-11-05
 
 La presentación y las capturas están en el [README](../README.md).
 
@@ -79,6 +79,7 @@ La mascota (easter egg) sigue en el código, desactivada con `MASCOTA_HABILITADA
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 2.6.1 | 2026-11-05 | Cupos: lo que se pasan una semana se descuenta entero de la siguiente, aunque antes les haya sobrado (lo que sobró ya fue al ahorro y no tapa excesos). El arrastre es solo el de la semana anterior; si la deuda supera el cupo, la semana queda en $ 0 y lo que falta sigue a la próxima. Los textos dicen siempre «la semana pasada». Se vuelve atrás con 2.6.0 (`039ac5d`). |
 | 2.6.0 | 2026-11-04 | Cupos semanales por categoría: una categoría de gasto tiene presupuesto mensual o cupo por semana (de lunes a domingo, recortada al mes). Lo que se pasan una semana se descuenta de la siguiente y lo que sobra va al ahorro (no se suma para gastar); el arrastre vuelve a cero cada mes. Inicio muestra los cupos de la semana y resta lo que queda de ellos de lo que les queda en el mes (`reservado_cupos` en `/api/resumen`). Sección nueva «Plan» en el menú, con dos pestañas: Fijos (antes en el menú; `/fijos` redirige a `/plan/fijos`) y Cupos (`/plan/cupos`: lo que aportan al ahorro contra el objetivo, la semana en curso, cada semana del mes y el alta y edición de cupos; endpoint `/api/cupos`). Gráfico de Inicio en barras (por defecto) o líneas, con períodos de 30 días y del mes (gasto de cada día sin los fijos, con promedio; endpoint `/api/diario`) además de 6 y 12 meses. La torta aparece en Movimientos en el celular (compacta, filtra por categoría) en lugar de los chips. 213 íconos de categoría agrupados por tema. Tabla nueva `cupos_semanales` (se crea sola, sin ALTER). Se vuelve atrás con 2.5.1 (`995de78`); la tabla nueva queda en la base sin molestar. |
 | 2.5.1 | 2026-10-27 | Sin cambios en la app. README de presentación con capturas (celular y escritorio, claro y oscuro, con datos inventados en `docs/capturas/`) y decisiones técnicas; lo técnico pasa a `docs/DESARROLLO.md`. Se quita `docs/propuestas.html`. CI en GitHub Actions (tests del backend, lint y build del frontend, build de la imagen) y borrado automático de ramas mergeadas. Licencia MIT. Rama principal: `main` (antes `master`). |
 | 2.5.0 | 2026-10-26 | Solo interfaz: buscador y chips de categoría en Movimientos (el filtro de categoría queda en la URL `?categoria=`), la torta de Inicio lleva a Movimientos filtrado, pastilla para los montos en dólares, «Pagos y cobros» con contador de pendientes y los registrados desde el encabezado, nombres en dos renglones en lugar de cortarse, calendario con semanas completas y fin de semana marcado, Inicio en grilla 2×2 pareja y atajos de teclado (C carga, H vuelve a hoy, Alt + ←/→ cambia de mes). Propuestas de diseño en `docs/propuestas.html`. Se vuelve atrás con 2.4.1 (`2811af3`). |

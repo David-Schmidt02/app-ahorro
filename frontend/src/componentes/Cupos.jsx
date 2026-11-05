@@ -5,24 +5,18 @@ import { IconoCategoria } from './Icono';
 
 const diasEntre = (desde, hasta) => Math.round((new Date(hasta) - new Date(desde)) / 864e5);
 
-/** De dónde viene lo arrastrado: «la semana pasada» si hubo una sola semana antes en el mes. */
-function cuandoAntes(desde) {
-  return diasEntre(`${desde.slice(0, 7)}-01`, desde) <= 7 ? 'la semana pasada' : 'las semanas anteriores';
-}
-
 function Cupo({ c, desde, hasta, esUltimaDelMes }) {
   const pasados = c.restante < 0;
   const tope = Math.max(c.disponible, c.gastado, 1);
-  const antes = cuandoAntes(desde);
 
   const notas = [];
   if (c.arrastre < 0) {
     notas.push({
-      texto: `${antes === 'la semana pasada' ? 'La semana pasada' : 'En las semanas anteriores'} se pasaron por ${dinero(-c.arrastre)}: esta semana tienen ${dinero(c.disponible)} en lugar de ${dinero(c.cupo)}.`,
+      texto: `La semana pasada se pasaron por ${dinero(-c.arrastre)}: esta semana tienen ${dinero(c.disponible)} en lugar de ${dinero(c.cupo)}.`,
       clase: 'es-aviso',
     });
   } else if (c.arrastre > 0) {
-    notas.push({ texto: `De ${antes} les sobraron ${dinero(c.arrastre)}: no se suman a esta semana, ya quedan para el ahorro.`, clase: 'es-bien' });
+    notas.push({ texto: `La semana pasada les sobraron ${dinero(c.arrastre)}: no se suman a esta semana, ya quedan para el ahorro.`, clase: 'es-bien' });
   }
   if (diasEntre(desde, hasta) < 6) {
     notas.push({ texto: `Semana corta por el cambio de mes: corresponden ${dinero(c.cupo)}.`, clase: '' });
