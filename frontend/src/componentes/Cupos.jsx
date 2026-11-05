@@ -16,7 +16,7 @@ function Cupo({ c, desde, hasta, esUltimaDelMes }) {
       clase: 'es-aviso',
     });
   } else if (c.arrastre > 0) {
-    notas.push({ texto: `La semana pasada les sobraron ${dinero(c.arrastre)}: no se suman a esta semana, ya quedan para el ahorro.`, clase: 'es-bien' });
+    notas.push({ texto: `La semana pasada les sobraron ${dinero(c.arrastre)}: van al ahorro.`, clase: 'es-bien' });
   }
   if (diasEntre(desde, hasta) < 6) {
     notas.push({ texto: `Semana corta por el cambio de mes: corresponden ${dinero(c.cupo)}.`, clase: '' });

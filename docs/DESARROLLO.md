@@ -1,6 +1,6 @@
 # Ahorro · desarrollo
 
-> **Versión** 2.6.1 · **Última actualización** 2026-11-05
+> **Versión** 2.7.0 · **Última actualización** 2026-11-05
 
 La presentación y las capturas están en el [README](../README.md).
 
@@ -67,7 +67,7 @@ backend/app/
   routers/           endpoints delgados
   core/              excepciones de dominio, seguridad, dinero y fechas
 frontend/src/
-  paginas/           Inicio, Movimientos, Plan (Fijos y Cupos), Calendario, Ajustes, Ingreso
+  paginas/           Inicio, Movimientos, Plan (Resumen, Fijos y Cupos), Calendario, Ajustes, Ingreso
   componentes/       barra del mes, hojas de carga y pago, torta, cierre del mes, calendarios…
   estado/            sesión, mes elegido, refresco de datos
   lib/               cliente de la API, formato de montos y fechas
@@ -79,6 +79,7 @@ La mascota (easter egg) sigue en el código, desactivada con `MASCOTA_HABILITADA
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 2.7.0 | 2026-11-05 | Plan › Resumen (pestaña nueva, la primera de Plan): «Ahorro según el plan» (ingresos esperados menos fijos, cupos y presupuestos) y «Ahorro proyectado» (ingresos menos lo gastado y lo que se espera gastar a este ritmo; los primeros 4 días se proyecta con el plan), y el plan contra lo gastado acumulado día a día en barras o líneas, con la proyección punteada desde hoy y en rojo lo que pasa por encima del plan (endpoint `/api/plan`). El gráfico pasa a un componente compartido (`Grafico.jsx`) con Inicio. Texto más corto cuando sobra cupo. Se vuelve atrás con 2.6.1 (`a875e67`). |
 | 2.6.1 | 2026-11-05 | Cupos: lo que se pasan una semana se descuenta entero de la siguiente, aunque antes les haya sobrado (lo que sobró ya fue al ahorro y no tapa excesos). El arrastre es solo el de la semana anterior; si la deuda supera el cupo, la semana queda en $ 0 y lo que falta sigue a la próxima. Los textos dicen siempre «la semana pasada». Se vuelve atrás con 2.6.0 (`039ac5d`). |
 | 2.6.0 | 2026-11-04 | Cupos semanales por categoría: una categoría de gasto tiene presupuesto mensual o cupo por semana (de lunes a domingo, recortada al mes). Lo que se pasan una semana se descuenta de la siguiente y lo que sobra va al ahorro (no se suma para gastar); el arrastre vuelve a cero cada mes. Inicio muestra los cupos de la semana y resta lo que queda de ellos de lo que les queda en el mes (`reservado_cupos` en `/api/resumen`). Sección nueva «Plan» en el menú, con dos pestañas: Fijos (antes en el menú; `/fijos` redirige a `/plan/fijos`) y Cupos (`/plan/cupos`: lo que aportan al ahorro contra el objetivo, la semana en curso, cada semana del mes y el alta y edición de cupos; endpoint `/api/cupos`). Gráfico de Inicio en barras (por defecto) o líneas, con períodos de 30 días y del mes (gasto de cada día sin los fijos, con promedio; endpoint `/api/diario`) además de 6 y 12 meses. La torta aparece en Movimientos en el celular (compacta, filtra por categoría) en lugar de los chips. 213 íconos de categoría agrupados por tema. Tabla nueva `cupos_semanales` (se crea sola, sin ALTER). Se vuelve atrás con 2.5.1 (`995de78`); la tabla nueva queda en la base sin molestar. |
 | 2.5.1 | 2026-10-27 | Sin cambios en la app. README de presentación con capturas (celular y escritorio, claro y oscuro, con datos inventados en `docs/capturas/`) y decisiones técnicas; lo técnico pasa a `docs/DESARROLLO.md`. Se quita `docs/propuestas.html`. CI en GitHub Actions (tests del backend, lint y build del frontend, build de la imagen) y borrado automático de ramas mergeadas. Licencia MIT. Rama principal: `main` (antes `master`). |
