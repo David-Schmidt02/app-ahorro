@@ -1,6 +1,9 @@
-"""Utilidades de meses ('YYYY-MM')."""
+"""Utilidades de meses ('YYYY-MM') y semanas."""
 import calendar
-from datetime import date
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+from app.config import get_settings
 
 from app.core.exceptions import ReglaDeNegocio
 
@@ -36,3 +39,20 @@ def dia_en_mes(inicio: date, dia: int) -> date:
     """El día pedido dentro del mes, o el último si el mes es más corto (ej. 31 en febrero)."""
     ultimo = calendar.monthrange(inicio.year, inicio.month)[1]
     return inicio.replace(day=min(dia, ultimo))
+
+
+def hoy_local() -> date:
+    """La fecha de hoy en la zona horaria de la casa (el servidor puede estar en UTC)."""
+    return datetime.now(ZoneInfo(get_settings().zona_horaria)).date()
+
+
+def semanas_del_mes(inicio: date) -> list[tuple[date, date]]:
+    """Las semanas (de lunes a domingo) del mes, la primera y la última recortadas al mes."""
+    fin = siguiente_mes(inicio) - timedelta(days=1)
+    semanas = []
+    desde = inicio
+    while desde <= fin:
+        hasta = min(desde + timedelta(days=6 - desde.weekday()), fin)
+        semanas.append((desde, hasta))
+        desde = hasta + timedelta(days=1)
+    return semanas

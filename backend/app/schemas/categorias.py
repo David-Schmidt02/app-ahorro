@@ -13,7 +13,8 @@ class CategoriaIn(BaseModel):
     icono: str = Field(pattern=_ICONO, examples=["shopping-cart"])
     color: str = Field(pattern=_COLOR)
     tipo: TipoMovimiento
-    presupuesto: MontoNoNegativo | None = None
+    presupuesto: MontoNoNegativo | None = Field(None, description="Tope mensual")
+    cupo_semanal: MontoNoNegativo | None = Field(None, description="Plata por semana; excluye al presupuesto mensual")
 
 
 class CategoriaUpdate(BaseModel):
@@ -21,6 +22,7 @@ class CategoriaUpdate(BaseModel):
     icono: str | None = Field(None, pattern=_ICONO)
     color: str | None = Field(None, pattern=_COLOR)
     presupuesto: MontoNoNegativo | None = None
+    cupo_semanal: MontoNoNegativo | None = None
     orden: int | None = None
     activa: bool | None = None
 
@@ -39,6 +41,7 @@ class CategoriaBreve(BaseModel):
 class CategoriaOut(CategoriaBreve):
     tipo: TipoMovimiento
     presupuesto: float | None
+    cupo_semanal: float | None
     orden: int
     activa: bool
 
@@ -46,5 +49,6 @@ class CategoriaOut(CategoriaBreve):
     def desde(cls, c: Categoria) -> "CategoriaOut":
         return cls(
             id=c.id, nombre=c.nombre, icono=c.icono, color=c.color, tipo=c.tipo,
-            presupuesto=a_pesos(c.presupuesto_centavos), orden=c.orden, activa=c.activa,
+            presupuesto=a_pesos(c.presupuesto_centavos), cupo_semanal=a_pesos(c.cupo.monto_centavos) if c.cupo else None,
+            orden=c.orden, activa=c.activa,
         )

@@ -8,7 +8,8 @@ from app.core.fechas import parsear_mes, siguiente_mes
 from app.dependencies import CalendariosExternosDep, DbDep, ProgramadosDep, ResumenDep
 from app.schemas.comunes import Mes
 from app.schemas.eventos import CalendarioOut, ProximosOut
-from app.schemas.resumen import EvolucionOut, ResumenOut
+from app.core.exceptions import ReglaDeNegocio
+from app.schemas.resumen import CuposDelMesOut, DiarioOut, EvolucionOut, ResumenOut
 from app.services.evento_service import EventoService
 
 router = APIRouter(tags=["Mes"])
@@ -22,6 +23,20 @@ def resumen(mes: Mes, servicio: ResumenDep) -> ResumenOut:
 @router.get("/evolucion", response_model=EvolucionOut)
 def evolucion(hasta: Mes, servicio: ResumenDep, meses: Annotated[int, Query(ge=2, le=24)] = 6) -> EvolucionOut:
     return servicio.evolucion(hasta, meses)
+
+
+@router.get("/cupos", response_model=CuposDelMesOut)
+def cupos(mes: Mes, servicio: ResumenDep) -> CuposDelMesOut:
+    """Cada cupo semana por semana y lo que aportaron al ahorro las semanas ya terminadas."""
+    return servicio.cupos_del_mes(mes)
+
+
+@router.get("/diario", response_model=DiarioOut)
+def diario(desde: date, hasta: date, servicio: ResumenDep) -> DiarioOut:
+    """Gasto de cada día, para comparar los gastos chicos del día a día (hasta 62 días)."""
+    if not 0 <= (hasta - desde).days < 62:
+        raise ReglaDeNegocio("El rango tiene que ir de 1 a 62 días")
+    return servicio.diario(desde, hasta)
 
 
 @router.get("/calendario", response_model=CalendarioOut)

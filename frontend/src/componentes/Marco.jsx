@@ -9,7 +9,7 @@ import Mascota from './Mascota';
 const SECCIONES = [
   { a: '/', icono: 'inicio', nombre: 'Inicio' },
   { a: '/movimientos', icono: 'lista', nombre: 'Movimientos' },
-  { a: '/fijos', icono: 'repetir', nombre: 'Fijos' },
+  { a: '/plan', icono: 'plan', nombre: 'Plan' },
   { a: '/calendario', icono: 'calendario', nombre: 'Calendario' },
   { a: '/ajustes', icono: 'ajustes', nombre: 'Ajustes' },
 ];

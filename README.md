@@ -1,6 +1,6 @@
 # Ahorro
 
-> **Versión** 2.5.1 · **Última actualización** 2026-10-27 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
+> **Versión** 2.6.0 · **Última actualización** 2026-11-04 · [Desarrollo, deploy e historial de versiones](docs/DESARROLLO.md)
 
 Libreta compartida de la casa para dos personas: gastos del día a día, ingresos, pagos fijos y en cuotas, calendario de vencimientos y un objetivo de ahorro mensual. La hice para usarla en pareja: la cargamos desde el celular en el momento y la miramos con calma en la compu.
 
@@ -26,10 +26,11 @@ Libreta compartida de la casa para dos personas: gastos del día a día, ingreso
 
 ## Qué hace
 
-- **Inicio**: cuánto les queda en el mes si se paga todo lo programado, contra el objetivo de ahorro. La barra muestra lo gastado, lo comprometido sin pagar (rayado) y la marca del objetivo. Debajo, los pagos y cobros pendientes (se marcan con un toque), la torta con el reparto del gasto contra el presupuesto de cada categoría (y el aviso «A este ritmo llegan a…» cuando una va a pasarse) y las líneas de ingresos, gastos y ahorro de los últimos 6 o 12 meses. En la primera quincena, una tarjeta con el cierre del mes anterior.
+- **Inicio**: cuánto les queda en el mes si se paga todo lo programado, contra el objetivo de ahorro. La barra muestra lo gastado, lo comprometido sin pagar (rayado) y la marca del objetivo. Debajo, los pagos y cobros pendientes (se marcan con un toque), los cupos de la semana (cuánto queda o cuánto se pasaron en el súper, las salidas…), la torta con el reparto del gasto contra el presupuesto de cada categoría (y el aviso «A este ritmo llegan a…» cuando una va a pasarse) y un gráfico en barras o líneas: el gasto de cada día de los últimos 30 días o del mes, sin los fijos para que no tapen los gastos chicos, o los ingresos, gastos y ahorro de los últimos 6 o 12 meses. En la primera quincena, una tarjeta con el cierre del mes anterior.
 - **Cargar** (botón +): un solo formulario para todo. «Ahora» registra un movimiento; «Mensual», «En cuotas» y «Más adelante» lo programan (un pago en cuotas es un mensual que termina solo). La categoría se elige de un desplegable con su ícono y color, y la fecha o el día del mes de un almanaque. Recuerda la última categoría usada; admite pesos o dólares (se pasan a pesos con el blue del día o con la cotización que se cargue).
-- **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra. La pestaña Categorías da de alta, edita (ícono, color, presupuesto), archiva o borra categorías. En escritorio, al costado, los números del mes y la torta para filtrar por categoría.
-- **Fijos**: alquiler, expensas, servicios, sueldos (todos los meses, un día dado), compras en cuotas y pagos únicos con fecha, con el mismo formulario que la carga. Al registrarlos se carga el monto real.
+- **Movimientos**: la libreta del mes, por día; tocar un renglón lo edita o lo borra, y la torta filtra por categoría (en escritorio al costado, con los números del mes). La pestaña Categorías da de alta, edita (ícono entre más de 200, color, tope), archiva o borra categorías.
+- **Plan › Cupos**: plata por semana para el súper, las salidas o lo que elijan. Lo que se pasan una semana se descuenta de la siguiente; lo que sobra no se suma para gastar, va al ahorro. Vuelve a cero cada mes y lo que queda se resta de lo que les queda. Muestra cada semana del mes y cuánto aportan al objetivo de ahorro.
+- **Plan › Fijos**: alquiler, expensas, servicios, sueldos (todos los meses, un día dado), compras en cuotas y pagos únicos con fecha, con el mismo formulario que la carga. Al registrarlos se carga el monto real.
 - **Calendario**: vencimientos del mes (a pagar, vencidos, a cobrar, registrados), eventos propios (cumpleaños y aniversarios anuales, salidas, recordatorios) y los de otros calendarios conectados. En escritorio cada día muestra sus nombres; debajo del día elegido, lo que viene en los próximos 7 días.
 - **Ajustes**: objetivo de ahorro mensual (en pesos o dólares), cotización del blue y copia de seguridad. El tema (claro, oscuro o el del sistema) y la cuenta están al pie de la barra lateral en escritorio y en Ajustes en el celular.
 
@@ -71,7 +72,7 @@ Las dos cuentas comparten todos los datos. El registro queda abierto hasta que e
 - **Montos en centavos enteros** para no arrastrar errores de punto flotante. Los gastos en dólares guardan la cotización usada; el blue se consulta en [dolarapi.com](https://dolarapi.com) y se guarda 6 h, así la app sigue andando si la API externa se cae.
 - **Backend en capas:** routers delgados, servicios con las reglas y excepciones de dominio que se traducen a HTTP en un solo lugar. Los servicios externos se inyectan, así los tests los reemplazan por dobles.
 - **Pagos programados como reglas, no como filas por mes:** un fijo mensual o en cuotas genera sus vencimientos al consultar cada mes, y al pagarlo se registra el monto real.
-- **Interfaz sin librería de componentes:** CSS propio con una escala de espacios y tokens de color para el tema claro y el oscuro, gráficos en SVG a mano (torta y líneas, con su tabla alternativa), atajos de teclado y diálogos nativos (`<dialog>`). Se instala como app en el teléfono.
+- **Interfaz sin librería de componentes:** CSS propio con una escala de espacios y tokens de color para el tema claro y el oscuro, gráficos en SVG a mano (torta, barras y líneas, con su tabla alternativa), atajos de teclado y diálogos nativos (`<dialog>`). Se instala como app en el teléfono.
 
 ## Stack
 
