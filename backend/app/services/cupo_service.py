@@ -20,7 +20,7 @@ def cupo_por_dias(semanal_centavos: int, dias: int) -> int:
 
 @dataclass(frozen=True)
 class _Semana:
-    """Un cupo en una semana, en centavos."""
+    """Un cupo en una semana, en centavos. `arrastre` es lo que quedó de la semana anterior (negativo si se pasaron)."""
 
     desde: date
     hasta: date
@@ -29,13 +29,18 @@ class _Semana:
     gastado: int
 
     @property
-    def disponible(self) -> int:
-        # Lo que se pasaron antes se descuenta; lo que sobró no se suma para gastar
+    def _base(self) -> int:
+        # Lo que se pasaron la semana pasada se descuenta entero; lo que sobró ya fue al ahorro y no se suma
         return self.cupo + min(0, self.arrastre)
 
     @property
+    def disponible(self) -> int:
+        return max(0, self._base)
+
+    @property
     def restante(self) -> int:
-        return self.disponible - self.gastado
+        """Negativo si se pasaron; si la deuda era mayor que el cupo, lo que no se cubrió sigue a la semana siguiente."""
+        return self._base - self.gastado
 
     def salida(self) -> dict[str, float]:
         return {
@@ -121,8 +126,9 @@ class CupoService:
             for desde, hasta in semanas:
                 cupo = cupo_por_dias(semanal, (hasta - desde).days + 1)
                 gastado_semana = sum(total for dia, total in gastado[c.id].items() if desde <= dia <= hasta)
-                lista.append(_Semana(desde=desde, hasta=hasta, cupo=cupo, arrastre=arrastre, gastado=gastado_semana))
-                arrastre += cupo - gastado_semana
+                semana = _Semana(desde=desde, hasta=hasta, cupo=cupo, arrastre=arrastre, gastado=gastado_semana)
+                lista.append(semana)
+                arrastre = semana.restante
             resultado.append((c, lista))
         return resultado
 

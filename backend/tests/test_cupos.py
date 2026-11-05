@@ -58,7 +58,8 @@ def test_lo_que_sobra_no_se_suma_para_gastar(api, con_fecha):
 
     [cupo] = api.get("/api/resumen", params={"mes": "2026-11"}).json()["cupos"]["cupos"]
 
-    assert (cupo["arrastre"], cupo["disponible"], cupo["restante"]) == (30_000, 70_000, 70_000)
+    # La semana pasada (2 al 8) sobraron 20.000: van al ahorro, no se suman
+    assert (cupo["arrastre"], cupo["disponible"], cupo["restante"]) == (20_000, 70_000, 70_000)
 
 
 def test_el_arrastre_vuelve_a_cero_cada_mes(api, con_fecha):
@@ -179,3 +180,33 @@ def test_si_se_pasan_esta_semana_queda_menos_reservado(api, con_fecha):
 
     # Se pasaron 40.000 esta semana: del cupo del 16 al 30 (150.000) quedan 110.000
     assert r["reservado_cupos"] == 110_000
+
+
+def test_lo_que_sobro_antes_no_tapa_lo_que_se_pasaron(api, con_fecha):
+    # El domingo 1 sobró su séptimo de cupo, pero eso ya fue al ahorro: el exceso del 2 al 8 se descuenta entero
+    con_fecha(date(2026, 11, 5))
+    _cupo_super(api, 100_000)
+    _gasto(api, "Súper", 100_000, "2026-11-02")
+    _gasto(api, "Súper", 17_000, "2026-11-04")
+
+    r = api.get("/api/cupos", params={"mes": "2026-11"}).json()
+
+    primera, esta, siguiente = r["cupos"][0]["semanas"][:3]
+    assert primera["restante"] == 14_286
+    assert (esta["arrastre"], esta["disponible"], esta["restante"]) == (14_286, 100_000, -17_000)
+    assert (siguiente["arrastre"], siguiente["disponible"]) == (-17_000, 83_000)
+    assert r["aporte"] == 14_286
+
+
+def test_si_se_pasan_por_mas_de_un_cupo_la_deuda_sigue(api, con_fecha):
+    con_fecha(date(2026, 11, 20))
+    _cupo_super(api)
+    _gasto(api, "Súper", 10_000, "2026-11-01")
+    _gasto(api, "Súper", 170_000, "2026-11-03")
+    _gasto(api, "Súper", 5_000, "2026-11-10")
+
+    semanas = api.get("/api/cupos", params={"mes": "2026-11"}).json()["cupos"][0]["semanas"]
+
+    # Del 2 al 8 se pasaron 100.000: la semana del 9 no tiene nada y aún le faltan 30.000 (más los 5.000 que gastó)
+    assert (semanas[2]["disponible"], semanas[2]["restante"]) == (0, -35_000)
+    assert (semanas[3]["disponible"], semanas[3]["arrastre"]) == (35_000, -35_000)

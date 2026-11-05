@@ -21,8 +21,8 @@ class SemanaDeCupo(BaseModel):
     """Una categoría con cupo en una semana del mes."""
 
     cupo: float = Field(description="Lo que corresponde a esta semana (menos si la semana está partida entre dos meses)")
-    arrastre: float = Field(description="Lo que sobró (+) o se pasaron (−) en las semanas anteriores del mes")
-    disponible: float = Field(description="Cupo de la semana menos lo que se pasaron antes; lo que sobró no se suma: va al ahorro")
+    arrastre: float = Field(description="Lo que sobró (+) o se pasaron (−) la semana anterior; vuelve a cero cada mes")
+    disponible: float = Field(description="Cupo de la semana menos lo que se pasaron la anterior; lo que sobró no se suma: va al ahorro")
     gastado: float
     restante: float = Field(description="Negativo si se pasaron")
 
